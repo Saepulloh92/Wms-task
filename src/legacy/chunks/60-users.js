@@ -66,15 +66,8 @@
       }
       function applyRole() {
         document.querySelectorAll(".mi[data-v]").forEach((b) => (b.hidden = !allowedView(b.dataset.v)));
-        // judul grup disembunyikan jika semua menu di bawahnya tersembunyi
-        document.querySelectorAll(".mg").forEach((g) => {
-          let n = g.nextElementSibling, any = false;
-          while (n && !n.classList.contains("mg")) {
-            if (n.classList.contains("mi") && !n.hidden) any = true;
-            n = n.nextElementSibling;
-          }
-          g.hidden = !any;
-        });
+        // grup menu (judul + submenu) disembunyikan jika semua isinya tersembunyi: lihat 76-menu-groups.js
+        if (typeof menuSync === "function") menuSync();
         let vis = 0;
         const navSel = navPicks();
         document.querySelectorAll("#tabs [data-v]").forEach((b) => {

@@ -25,6 +25,7 @@ Cari fitur di sini, buka **hanya satu file**. Semua chunk `NN-*.js` dijalankan b
 | `92-monitoring.js` | 440 | Monitoring kiriman / Beranda | monCSV, monUrls, monNum, monCol, monBuild, monCmp, monPct, monSeg, monRender, monLoad … | warehouse_so_mon_v1<br>warehouse_so_monc_v1<br>warehouse_so_mong_v1 |
 | `95-tasks.js` | 210 | Tugas Bin | taskBadges, renderTaskBar, tkPick, renderTask, tkIngest | – |
 | `97-bridge-links.js` | 9 | Jembatan: membuka state & helper legacy ke React lewat window.WMS (lihat src/legacy/bridge.js). | – | – |
+| `76-menu-groups.js` | 50 | Menu samping bertingkat (accordion) | menuSync | – |
 | `98-sync.js` | 339 | Sinkron Google Sheets (Apps Script) + start-up aplikasi | sySoon, syBuild, syMerge, syApply, syRefresh, syCall, syRun, syPoll, netUi, syUi | warehouse_so_dest_v1<br>warehouse_so_sync_v1<br>warehouse_so_view_v1 |
 | `patch-v18-display.js` | 32 | Tampilan lapangan + scan label rak (patch IIFE, dijalankan setelah chunk utama) | – | warehouse_so_disp_v1 |
 | `patch-v19-beep-net.js` | 61 | Bip + pita status jaringan (patch IIFE, dijalankan setelah chunk utama) | – | warehouse_so_disp_v1 |

@@ -14,6 +14,7 @@
           else b.removeAttribute("aria-current");
         });
         curViewId = v;
+        if (typeof menuSync === "function") menuSync();
         $("tMenu").classList.toggle("on", ![...document.querySelectorAll("#tabs [data-v]")].some((b) => !b.hidden && b.dataset.v === v));
         try { localStorage.setItem("warehouse_so_view_v1", v); } catch (e) {}
         side(false);

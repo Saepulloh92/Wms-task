@@ -8,6 +8,7 @@ import "./styles/04-nav-bins-undo.css";
 import "./styles/05-monitoring.css";
 import "./styles/06-identity-outdoor.css";
 import "./styles/07-tablet-lite.css";
+import "./styles/08-menu-groups.css";
 import App from "./App.jsx";
 
 window.WMS_CONFIG = config;
