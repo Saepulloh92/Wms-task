@@ -93,7 +93,7 @@ var MENU_LABEL = {
   so: 'Periksa Bin', dc: 'DC Harian', task: 'Tugas Bin', check: 'Review Supervisor', kes: 'Cek Kesesuaian',
   adj: 'File Adjust', clr: 'Clearing', mon: 'Beranda', muat: 'Laporan Muat', kpi: 'KPI Area', tg: 'Telegram', data: 'Data WMS', usr: 'User & Area'
 };
-var MENU_OPERATOR = ['so', 'dc', 'task'];   // preset Operator di aplikasi
+var MENU_OPERATOR = ['mon', 'so', 'dc', 'task'];   // preset Operator di aplikasi
 var CHUNK = 45000;          // batas aman per sel (maks 50.000 karakter)
 var BACKUP_FOLDER = 'Stock Control Backup';
 var BACKUP_KEEP = 30;

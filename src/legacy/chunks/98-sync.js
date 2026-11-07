@@ -329,7 +329,8 @@
       guardUi(true);
       try {
         const lv = localStorage.getItem("warehouse_so_view_v1");
-        if (lv && allowedView(lv) && document.getElementById("v-" + lv)) go(lv);
+        if (allowedView("mon")) go("mon"); // halaman utama = monitor kiriman
+        else if (lv && allowedView(lv) && document.getElementById("v-" + lv)) go(lv);
         else if (allowedView("mon")) go("mon");
         else {
           const first = ["so", "dc", "task", "check", "kes", "adj", "clr", "muat", "kpi", "tg", "data", "usr"].find(allowedView);

@@ -178,7 +178,7 @@
         const msg = [];
         if (monErr) msg.push(`<div class="note">${esc(monErr)}</div>`);
         if (!monCache) {
-          $("monMsg").innerHTML = msg.join("") || '<div class="note info">Belum ada data. Buka "Pengaturan sumber &amp; kolom" di bawah, isi alamat spreadsheet, lalu ketuk Simpan &amp; muat data.</div>';
+          $("monMsg").innerHTML = msg.join("") || '<div class="note info"><b>Selamat datang.</b> Hubungkan spreadsheet kiriman agar status mobil tampil di sini.<br><button class="btn pri sm mt" id="monOpenSet" type="button">Atur sumber data</button></div>';
           $("monOver").innerHTML = $("monList").innerHTML = $("monTools").innerHTML = "";
           $("monAt").textContent = "";
           $("monTg").disabled = true;
@@ -193,6 +193,8 @@
         if (!b.hasName) msg.push('<div class="note">Kolom nama wilayah belum diatur atau tidak ditemukan. Cek pengaturan kolom.</div>');
         else if (!b.groups.length) msg.push(`<div class="note">Tidak ada baris data mulai baris ke-${mon.start}. Cek "Data mulai baris ke".</div>`);
         if (b.missing.length) msg.push(`<div class="note">Kolom tidak ditemukan: ${esc(b.missing.join(", "))}.</div>`);
+        const gg = b.groups.filter((g) => g.gagalN);
+        if (gg.length) msg.unshift(`<div class="note" role="alert">⚠️ <b>${fmt(gg.reduce((a, g) => a + g.gagalN, 0))} mobil gagal masuk</b> di ${gg.map((g) => esc(g.name)).join(", ")}.</div>`);
         $("monMsg").innerHTML = msg.join("");
         const S = b.sum, L = (r) => esc(MON_LBL(b, r));
         const cell = (r, k) => (S[r] == null ? "" : `<div class="c-${k}"><small>${L(r)}</small><strong>${fmt(S[r])}</strong></div>`);
@@ -232,6 +234,9 @@
           }).join("") +
           "</div>";
       }
+      $("monMsg").onclick = (e) => {
+        if (e.target.id === "monOpenSet") { $("monSet").open = true; $("monUrl").focus(); }
+      };
       $("monTools").onclick = (e) => {
         const c = e.target.closest("[data-k]");
         if (c) {

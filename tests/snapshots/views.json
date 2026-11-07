@@ -93,7 +93,7 @@
   "hidden": [
    "v-mon"
   ],
-  "text": "Beranda Mobil per wilayah dari Google Spreadsheet, dibandingkan dengan SPM yang dikerjakan di Laporan Muat. Muat ulang Mobil keluar dan SPM dikerjakan Laporan Muat belum diimpor. Impor file laporan muat supaya jumlah mobil keluar bisa dibandingkan dengan SPM yang dikerjakan. Buka Laporan Muat Belum ada data. Buka \"Pengaturan sumber & kolom\" di bawah, isi alamat spreadsheet, lalu ketuk Simpan & muat data. Kirim ringkasan ke Telegram Pengaturan sumber & kolom"
+  "text": "Beranda Mobil per wilayah dari Google Spreadsheet, dibandingkan dengan SPM yang dikerjakan di Laporan Muat. Muat ulang Mobil keluar dan SPM dikerjakan Laporan Muat belum diimpor. Impor file laporan muat supaya jumlah mobil keluar bisa dibandingkan dengan SPM yang dikerjakan. Buka Laporan Muat Selamat datang. Hubungkan spreadsheet kiriman agar status mobil tampil di sini. Atur sumber data Kirim ringkasan ke Telegram Pengaturan sumber & kolom"
  },
  "data": {
   "title": "Data WMS",
