@@ -1,3 +1,4 @@
+// Jalankan dengan build TANPA link sinkron: VITE_SYNC_URL= VITE_SYNC_TOKEN= VITE_CLEARING_URL= npx vite build --outDir /tmp/dist-test && npx vite preview --outDir /tmp/dist-test --port 4173
 // Uji paritas tampilan: tiap menu dibuka dengan state yang sama, teksnya dibandingkan dengan snapshot dari aplikasi asli.
 //   npm run build && npx vite preview --port 4173 &   lalu   node tests/parity.mjs            (bandingkan)
 //   ORIGINAL=/path/index-fixd.html node tests/parity.mjs --update                              (buat ulang snapshot dari file asli)
