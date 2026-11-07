@@ -69,7 +69,7 @@
   "hidden": [
    "v-clr"
   ],
-  "text": "Clearing Cocokkan No Voucher dan Qty dari Laporan Voucher dengan hasil counting. SMS diambil dari 8 angka depan kode item hasil counting. Cocok 0 Selisih / dobel 0 Belum dihitung 0 Tidak di laporan 0 1. Laporan Voucher (.xlsx / .csv) Belum ada laporan. Pilih file Laporan Voucher. 2. Hasil counting Link spreadsheet counting belum diatur (Pengaturan di bawah), atau muat dari file. Muat counting dari spreadsheet Semua 0 Perlu dicek 0 Ditandai selesai 0 Cocok 0 Belum dihitung 0 Tidak di laporan 0 Cari voucher / SMS / item Muat Laporan Voucher dan counting dulu. Salin data untuk input WMS Belum ada data untuk disimpan. Simpan, salin & kirim ke Telegram Riwayat clearing tersimpan Belum ada hasil clearing yang disimpan. Pengaturan spreadsheet counting"
+  "text": "Clearing Cocokkan No Voucher dan Qty dari Laporan Voucher dengan hasil counting. Hanya voucher dari laporan yang Anda impor yang dicocokkan; baris counting lain diabaikan. SMS diambil dari 8 angka depan kode item hasil counting. Cocok 0 Selisih / dobel 0 Belum dihitung 0 1. Laporan Voucher (.xlsx / .csv) Belum ada laporan. Pilih file Laporan Voucher. 2. Hasil counting Link spreadsheet counting belum diatur (Pengaturan di bawah), atau muat dari file. Muat counting dari spreadsheet Semua 0 Perlu dicek 0 Ditandai selesai 0 Cocok 0 Belum dihitung 0 Cari voucher / SMS / item Muat Laporan Voucher dan counting dulu. Salin data untuk input WMS Belum ada data untuk disimpan. Simpan, salin & kirim ke Telegram Riwayat clearing tersimpan Belum ada hasil clearing yang disimpan. Pengaturan spreadsheet counting"
  },
  "kpi": {
   "title": "KPI Area",

@@ -124,13 +124,8 @@
           const tm = (g.rows.find((x) => x.t) || {}).t || "", lori = r.lr || (g.rows.find((x) => x.lr) || {}).lr || "";
           list.push({ v: r.v, sms, kc, qR: r.q, qC, diff, st, n: r.n, r: r.r, rc: g.rows.length, lori, shift: r.sh || clrShiftOf(tm), tm, pic: r.pic || "", grp: r.grp || "" });
         });
-        cm.forEach((g, k) => {
-          if (seen.has(k)) return;
-          const qC = g.rows.reduce((a, b) => a + (b.q || 0), 0), kc = (g.rows.find((x) => sms8(x.k)) || g.rows[0]).k || "";
-          const tm = (g.rows.find((x) => x.t) || {}).t || "";
-          list.push({ v: g.v, sms: sms8(kc), kc, qR: null, qC, diff: null, st: "extra", n: "", r: "", rc: g.rows.length, lori: (g.rows.find((x) => x.lr) || {}).lr || "", shift: clrShiftOf(tm), tm });
-        });
-        const ord = { dup: 0, qty: 1, sms: 2, belum: 3, extra: 4, ok: 5 };
+        // hanya voucher yang ada di Laporan Voucher yang diimpor; baris counting lain diabaikan
+        const ord = { dup: 0, qty: 1, sms: 2, belum: 3, ok: 4 };
         list.sort((a, b) => ord[a.st] - ord[b.st] || String(a.v).localeCompare(String(b.v), "id", { numeric: true }));
         return list;
       }
@@ -157,10 +152,9 @@
           ["Cocok", n("ok"), "var(--green)"],
           ["Selisih / dobel", n("qty") + n("dup") + n("sms"), n("qty") + n("dup") + n("sms") ? "var(--red)" : ""],
           ["Belum dihitung", n("belum"), n("belum") ? "var(--amber)" : ""],
-          ["Tidak di laporan", n("extra"), n("extra") ? "var(--amber)" : ""],
         ].map(([l, v, c]) => `<div class="stat"><small>${l}</small><strong style="${c ? "color:" + c : ""}">${v}</strong></div>`).join("");
-        $("clrChips").innerHTML = chipsHtml(clrF, [["all", "Semua", all.length], ["bad", "Perlu dicek", all.filter((x) => x.st !== "ok" && !clrIsDone(x)).length], ["done", "Ditandai selesai", all.filter(clrIsDone).length], ["ok", "Cocok", n("ok")], ["belum", "Belum dihitung", n("belum")], ["extra", "Tidak di laporan", n("extra")]]);
-          clrRekapUi(all);
+        $("clrChips").innerHTML = chipsHtml(clrF, [["all", "Semua", all.length], ["bad", "Perlu dicek", all.filter((x) => x.st !== "ok" && !clrIsDone(x)).length], ["done", "Ditandai selesai", all.filter(clrIsDone).length], ["ok", "Cocok", n("ok")], ["belum", "Belum dihitung", n("belum")]]);
+        $("clrRekap").innerHTML = ""; // rekap lengkap tidak ditampilkan; tugas clearing hanya mencocokkan
         const shs = [...new Set(all.map((x) => x.shift).filter(Boolean))].sort();
         $("clrShChips").innerHTML = shs.length ? chipsHtml(clrShF, [["all", "Semua shift", all.length], ...shs.map((h) => [h, h, all.filter((x) => x.shift === h).length])]).replace(/data-k=/g, "data-sh=") : "";
         const q = $("clrQ").value.toLowerCase().trim();
