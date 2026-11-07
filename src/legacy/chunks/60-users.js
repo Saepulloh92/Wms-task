@@ -237,8 +237,45 @@
         renderBins();
         renderUsr();
       }
+      const saveAreaCfg = (list) => {
+        areaCfg = { list, at: Date.now() };
+        sv(K_AC, areaCfg);
+        if (typeof renderBins === "function") renderBins();
+        renderUsr();
+      };
+      function renderAreaCfg() {
+        const base = areaBase();
+        $("aCfgList").innerHTML = base.length
+          ? base.map((a) => `<button type="button" class="chip" data-ad="${esc(a)}" aria-label="Hapus area ${esc(a)}">${esc(a)} ✕</button>`).join("")
+          : '<div class="hint">Belum ada area. Tambahkan di bawah.</div>';
+      }
+      const areaClean = (v) => String(v || "").toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 12);
+      $("aCfgAdd").onclick = () => {
+        const a = areaClean($("aCfgIn").value);
+        if (!a) return toast("Isi nama area (huruf/angka).");
+        if (allAreas().includes(a)) return toast("Area " + a + " sudah ada.");
+        saveAreaCfg([...areaBase(), a]);
+        $("aCfgIn").value = "";
+        toast("Area " + a + " ditambahkan");
+      };
+      $("aCfgIn").onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); $("aCfgAdd").onclick(); } };
+      $("aCfgList").onclick = async (e) => {
+        const b = e.target.closest("[data-ad]");
+        if (!b) return;
+        const a = b.dataset.ad;
+        if (DATA.some((x) => x.area === a)) return toast("Area " + a + " masih punya bin di data WMS, tidak bisa dihapus.");
+        if (!(await ask("Hapus area " + a + "?", "Area dilepas dari semua petugas.", "Hapus", true))) return;
+        users.forEach((u) => { if (Array.isArray(u.areas)) u.areas = u.areas.filter((x) => x !== a); });
+        sv(K_U, users);
+        uSel = uSel.filter((x) => x !== a);
+        saveAreaCfg(areaBase().filter((x) => x !== a));
+      };
+      $("aCfgReset").onclick = async () => {
+        if (await ask("Kembalikan daftar area awal?", "Daftar area kembali ke 18 area bawaan.", "Kembalikan")) saveAreaCfg([...AREA_DEFAULT]);
+      };
       function renderUsr() {
         const A = allAreas();
+        renderAreaCfg();
         const eu = uEdit && users.find((x) => x.id === uEdit),
           adminRole = $("uRole").value === "admin";
         $("uTitle").textContent = uEdit ? "Ubah user" : "Tambah user";

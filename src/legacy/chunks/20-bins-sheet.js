@@ -2,9 +2,13 @@
    asal: index-fixd.html baris 2623-2738 */
       /* ---------- daftar bin ---------- */
       const areas = () => [...new Set(DATA.map((x) => x.area))].sort();
-      /* Daftar area gudang (semuanya area WMS, sesuai papan area). Tampil di menu User & Area walau data WMS belum diimpor; bin-nya datang dari Informasi Rak WMS. */
-      const AREA_TETAP = ["MC", "L", "D1", "D2", "C2", "C1", "B2", "B1", "A2", "E", "F", "M", "A1", "G", "O", "P", "N", "H"];
-      const allAreas = () => [...new Set([...AREA_TETAP, ...DATA.map((x) => x.area)])];
+      /* Daftar area dinamis (diatur admin di menu User & Area, ikut tersinkron). Awalnya sesuai papan area gudang.
+         Dipakai untuk pemeriksaan per bin dan cek kesesuaian; bin-nya datang dari kolom Area di Informasi Rak WMS. */
+      const AREA_DEFAULT = ["MC", "L", "D1", "D2", "C2", "C1", "B2", "B1", "A2", "E", "F", "M", "A1", "G", "O", "P", "N", "H"];
+      const K_AC = "warehouse_so_areacfg_v1";
+      let areaCfg = ld(K_AC, null);
+      const areaBase = () => (areaCfg && Array.isArray(areaCfg.list) ? areaCfg.list : AREA_DEFAULT);
+      const allAreas = () => [...new Set([...areaBase(), ...DATA.map((x) => x.area)])];
       function chipsHtml(cur, opts) {
         return opts
           .map(

@@ -64,7 +64,7 @@ function merge_(server, client, del, replace) {
   });
 
   // map sederhana: gabungkan, nilai klien menang
-  ['codefix', 'dcPick', 'dest'].forEach(function (name) {
+  ['codefix', 'dcPick', 'dest', 'areacfg'].forEach(function (name) {
     var key = K[name];
     var sv = isObj_(server[key]) ? server[key] : {};
     var c = isObj_(client[key]) ? client[key] : {};

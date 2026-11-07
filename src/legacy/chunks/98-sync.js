@@ -9,7 +9,7 @@
       const syKey = { counts: K_C, dc: K_D, tasks: K_T, closed: K_X };
       const syGetV = { counts: () => counts, dc: () => dc, tasks: () => tasks, closed: () => closed };
       const sySetV = { counts: (v) => (counts = v), dc: (v) => (dc = v), tasks: (v) => (tasks = v), closed: (v) => (closed = v) };
-      const syPlain = { master: K_M, users: K_U, mon: K_MON, codefix: K_F, dcPick: K_DP, dest: "warehouse_so_dest_v1" };
+      const syPlain = { master: K_M, users: K_U, mon: K_MON, codefix: K_F, dcPick: K_DP, dest: "warehouse_so_dest_v1", areacfg: "warehouse_so_areacfg_v1" };
       // riwayat laporan (Kesesuaian, Muat, Clearing): dikirim ke server per tanggal untuk dibuat sheet laporan
       const syRpt = { kesH: K_KESH, muatH: K_MUATH, clrH: K_CLRH };
       const syRptMap = {
@@ -82,6 +82,7 @@
         if (has("codefix")) data[K_F] = codeFix;
         if (has("dcPick")) data[K_DP] = dcPick;
         if (has("dest")) data[syPlain.dest] = dest;
+        if (has("areacfg") && areaCfg) data[syPlain.areacfg] = areaCfg;
         syRkPend = {};
         Object.keys(syRpt).forEach((n) => {
           if (!has(n)) return;
@@ -168,6 +169,11 @@
           if (rd[K_DP] && !SY.rep.includes("dcPick") && !same("dcPick", rd[K_DP])) {
             dcPick = rd[K_DP];
             put(K_DP, dcPick);
+            changed = true;
+          }
+          if (rd[syPlain.areacfg] && Array.isArray(rd[syPlain.areacfg].list) && !SY.rep.includes("areacfg") && !same("areacfg", rd[syPlain.areacfg])) {
+            areaCfg = rd[syPlain.areacfg];
+            put(syPlain.areacfg, areaCfg);
             changed = true;
           }
           if (rd[syPlain.dest] && !SY.rep.includes("dest") && !same("dest", rd[syPlain.dest])) {

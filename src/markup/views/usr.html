@@ -20,6 +20,13 @@
             <button class="btn pri mt-lg" id="uAdd">Simpan user</button>
             <button class="btn sec mt" id="uCancel" hidden>Batal</button>
           </div>
+          <h3 class="sec">Daftar area</h3>
+          <div class="panel">
+            <p class="fine">Area dipakai untuk pemeriksaan per bin dan cek kesesuaian. Bin-nya datang dari kolom Area di Informasi Rak WMS, jadi nama area harus sama persis.</p>
+            <div class="chips wrap" id="aCfgList" role="group" aria-label="Daftar area"></div>
+            <div class="row2 mt"><div><label for="aCfgIn">Tambah area</label><input id="aCfgIn" placeholder="mis. A3" maxlength="12" autocomplete="off" autocapitalize="characters" /></div><div><label>&nbsp;</label><button class="btn pri sm" id="aCfgAdd" type="button">Tambah</button></div></div>
+            <button class="btn sec sm mt" id="aCfgReset" type="button">Kembalikan daftar awal</button>
+          </div>
           <h3 class="sec">Status area</h3>
           <div id="aStat"></div>
           <div class="panel mt-lg">

@@ -45,7 +45,7 @@
  * "data" memakai nama kunci yang sama dengan localStorage aplikasi:
  *   warehouse_so_master_v2, warehouse_so_counts_v2, warehouse_so_codefix_v1,
  *   warehouse_so_users_v1, warehouse_so_closed_v1, warehouse_dc_v1,
- *   warehouse_dc_pick_v1, warehouse_so_dest_v1, warehouse_so_tasks_v1,
+ *   warehouse_dc_pick_v1, warehouse_so_dest_v1, warehouse_so_areacfg_v1, warehouse_so_tasks_v1,
  *   warehouse_so_mon_v1
  *
  * "del" (opsional) = rekaman yang dihapus/diurungkan di perangkat:
@@ -65,6 +65,7 @@ var K = {
   dc: 'warehouse_dc_v1',
   dcPick: 'warehouse_dc_pick_v1',
   dest: 'warehouse_so_dest_v1',
+  areacfg: 'warehouse_so_areacfg_v1',   // daftar area yang diatur admin: { list: ["A1", ...] }
   tasks: 'warehouse_so_tasks_v1',
   mon: 'warehouse_so_mon_v1',
   // riwayat laporan per tanggal (dikirim aplikasi, hanya untuk membuat sheet laporan)
