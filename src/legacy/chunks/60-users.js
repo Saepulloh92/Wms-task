@@ -217,9 +217,9 @@
       }
       async function closeArea(a) {
         if (!(await supAuth())) return;
-        const s = areaStat(a);
-        if (!s.total || s.done < s.total) return toast("Area belum bisa ditutup: masih ada bin yang belum diperiksa.");
-        if (!(await ask("Tutup area " + a + "?", "Bin di area ini tidak bisa diubah sampai dibuka kembali.", "Tutup area"))) return;
+        const s = areaStat(a), wms = s.total > 0;
+        if (wms && s.done < s.total) return toast("Area belum bisa ditutup: masih ada bin yang belum diperiksa.");
+        if (!(await ask((wms ? "Tutup" : "Kunci") + " area " + a + "?", wms ? "Bin di area ini tidak bisa diubah sampai dibuka kembali." : "Area mandiri (di luar WMS) dikunci sampai dibuka kembali.", wms ? "Tutup area" : "Kunci area"))) return;
         closed[a] = { by: curName() || "Supervisor", at: new Date().toISOString() };
         sv(K_X, closed);
         toast("Area " + a + " ditutup");
@@ -238,7 +238,7 @@
         renderUsr();
       }
       function renderUsr() {
-        const A = areas();
+        const A = allAreas();
         const eu = uEdit && users.find((x) => x.id === uEdit),
           adminRole = $("uRole").value === "admin";
         $("uTitle").textContent = uEdit ? "Ubah user" : "Tambah user";
@@ -269,7 +269,7 @@
                     : u.areas
                         .map((a) => {
                           const s = areaStat(a);
-                          return `<span class="pill ${isClosed(a) ? "green" : s.done ? "amber" : ""}">${esc(a)} ${isClosed(a) ? "ditutup" : s.done + "/" + s.total}</span>`;
+                          return `<span class="pill ${isClosed(a) ? "green" : s.done ? "amber" : ""}">${esc(a)} ${isClosed(a) ? (s.total ? "ditutup" : "terkunci") : s.total ? s.done + "/" + s.total : "mandiri"}</span>`;
                         })
                         .join(" ") || '<span class="m">Belum ada area</span>',
                   self = meUser() && meUser().id === u.id;
@@ -281,8 +281,9 @@
           const s = areaStat(a),
             c = isClosed(a),
             full = s.total && s.done === s.total,
+            mand = !s.total,
             ow = owners(a);
-          return `<div class="card"><div class="r"><b class="big">Area ${esc(a)}</b><span class="pill ${c ? "green" : full ? "amber" : ""}">${c ? "Ditutup" : full ? "Siap ditutup" : "Berjalan"}</span></div><div class="m">${s.done} dari ${s.total} bin diperiksa. Petugas: ${ow.length ? esc(ow.join(", ")) : "belum ada"}</div>${c ? `<div class="m">Ditutup oleh ${esc(closed[a].by)}</div>${isAdmin() ? `<button class="btn sec sm" data-reopen="${esc(a)}">Buka kembali</button>` : ""}` : full && isAdmin() ? `<button class="btn pri sm" data-close="${esc(a)}">Tutup area ${esc(a)}</button>` : ""}</div>`;
+          return `<div class="card"><div class="r"><b class="big">Area ${esc(a)}</b><span class="pill ${c ? "green" : full ? "amber" : ""}">${c ? (mand ? "Terkunci" : "Ditutup") : mand ? "Mandiri" : full ? "Siap ditutup" : "Berjalan"}</span></div><div class="m">${mand ? "Di luar WMS (tanpa daftar bin)." : s.done + " dari " + s.total + " bin diperiksa."} Petugas: ${ow.length ? esc(ow.join(", ")) : "belum ada"}</div>${c ? `<div class="m">Ditutup oleh ${esc(closed[a].by)}</div>${isAdmin() ? `<button class="btn sec sm" data-reopen="${esc(a)}">Buka kembali</button>` : ""}` : (full || mand) && isAdmin() ? `<button class="btn pri sm" data-close="${esc(a)}">${mand ? "Kunci" : "Tutup"} area ${esc(a)}</button>` : ""}</div>`;
         }).join("");
       }
       function resetUForm() {

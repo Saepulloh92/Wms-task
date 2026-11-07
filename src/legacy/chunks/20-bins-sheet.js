@@ -2,6 +2,10 @@
    asal: index-fixd.html baris 2623-2738 */
       /* ---------- daftar bin ---------- */
       const areas = () => [...new Set(DATA.map((x) => x.area))].sort();
+      /* Daftar area tetap (sesuai papan area gudang). Area yang tidak ada di Informasi Rak WMS berdiri sendiri (mandiri): tetap bisa dipilih, ditugaskan, dan dikunci. */
+      const AREA_TETAP = ["MC", "L", "D1", "D2", "C2", "C1", "B2", "B1", "A2", "E", "F", "M", "A1", "G", "O", "P", "N", "H"];
+      const allAreas = () => [...new Set([...AREA_TETAP, ...DATA.map((x) => x.area)])];
+      const isWmsArea = (a) => DATA.some((x) => x.area === a);
       function chipsHtml(cur, opts) {
         return opts
           .map(
