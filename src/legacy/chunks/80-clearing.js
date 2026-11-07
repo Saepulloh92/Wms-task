@@ -99,6 +99,25 @@
         });
         return res.map(({ v, q, k, t, lr }) => ({ v, q, k, t, lr }));
       }
+      /* waktu foto counting -> ms (NaN bila tidak terbaca): ISO, dd/mm/yyyy hh:mm, atau serial Excel */
+      function clrTs(t) {
+        const x = String(t || "").trim();
+        if (!x) return NaN;
+        if (/^\d+(\.\d+)?$/.test(x)) { const n = Number(x); return n > 20000 && n < 80000 ? Math.round((n - 25569) * 864e5) : NaN; }
+        const m = x.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})(?:[ T,]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+        if (m) return new Date(+m[3], +m[2] - 1, +m[1], +(m[4] || 0), +(m[5] || 0), +(m[6] || 0)).getTime();
+        return Date.parse(x);
+      }
+      /* beberapa baris counting untuk satu voucher: pakai yang TERBARU (waktu foto bila terbaca semua, kalau tidak baris paling bawah) */
+      function clrLatest(rows) {
+        const ts = rows.map((r) => clrTs(r.t));
+        if (ts.every((v) => !isNaN(v))) {
+          let bi = 0;
+          ts.forEach((v, i) => { if (v >= ts[bi]) bi = i; });
+          return rows[bi];
+        }
+        return rows[rows.length - 1];
+      }
       function clrBuild() {
         const rep = clrRep ? clrRep.rows : [], cnt = clrCnt ? clrCnt.rows : [];
         const cm = new Map();
@@ -113,15 +132,13 @@
           seen.add(k);
           const g = cm.get(k);
           if (!g) return list.push({ v: r.v, sms: "", kc: "", qR: r.q, qC: null, diff: null, st: "belum", n: r.n, r: r.r, rc: 0, lori: r.lr || "", shift: r.sh || "", tm: "", pic: r.pic || "", grp: r.grp || "" });
-          const qs = g.rows.map((x) => x.q);
-          const qC = qs.every((x) => x == null) ? null : qs.reduce((a, b) => a + (b || 0), 0);
-          const kc = (g.rows.find((x) => sms8(x.k)) || g.rows[0]).k || "";
+          const lt = clrLatest(g.rows), qC = lt.q == null ? null : lt.q;
+          const kc = lt.k || (g.rows.find((x) => sms8(x.k)) || {}).k || "";
           const sms = sms8(kc), sr = sms8(r.k), diff = qC == null || r.q == null ? null : qC - r.q;
           let st = "ok";
-          if (g.rows.length > 1) st = "dup";
-          else if (diff !== 0) st = "qty";
+          if (diff !== 0) st = "qty";
           else if (sms && sr && sms !== sr) st = "sms";
-          const tm = (g.rows.find((x) => x.t) || {}).t || "", lori = r.lr || (g.rows.find((x) => x.lr) || {}).lr || "";
+          const tm = lt.t || (g.rows.find((x) => x.t) || {}).t || "", lori = r.lr || lt.lr || (g.rows.find((x) => x.lr) || {}).lr || "";
           list.push({ v: r.v, sms, kc, qR: r.q, qC, diff, st, n: r.n, r: r.r, rc: g.rows.length, lori, shift: r.sh || clrShiftOf(tm), tm, pic: r.pic || "", grp: r.grp || "" });
         });
         // hanya voucher yang ada di Laporan Voucher yang diimpor; baris counting lain diabaikan
@@ -162,7 +179,7 @@
         $("clrList").innerHTML = (vis.length ? vis.slice(0, 300).map((x) => {
           const [lb, cl] = CLR_ST[x.st];
           const d = x.diff == null ? "" : x.diff === 0 ? "0" : (x.diff > 0 ? "+" : "") + fmt(x.diff);
-          return `<div class="card vc s-${x.st}"><div class="r"><b class="id">${esc(x.v)}</b><span class="pill ${cl}">${lb}</span>${clrIsDone(x) ? ' <span class="pill green">Selesai</span>' : ""}</div>${x.n ? `<div class="nm">${esc(x.n)}${x.r ? ", rak " + esc(x.r) : ""}</div>` : ""}<dl class="kv k3"><div><dt>Shift</dt><dd>${esc(x.shift || "-")}${x.tm ? "<small>" + esc((String(x.tm).match(/\d{1,2}:\d{2}/) || [""])[0]) + "</small>" : ""}</dd></div><div><dt>No Lori</dt><dd class="id">${esc(x.lori || "-")}</dd></div><div><dt>Selisih</dt><dd class="${x.diff ? "neg" : ""}">${d || "-"}</dd></div><div><dt>SMS</dt><dd class="id">${esc(x.sms || "-")}</dd></div><div><dt>Qty WMS</dt><dd>${x.qR == null ? "-" : fmt(x.qR)}</dd></div><div><dt>Qty count</dt><dd>${x.qC == null ? "-" : fmt(x.qC)}</dd></div></dl>${x.rc > 1 ? `<div class="m">${x.rc} baris counting untuk voucher ini.</div>` : ""}${clrAct(x)}</div>`;
+          return `<div class="card vc s-${x.st}"><div class="r"><b class="id">${esc(x.v)}</b><span class="pill ${cl}">${lb}</span>${clrIsDone(x) ? ' <span class="pill green">Selesai</span>' : ""}</div>${x.n ? `<div class="nm">${esc(x.n)}${x.r ? ", rak " + esc(x.r) : ""}</div>` : ""}<dl class="kv k3"><div><dt>Shift</dt><dd>${esc(x.shift || "-")}${x.tm ? "<small>" + esc((String(x.tm).match(/\d{1,2}:\d{2}/) || [""])[0]) + "</small>" : ""}</dd></div><div><dt>No Lori</dt><dd class="id">${esc(x.lori || "-")}</dd></div><div><dt>Selisih</dt><dd class="${x.diff ? "neg" : ""}">${d || "-"}</dd></div><div><dt>SMS</dt><dd class="id">${esc(x.sms || "-")}</dd></div><div><dt>Qty WMS</dt><dd>${x.qR == null ? "-" : fmt(x.qR)}</dd></div><div><dt>Qty count</dt><dd>${x.qC == null ? "-" : fmt(x.qC)}</dd></div></dl>${x.rc > 1 ? `<div class="m">${x.rc} foto counting untuk voucher ini, dipakai yang terbaru.</div>` : ""}${clrAct(x)}</div>`;
         }).join("") + (vis.length > 300 ? `<p class="fine">Menampilkan 300 dari ${fmt(vis.length)}. Pakai pencarian atau filter.</p>` : "") : `<div class="empty">${all.length ? "Tidak ada voucher di filter ini." : "Muat Laporan Voucher dan counting dulu."}</div>`);
       }
       async function clrFetch(manual) {
