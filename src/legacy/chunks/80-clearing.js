@@ -118,6 +118,7 @@
         }
         return rows[rows.length - 1];
       }
+      const CLR_IKAT = 25; // isi satu ikatan
       function clrBuild() {
         const rep = clrRep ? clrRep.rows : [], cnt = clrCnt ? clrCnt.rows : [];
         const cm = new Map();
@@ -132,14 +133,22 @@
           seen.add(k);
           const g = cm.get(k);
           if (!g) return list.push({ v: r.v, sms: "", kc: "", qR: r.q, qC: null, diff: null, st: "belum", n: r.n, r: r.r, rc: 0, lori: r.lr || "", shift: r.sh || "", tm: "", pic: r.pic || "", grp: r.grp || "" });
-          const lt = clrLatest(g.rows), qC = lt.q == null ? null : lt.q;
+          const lt = clrLatest(g.rows);
+          let qC = lt.q == null ? null : lt.q, ik = 0;
           const kc = lt.k || (g.rows.find((x) => sms8(x.k)) || {}).k || "";
-          const sms = sms8(kc), sr = sms8(r.k), diff = qC == null || r.q == null ? null : qC - r.q;
+          let diff = qC == null || r.q == null ? null : qC - r.q;
+          // counting dalam ikatan: qty counting x CLR_IKAT = qty laporan (mis. 42 x 25 = 1050) dianggap cocok.
+          // Selisih ratusan/ribuan yang jauh mengecil bila dikali ikatan juga dibaca sebagai ikatan (selisihnya dihitung setelah dikali).
+          if (diff != null && diff !== 0 && qC > 0) {
+            const e = qC * CLR_IKAT, nd = e - r.q;
+            if (nd === 0 || (Math.abs(diff) >= 100 && Math.abs(nd) < Math.abs(diff))) { ik = qC; qC = e; diff = nd; }
+          }
+          const sms = sms8(kc), sr = sms8(r.k);
           let st = "ok";
           if (diff !== 0) st = "qty";
           else if (sms && sr && sms !== sr) st = "sms";
           const tm = lt.t || (g.rows.find((x) => x.t) || {}).t || "", lori = r.lr || lt.lr || (g.rows.find((x) => x.lr) || {}).lr || "";
-          list.push({ v: r.v, sms, kc, qR: r.q, qC, diff, st, n: r.n, r: r.r, rc: g.rows.length, lori, shift: r.sh || clrShiftOf(tm), tm, pic: r.pic || "", grp: r.grp || "" });
+          list.push({ v: r.v, sms, kc, qR: r.q, qC, diff, st, ik, n: r.n, r: r.r, rc: g.rows.length, lori, shift: r.sh || clrShiftOf(tm), tm, pic: r.pic || "", grp: r.grp || "" });
         });
         // hanya voucher yang ada di Laporan Voucher yang diimpor; baris counting lain diabaikan
         const ord = { dup: 0, qty: 1, sms: 2, belum: 3, ok: 4 };
@@ -181,7 +190,7 @@
         $("clrList").innerHTML = (vis.length ? vis.slice(0, 300).map((x) => {
           const [lb, cl] = CLR_ST[x.st];
           const d = x.diff == null ? "" : x.diff === 0 ? "0" : (x.diff > 0 ? "+" : "") + fmt(x.diff);
-          return `<div class="card vc s-${x.st}"><div class="r"><b class="id">${esc(x.v)}</b><span class="pill ${cl}">${lb}</span>${clrIsDone(x) ? ' <span class="pill green">Selesai</span>' : ""}</div>${x.n ? `<div class="nm">${esc(x.n)}${x.r ? ", rak " + esc(x.r) : ""}</div>` : ""}<dl class="kv k3"><div><dt>Shift</dt><dd>${esc(x.shift || "-")}${x.tm ? "<small>" + esc((String(x.tm).match(/\d{1,2}:\d{2}/) || [""])[0]) + "</small>" : ""}</dd></div><div><dt>No Lori</dt><dd class="id">${esc(x.lori || "-")}</dd></div><div><dt>Selisih</dt><dd class="${x.diff ? "neg" : ""}">${d || "-"}</dd></div><div><dt>SMS</dt><dd class="id">${esc(x.sms || "-")}</dd></div><div><dt>Qty WMS</dt><dd>${x.qR == null ? "-" : fmt(x.qR)}</dd></div><div><dt>Qty count</dt><dd>${x.qC == null ? "-" : fmt(x.qC)}</dd></div></dl>${x.rc > 1 ? `<div class="m">${x.rc} foto counting untuk voucher ini, dipakai yang terbaru.</div>` : ""}${clrAct(x)}</div>`;
+          return `<div class="card vc s-${x.st}"><div class="r"><b class="id">${esc(x.v)}</b><span class="pill ${cl}">${lb}</span>${clrIsDone(x) ? ' <span class="pill green">Selesai</span>' : ""}</div>${x.n ? `<div class="nm">${esc(x.n)}${x.r ? ", rak " + esc(x.r) : ""}</div>` : ""}<dl class="kv k3"><div><dt>Shift</dt><dd>${esc(x.shift || "-")}${x.tm ? "<small>" + esc((String(x.tm).match(/\d{1,2}:\d{2}/) || [""])[0]) + "</small>" : ""}</dd></div><div><dt>No Lori</dt><dd class="id">${esc(x.lori || "-")}</dd></div><div><dt>Selisih</dt><dd class="${x.diff ? "neg" : ""}">${d || "-"}</dd></div><div><dt>SMS</dt><dd class="id">${esc(x.sms || "-")}</dd></div><div><dt>Qty WMS</dt><dd>${x.qR == null ? "-" : fmt(x.qR)}</dd></div><div><dt>Qty count</dt><dd>${x.qC == null ? "-" : fmt(x.qC)}</dd></div></dl>${x.ik ? `<div class="m">Counting ${fmt(x.ik)} ikat × ${CLR_IKAT} = ${fmt(x.qC)}.</div>` : ""}${x.rc > 1 ? `<div class="m">${x.rc} foto counting untuk voucher ini, dipakai yang terbaru.</div>` : ""}${clrAct(x)}</div>`;
         }).join("") + (vis.length > 300 ? `<p class="fine">Menampilkan 300 dari ${fmt(vis.length)}. Pakai pencarian atau filter.</p>` : "") : `<div class="empty">${all.length ? "Tidak ada voucher di filter ini." : "Muat Laporan Voucher dan counting dulu."}</div>`);
       }
       async function clrFetch(manual) {
