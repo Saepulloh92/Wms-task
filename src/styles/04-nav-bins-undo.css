@@ -1,0 +1,92 @@
+/* asal: index-fixd.html baris 942-1032 */
+      /* ---- v4: navigasi bawah, kerapian, keamanan input ---- */
+      .mg { font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); padding: 12px 14px 4px; }
+      .mg:first-child { padding-top: 4px; }
+      .tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: #fff; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(5, 1fr); padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -4px 16px #26303814; }
+      .tabs button { position: relative; border: 0; background: none; min-height: 60px; padding: 6px 2px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 13px; font-weight: 700; color: var(--muted); touch-action: manipulation; }
+      .tabs button svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .tabs button.on { color: var(--blue); }
+      .tabs button.on::before { content: ""; position: absolute; top: 0; left: 22%; right: 22%; height: 3px; border-radius: 0 0 3px 3px; background: var(--blue); }
+      .tabs button:active { background: var(--bg); }
+      .tabs .bd { position: absolute; top: 4px; left: calc(50% + 6px); background: var(--red); color: #fff; border-radius: 10px; font-size: 12px; line-height: 18px; min-width: 18px; padding: 0 5px; text-align: center; }
+      .app { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+      #toast { bottom: calc(80px + env(safe-area-inset-bottom)); }
+      .note.warnbox, .prev .big-diff { font-weight: 700; }
+      .prev .bigdiff { margin-top: 6px; font-weight: 700; color: var(--red); }
+      .dlg > div { box-shadow: 0 20px 60px #0005; }
+      @media (min-width: 900px) {
+        .tabs { display: none; }
+        .app { padding-bottom: 24px; }
+        #toast { bottom: 24px; }
+        .content { max-width: 960px; }
+        header .prog { max-width: 960px; }
+        .bin-list { grid-template-columns: repeat(2, 1fr); }
+        main { padding: 20px 24px; }
+      }
+      @media (min-width: 1200px) {
+        .bin-list { grid-template-columns: repeat(3, 1fr); }
+      }
+      @media (max-width: 380px) {
+        .tabs button { font-size: 12px; }
+        .row2 { gap: 8px; }
+      }
+      @media (hover: hover) {
+        .bin:hover, .pk:hover { border-color: #9fc1de; }
+        .chip:hover:not(.on) { border-color: #9fc1de; }
+        .btn:hover:not(:disabled) { filter: brightness(0.96); }
+        .mi:hover:not(.on) { background: var(--bg); }
+      }
+
+      /* ---- v5: navigasi bin, urungkan, proteksi data ---- */
+      .sh-head > div:nth-child(2) { min-width: 0; flex: 1; }
+      .sh-head small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .sh-nav { display: flex; gap: 6px; margin-left: auto; }
+      .sh-nav button {
+        background: #ffffff25; color: #fff; border: 0; border-radius: 10px;
+        width: 44px; height: 44px; font-size: 26px; font-weight: 800; line-height: 1;
+        display: grid; place-items: center; padding: 0 0 3px;
+      }
+      .sh-nav button:disabled { opacity: 0.3; cursor: default; }
+      .sh-nav button:active:not(:disabled) { background: #ffffff50; }
+      .sh-nav .un { font-size: 22px; background: #ffffff40; }
+      @media (max-width: 380px) {
+        .sh-nav button, .sh-head .x { width: 44px; height: 44px; }
+        .sh-nav { gap: 4px; }
+      }
+      .undobar {
+        display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        background: var(--blue2); border: 1px solid #bcd7ee; border-radius: 12px;
+        padding: 6px 6px 6px 12px; margin-top: 10px; font-size: 14px; color: #254a6d;
+      }
+      .undobar button {
+        flex: none; border: 2px solid var(--blue); background: #fff; color: var(--blue);
+        border-radius: 10px; font-weight: 800; padding: 0 14px; min-height: 42px; font-size: 15px;
+      }
+      #toast button {
+        margin-left: 12px; background: none; border: 2px solid #ffffff70; color: #fff;
+        border-radius: 8px; font-weight: 800; padding: 2px 14px; min-height: 44px; font-size: 15px;
+      }
+      #toast { width: max-content; }
+      #toast.up { bottom: calc(170px + env(safe-area-inset-bottom)); }
+      .guard { display: grid; gap: 8px; margin-bottom: 12px; }
+      .guard:empty { display: none; }
+      .gd { border-radius: 12px; padding: 12px 14px; border: 1px solid; font-size: 14px; }
+      .gd b { display: block; font-size: 15px; margin-bottom: 2px; }
+      .gd .ga { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+      .gd .ga button { border-radius: 10px; font-weight: 800; padding: 0 14px; min-height: 44px; font-size: 15px; border: 2px solid; }
+      .gd .ga .p { background: var(--navy); border-color: var(--navy); color: #fff; }
+      .gd .ga .s { background: #fff; border-color: currentColor; color: inherit; }
+      .gd.err { background: var(--redbg); border-color: #efc4c0; color: #8d2822; }
+      .gd.warn { background: var(--amberbg); border-color: #ead19b; color: var(--amber); }
+      .gd.info { background: var(--blue2); border-color: #bcd7ee; color: #254a6d; }
+      .meter { height: 8px; border-radius: 5px; background: var(--line); overflow: hidden; margin: 10px 0 4px; }
+      .meter i { display: block; height: 100%; background: var(--blue); }
+      .meter.hi i { background: #c98a00; }
+      .meter.full i { background: var(--red); }
+      .qtyrow button { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+      #errBk { margin-bottom: 0; }
+      .sw { display: flex; align-items: flex-start; gap: 12px; margin: 12px 0 0; font-weight: 700; min-height: 48px; padding: 6px 0; cursor: pointer; }
+      .sw input { width: 28px; height: 28px; min-height: 28px; flex: none; margin: 1px 0 0; padding: 0; accent-color: var(--blue); }
+      .sw small { display: block; font-weight: 400; color: var(--muted); font-size: 13px; }
+      #tgRes:not(:empty) { margin-top: 10px; }
+      .tgq { font-size: 14px; margin: 0 0 10px; }

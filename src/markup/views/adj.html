@@ -1,0 +1,26 @@
+            <h2>File Adjust</h2>
+            <p class="hint">Dibuat otomatis dari hasil pemeriksaan. Hanya selisih yang masuk.</p>
+            <div class="stats" id="adjStats" aria-live="polite" aria-atomic="true"></div>
+            <div id="adjWarn"></div>
+            <div id="adjList"></div>
+            <details>
+              <summary>Pengaturan file Adjust</summary>
+              <div class="set">
+                <label for="aTgl">Tanggal</label><input id="aTgl" type="date" />
+                <div class="row2">
+                  <div>
+                    <label for="aSite">Site</label><input id="aSite" value="10021" inputmode="numeric" />
+                  </div>
+                  <div>
+                    <label for="aKat">Kode Kategori</label><input id="aKat" value="1" inputmode="numeric" />
+                  </div>
+                </div>
+                <label for="aLoc">Location</label><input id="aLoc" value="L-PIPA" />
+                <p class="fine">Format rak diubah otomatis, misalnya B1-16-B menjadi B1-16B.</p>
+              </div>
+            </details>
+            <button class="btn pri" id="btnAdj">Unduh file Adjust (.xlsx)</button>
+            <button class="btn sec mt" id="btnAdjCopy">
+              Salin untuk ditempel ke Excel
+            </button>
+            <button class="btn sec mt" data-tg="adj">Kirim daftar selisih ke Telegram</button>

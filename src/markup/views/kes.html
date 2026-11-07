@@ -1,0 +1,21 @@
+            <h2>Cek Kesesuaian</h2>
+            <p class="hint">Cek rak dan stok per bin dari data WMS yang dimuat.</p>
+            <div id="kVerdict"></div>
+            <div class="chips" id="kChips"></div>
+            <div id="kList"></div>
+            <button class="btn pri mt" id="kCopy" type="button">Salin laporan kesesuaian</button>
+            <button class="btn sec mt" data-tg="kCopy" type="button">Kirim laporan ke Telegram</button>
+            <button class="btn sec mt ximp" id="kCsv" type="button">Unduh laporan (CSV)</button>
+            <h3 class="sec">Riwayat laporan tersimpan</h3>
+            <p class="fine">Laporan tersimpan otomatis tiap hari, tidak perlu menekan tombol simpan.</p>
+            <div id="kHist"></div>
+            <details>
+              <summary>Aturan pengecekan</summary>
+              <div class="set">
+                <label for="kfa">Rak berakhiran A untuk produk</label><input id="kfa" value="STANDARD D" />
+                <label for="kfb">Rak berakhiran B untuk produk</label><input id="kfb" value="JIS AW" />
+                <label for="klow">Dianggap stok sedikit jika ≤</label
+                ><input id="klow" type="number" inputmode="numeric" value="5" />
+                <p class="fine">Aturan ini khusus gudang pipa. Kosongkan kolom produk jika gudang Anda tidak memakai aturan rak A/B. Pengaturan tersimpan di perangkat.</p>
+              </div>
+            </details>

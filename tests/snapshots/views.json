@@ -1,0 +1,106 @@
+{
+ "so": {
+  "title": "Periksa Bin",
+  "sub": "2 bin perlu review",
+  "hidden": [
+   "v-so"
+  ],
+  "text": "Pilih bin yang diperiksa Ketuk bin untuk mulai menghitung. Lanjut: B1-01-B · 33 belum Cari bin (papan angka) Filter petugas, area, cari teks Petugas Semua petugas (admin) Budi Sari Andi Area Semua area B1 Cari Area B1: 3 dari 36 bin diperiksa. Semua 36 Belum 33 Perlu review 2 Sesuai 1 B1-01-A PIPA RUCIKA STANDARD D 3\" SC 4M 630 qty WMS Sesuai B1-01-B PIPA RUCIKA JIS AW 1\" SC 4M – qty WMS Belum B1-02-A PIPA RUCIKA STANDARD D 3\" SC 4M 2.773 qty WMS Selisih qty B1-02-B PIPA RUCIKA JIS AW 1\" SC 4M – qty WMS Belum B1-03-A PIPA RUCIKA STANDARD D 2 1/2\" SC 4M 6.731 qty WMS Item beda B1-03-B PIPA RUCIKA JIS AW 1 1/4\" SC 4M – qty WMS Belum B1-04-A PIPA RUCIKA STANDARD D 2 1/2\" SC 4M – qty WMS Belum B1-04-B PIPA RUCIKA JIS AW 2\" SC 4M – qty WMS Belum B1-05-A PIPA RUCIKA STANDARD D 3\" SC 4M – qty WMS Belum B1-05-B PIPA RUCIKA JIS AW 2\" SC 4M – qty WMS Belum B1-06-A PIPA RUCIKA STANDARD D 3\" SC 4M – qty WMS Belum"
+ },
+ "dc": {
+  "title": "DC Harian",
+  "sub": "Cek harian per item",
+  "hidden": [
+   "v-dc"
+  ],
+  "text": "DC Harian Pilih item bebas, catat qty per rak, lalu cocokkan dengan stok sistem. Item dicek 0/0 Belum dicek 0 Sesuai 0 Selisih 0 Pilih item DC (0) Cari item Belum 0 Selisih 0 Sesuai 0 Semua 0 Belum ada item yang dipilih. Ketuk Pilih item DC di atas. Salin & kirim rekap ke Telegram Mulai DC baru"
+ },
+ "check": {
+  "title": "Review Supervisor",
+  "sub": "2 bin perlu review",
+  "hidden": [
+   "v-check"
+  ],
+  "text": "Review Supervisor Bin yang item atau qty-nya tidak sesuai. Diperiksa 3/36 Sesuai 1 Perlu review 2 Belum 33 Perlu review 2 Sesuai 1 Belum 33 Semua 36 B1-02-A Selisih qty PIPA RUCIKA STANDARD D 3\" SC 4M WMS 2.773 · Fisik 2.700 -73 Catatan: kurang Periksa ulang B1-03-A Item beda PIPA RUCIKA STANDARD D 2 1/2\" SC 4M WMS 6.731 · Fisik 5 -6.726 Ditemukan: LAIN (5) Periksa ulang"
+ },
+ "adj": {
+  "title": "File Adjust",
+  "sub": "Selisih siap diunggah",
+  "hidden": [
+   "v-adj"
+  ],
+  "text": "File Adjust Dibuat otomatis dari hasil pemeriksaan. Hanya selisih yang masuk. Baris adjust 3 Total tambah +5 Total kurang -6.801 Bin diperiksa 3 1 barang belum punya kode item. Isi kodenya agar masuk file. LAIN B1-02A -73 PIPA RUCIKA STANDARD D 3\" SC 4M 10172005089004 · SO selisih qty B1-03A -6.726 PIPA RUCIKA STANDARD D 2 1/2\" SC 4M 10172005076004 · SO selisih item WMS B1-03A +5 LAIN kode belum ada · SO item lain ditemukan di bin B1-16B -2 PIPA RUCIKA STANDARD D 10\" SC 4M 10172005267004 · Salah rak, keluarkan dari B1-16B Pengaturan file Adjust Unduh file Adjust (.xlsx) Salin untuk ditempel ke Excel Kirim daftar selisih ke Telegram"
+ },
+ "task": {
+  "title": "Tugas Bin",
+  "sub": "Tugas per petugas",
+  "hidden": [
+   "v-task"
+  ],
+  "text": "Tugas Bin Daftar bin tugas yang ditunjuk ke petugas. Selesai otomatis saat bin disimpan. Total tugas 0 Selesai 0 Belum 0 Tanpa petugas 0 Per petugas Budi Tidak ada tugas Sari Tidak ada tugas Andi Tidak ada tugas Hapus semua tugas"
+ },
+ "kes": {
+  "title": "Cek Kesesuaian",
+  "sub": "Bandingkan WMS dan fisik",
+  "hidden": [
+   "v-kes"
+  ],
+  "text": "Cek Kesesuaian Cek rak dan stok per bin dari data WMS yang dimuat. Rak dicek 36 Sesuai 33 Perlu adjust 1 Perlu dicek 2 Semua 11 Perlu adjust 1 Perlu dicek 2 Kosong 8 Perlu adjust (1) Bin Stok Masalah Item / keterangan B1-16-B 2 Barang di rak yang salah PIPA RUCIKA STANDARD D 10\" SC 4M Rak berakhiran B khusus JIS AW. Isinya PIPA RUCIKA STANDARD D 10\" SC 4M. Rak tujuan (boleh dikosongkan) B1-16-B adjust -2 Perlu dicek di lapangan (2) Bin Stok Masalah Item / keterangan B1-04-B 3 Stok tinggal sedikit PIPA RUCIKA JIS AW 2\" SC 4M Sisa 3. Cek langsung di rak. B1-07-B 1 Stok tinggal sedikit PIPA RUCIKA JIS AW 2 1/2\" SC 4M Sisa 1. Cek langsung di rak. Rak kosong (8) B1-01-B · B1-02-B · B1-03-B · B1-05-B · B1-06-B · B1-12-B · B1-13-B · B1-18-B Salin laporan kesesuaian Kirim laporan ke Telegram Riwayat laporan tersimpan Laporan tersimpan otomatis tiap hari, tidak perlu menekan tombol simpan. Belum ada laporan tersimpan. Aturan pengecekan"
+ },
+ "muat": {
+  "title": "Laporan Muat",
+  "sub": "Laporan muat",
+  "hidden": [
+   "v-muat"
+  ],
+  "text": "Laporan Muat Unggah laporan muat (Excel), teks WhatsApp langsung jadi. Pilih file laporan muat File: belum ada file Simpan, salin & kirim ke Telegram Belum ada laporan. Pilih file laporan muat (Excel) di atas. Riwayat laporan tersimpan Belum ada laporan yang disimpan. Pengaturan laporan"
+ },
+ "usr": {
+  "title": "User & Area",
+  "sub": "Atur petugas dan area",
+  "hidden": [
+   "v-usr"
+  ],
+  "text": "User & Area Kelola admin dan petugas: peran, PIN, area, dan status aktif. Admin Admin Tanpa PIN Akses penuh ke semua menu Ubah Nonaktifkan Hapus Budi Petugas Tanpa PIN B1 3/36 Menu: Operator Ubah Nonaktifkan Hapus Sari Petugas Tanpa PIN B1 3/36 Menu: Operator Ubah Nonaktifkan Hapus Andi Petugas Tanpa PIN B1 3/36 Menu: Operator Ubah Nonaktifkan Hapus Tambah user Nama Peran Petugas (menu diatur di bawah) Admin (semua menu) Area yang dikerjakan B1 Akses menu Operator Supervisor Periksa Bin DC Harian Tugas Bin Review Supervisor Cek Kesesuaian File Adjust Clearing Beranda Laporan Muat KPI Area Telegram Data WMS Menu yang tidak dicentang disembunyikan dari user ini. Menu User & Area selalu khusus admin. Aktif User nonaktif tidak bisa masuk dan tidak dapat tugas baru. Simpan user Status area Area B1 Berjalan 3 dari 36 bin diperiksa. Petugas: Budi, Sari, Andi Keamanan & mode periksa Mode hitung buta (disarankan untuk Stock Opname) Qty WMS disembunyikan saat menghitung dan tombol \"YA\" tidak mengisi qty otomatis. Hasil hitung jadi independen. PIN dan peran adalah pencegah salah pakai di perangkat bersama, bukan keamanan tingkat tinggi: data tetap ada di browser perangkat ini. Atur ulang PIN Untuk satu user, pilih Ubah di daftar user lalu isi PIN baru. Tombol di bawah menghapus PIN SEMUA user, termasuk PIN Anda, dan akses jadi terbuka sampai admin membuat PIN lagi."
+ },
+ "clr": {
+  "title": "Clearing",
+  "sub": "Voucher vs counting",
+  "hidden": [
+   "v-clr"
+  ],
+  "text": "Clearing Cocokkan No Voucher dan Qty dari Laporan Voucher dengan hasil counting. SMS diambil dari 8 angka depan kode item hasil counting. Cocok 0 Selisih / dobel 0 Belum dihitung 0 Tidak di laporan 0 1. Laporan Voucher (.xlsx / .csv) Belum ada laporan. Pilih file Laporan Voucher. 2. Hasil counting Link spreadsheet counting belum diatur (Pengaturan di bawah), atau muat dari file. Muat counting dari spreadsheet Semua 0 Perlu dicek 0 Ditandai selesai 0 Cocok 0 Belum dihitung 0 Tidak di laporan 0 Cari voucher / SMS / item Muat Laporan Voucher dan counting dulu. Salin data untuk input WMS Belum ada data untuk disimpan. Simpan, salin & kirim ke Telegram Riwayat clearing tersimpan Belum ada hasil clearing yang disimpan. Pengaturan spreadsheet counting"
+ },
+ "kpi": {
+  "title": "KPI Area",
+  "sub": "Capaian per area dan petugas",
+  "hidden": [
+   "v-kpi"
+  ],
+  "text": "KPI Area Capaian tiap area dan petugas. Akurasi = bin sesuai dibagi bin diperiksa. Progres 8% Akurasi 33% Area ditutup 0/1 Selisih qty 0 / -6.799 Area B1 Berjalan Petugas: Budi, Sari, Andi Diperiksa 3/36 (8%) Akurasi bin 33% Perlu review 2 Selisih qty 0 / -6.799 Durasi 50m Bin per jam 3,6 Per petugas Budi 1 bin diperiksa Akurasi bin 0% Perlu review 1 Sari 0 bin diperiksa Akurasi bin – Perlu review 0 Andi 2 bin diperiksa Akurasi bin 50% Perlu review 1 Salin KPI untuk WhatsApp Kirim KPI ke Telegram"
+ },
+ "tg": {
+  "title": "Telegram",
+  "sub": "Kirim info ke Telegram",
+  "hidden": [
+   "v-tg"
+  ],
+  "text": "Telegram Kirim informasi pemeriksaan ke grup atau chat Telegram lewat bot Anda. Token bot Tampilkan token Chat ID Ambil Chat ID otomatis ID topik (opsional, untuk grup bertopik) Buat bot lewat @BotFather, lalu masukkan bot ke grup (atau kirim satu pesan ke bot). Tombol \"Ambil Chat ID\" membaca pesan terakhir yang diterima bot. Kirim otomatis Bin yang perlu review Item beda atau selisih qty, saat disimpan. Setiap bin yang disimpan Termasuk yang sesuai. Bisa ramai. Area ditutup atau dibuka kembali Beserta capaian dan akurasi area. DC Harian selesai Stok sistem, fisik, dan selisih per item. Laporan lain (rekap DC, KPI, laporan muat, file Adjust) dikirim lewat tombol \"Kirim ke Telegram\" di halamannya masing-masing. Simpan pengaturan Kirim pesan tes Belum terhubung. Isi token dan Chat ID. Kirim ulang antrean Kosongkan antrean Pesan yang gagal karena tidak ada sinyal ditahan di perangkat dan dikirim otomatis saat koneksi kembali. Token hanya disimpan di perangkat ini dan tidak ikut file cadangan. Siapa pun yang memegang perangkat ini bisa membacanya, jadi pakai bot khusus gudang."
+ },
+ "mon": {
+  "title": "Beranda",
+  "sub": "Posisi mobil per wilayah",
+  "hidden": [
+   "v-mon"
+  ],
+  "text": "Beranda Mobil per wilayah dari Google Spreadsheet, dibandingkan dengan SPM yang dikerjakan di Laporan Muat. Muat ulang Mobil keluar dan SPM dikerjakan Laporan Muat belum diimpor. Impor file laporan muat supaya jumlah mobil keluar bisa dibandingkan dengan SPM yang dikerjakan. Buka Laporan Muat Belum ada data. Buka \"Pengaturan sumber & kolom\" di bawah, isi alamat spreadsheet, lalu ketuk Simpan & muat data. Kirim ringkasan ke Telegram Pengaturan sumber & kolom"
+ },
+ "data": {
+  "title": "Data WMS",
+  "sub": "Impor data WMS",
+  "hidden": [
+   "v-data"
+  ],
+  "text": "Data acuan WMS Impor Informasi Rak dari WMS (Excel atau CSV). Hasil pemeriksaan lama dikosongkan. Pilih file Impor data WMS Kolom wajib: Area, Rak (atau Bin), Kode Item, Nama Item, Onhand. Baris judul di atas header diabaikan. Sinkron Google Sheets Hasil periksa, DC, tugas, dan petugas disinkronkan antar perangkat dan tersalin ke Google Sheets Anda. Tanpa PIN. URL Web app (Apps Script) Token Sinkron otomatis Kirim beberapa detik setelah ada perubahan dan cek pembaruan tiap 45 detik. Tanpa internet, data tetap aman di perangkat dan dikirim saat online. Belum tersambung ke Google Sheets. Simpan dan sinkron Sinkron sekarang Cadangan data Belum pernah dicadangkan. Penyimpanan terpakai ± 0 MB dari ± 5 MB (perkiraan). Pulihkan dari file cadangan Pulihkan data Cadangan memuat data WMS, hasil periksa, DC, petugas, dan status area. Simpan filenya di tempat aman (misalnya kirim ke WhatsApp sendiri). 36 bin dimuat dari 1 area. Kembalikan data contoh Hapus semua hasil pemeriksaan"
+ }
+}

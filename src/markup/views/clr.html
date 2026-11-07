@@ -1,0 +1,51 @@
+          <h2>Clearing</h2>
+          <p class="hint">Cocokkan No Voucher dan Qty dari Laporan Voucher dengan hasil counting. SMS diambil dari 8 angka depan kode item hasil counting.</p>
+          <div class="stats" id="clrStats"></div>
+          <div id="clrRekap"></div>
+          <div class="panel">
+            <label for="clrRepFile">1. Laporan Voucher (.xlsx / .csv)</label>
+            <input id="clrRepFile" type="file" accept=".csv,.xls,.xlsx,text/csv" />
+            <p class="fine" id="clrRepInfo"></p>
+            <label>2. Hasil counting</label>
+            <p class="fine" id="clrCntInfo" role="status"></p>
+            <button class="btn pri" id="clrLoad" type="button">Muat counting dari spreadsheet</button>
+            <div class="ximp"><label for="clrCntFile">Atau muat counting dari file</label>
+            <input id="clrCntFile" type="file" accept=".csv,.xls,.xlsx,text/csv" /></div>
+          </div>
+          <div class="panel mt">
+            <div class="chips" id="clrChips"></div>
+            <div class="chips" id="clrShChips"></div>
+            <label for="clrQ">Cari voucher / SMS / item</label>
+            <input id="clrQ" type="search" placeholder="Contoh: 4043814" autocomplete="off" />
+            <div id="clrList" class="bin-list"></div>
+          </div>
+          <button class="btn pri mt ximp" id="clrCsv" type="button">Unduh hasil clearing (CSV)</button>
+          <details class="mt"><summary>Salin data untuk input WMS</summary><button class="btn sec mt" id="clrCopy" type="button">Salin No Voucher + SMS + Qty</button></details>
+          <div class="panel mt" id="clrSavePanel">
+            <p class="fine" id="clrSaveInfo" role="status" style="margin:0 0 10px"></p>
+            <button class="btn pri" id="clrSaveHist" type="button">Simpan, salin &amp; kirim ke Telegram</button>
+          </div>
+          <button class="ximp" data-tg="clrTg" type="button" tabindex="-1" aria-hidden="true">x</button>
+          <button class="btn sec mt" id="clrTg" type="button" hidden>tg</button>
+          <h3 class="sec">Riwayat clearing tersimpan</h3>
+          <div id="clrHist"></div>
+          <details class="panel mt" id="clrCfg">
+            <summary>Pengaturan spreadsheet counting</summary>
+            <div class="set">
+              <label for="clrUrl">Link spreadsheet hasil counting (Google Sheets atau CSV)</label>
+              <input id="clrUrl" placeholder="https://docs.google.com/spreadsheets/d/…" autocomplete="off" spellcheck="false" />
+              <p class="fine">Bagikan sebagai "Siapa saja yang memiliki link (Pelihat)". Jika bukan sheet pertama, salin link saat tab sheet itu terbuka (ada gid=…).</p>
+              <label for="clrStart">Data mulai baris ke</label>
+              <input id="clrStart" type="number" inputmode="numeric" min="1" value="2" />
+              <label for="clrCV">Kolom No Voucher</label>
+              <input id="clrCV" placeholder="Huruf kolom (A, B…) atau judul, contoh: No Voucher" autocomplete="off" />
+              <label for="clrCQ">Kolom Qty counting</label>
+              <input id="clrCQ" placeholder="Contoh: Qty" autocomplete="off" />
+              <label for="clrCK">Kolom Kode Item (sumber SMS, 8 angka depan)</label>
+              <input id="clrCK" placeholder="Contoh: Kode Item" autocomplete="off" />
+              <label for="clrSh1">Jam mulai Shift 1 / 2 / 3 (jam 0-23)</label>
+              <div class="shsw"><input id="clrSh1" aria-label="Jam mulai Shift 1" type="number" min="0" max="23" inputmode="numeric" /><input id="clrSh2" aria-label="Jam mulai Shift 2" type="number" min="0" max="23" inputmode="numeric" /><input id="clrSh3" aria-label="Jam mulai Shift 3" type="number" min="0" max="23" inputmode="numeric" /></div>
+              <p class="fine">Shift dibaca dari kolom Shift di laporan voucher; kalau tidak ada, dihitung dari jam foto counting. Kolom No Lori dibaca dari kolom berjudul lori / nopol / plat.</p>
+              <button class="btn pri mt-lg" id="clrSave" type="button">Simpan &amp; muat counting</button>
+            </div>
+          </details>

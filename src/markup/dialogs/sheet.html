@@ -1,0 +1,40 @@
+      <div class="sh-head">
+        <button class="x" id="shX" aria-label="Tutup"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        <div><b id="shBin"></b><small id="shPos"></small></div>
+      </div>
+      <div class="sh-body">
+        <div class="itembox"><div id="shItem"></div></div>
+        <label id="mLbl">1. Barang di bin sama dengan data WMS?</label>
+        <div class="choice" role="group" aria-labelledby="mLbl">
+          <button class="yes" id="yes" aria-pressed="false">YA, SAMA</button><button class="no" id="no" aria-pressed="false">TIDAK</button>
+        </div>
+        <div id="diffWrap" hidden>
+          <div class="warn">Barang berbeda. Catat barang lain yang ada di bin ini beserta qty-nya.</div>
+          <div id="lines"></div>
+          <button class="btn sec sm mt" id="addL">Tambah barang lain</button>
+        </div>
+        <label for="qty" id="qLbl">2. Qty fisik</label>
+        <div class="qtyrow">
+          <button id="qm" aria-label="Kurangi">−</button
+          ><input id="qty" type="number" inputmode="numeric" enterkeyhint="done" min="0" step="1" placeholder="0" autocomplete="off" /><button
+            id="qp"
+            aria-label="Tambah"
+          >
+            +
+          </button>
+        </div>
+        <button class="btn sec sm mt" id="qSame"></button>
+        <div id="prev"></div>
+        <label for="note">Catatan (opsional)</label
+        ><input id="note" placeholder="Contoh: label tidak terbaca" maxlength="200" enterkeyhint="done" autocomplete="off" />
+      </div>
+      <div class="sh-foot">
+        <div class="err" id="err" role="alert"></div>
+        <button class="btn sec sm ximp" id="errBk" hidden>Unduh cadangan sekarang</button>
+        <button class="btn sec sm" id="shUndo" type="button" hidden>Urungkan simpan terakhir</button>
+        <div class="sh-step">
+          <button class="nv" id="shPrev" type="button" aria-label="Bin sebelumnya" title="Bin sebelumnya"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <button class="btn pri" id="save">Simpan &amp; lanjut</button>
+          <button class="nv" id="shNext" type="button" aria-label="Bin berikutnya" title="Bin berikutnya"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+        </div>
+      </div>

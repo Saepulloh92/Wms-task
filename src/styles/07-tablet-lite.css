@@ -1,0 +1,75 @@
+/* asal: index-fixd.html baris 1242-1315 */
+      /* ---- v23: tablet (portrait 700-899, landscape 900+), sentuh nyaman ---- */
+      @media (min-width: 700px) and (max-width: 899px) {
+        main { max-width: 820px; margin: 0 auto; padding: 20px 28px; }
+        header .prog, .content { max-width: 820px; margin-left: auto; margin-right: auto; }
+        .tabs button { min-height: 72px; font-size: 14px; gap: 4px; }
+        .tabs button svg { width: 28px; height: 28px; }
+        .tabs .bd { left: calc(50% + 10px); }
+        .app { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+        #toast { bottom: calc(92px + env(safe-area-inset-bottom)); }
+        .side { width: 340px; }
+        .dr { grid-template-columns: 1fr 150px 56px; }
+        .tot { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+      }
+      @media (min-width: 900px) and (max-width: 1199px) {
+        .app { padding-left: 260px; }
+        .side { width: 260px; }
+        main { padding: 20px 24px; }
+        .bin-list { grid-template-columns: repeat(2, 1fr); }
+      }
+      @media (min-width: 1280px) {
+        .content, header .prog { max-width: 1180px; }
+        .bin-list { grid-template-columns: repeat(3, 1fr); }
+      }
+      /* sheet (DC, pilih item) tidak menimpa sidebar saat landscape */
+      @media (min-width: 900px) {
+        .sheet { inset: 24px 24px 24px calc(284px + 24px); max-width: none; margin: 0; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px #0007; }
+      }
+      @media (min-width: 900px) and (max-width: 1199px) {
+        .sheet { inset: 24px 24px 24px calc(260px + 24px); }
+      }
+      @media (min-width: 700px) and (max-width: 899px) {
+        .sheet { inset: 24px 32px; max-width: 760px; margin: auto; }
+      }
+      /* layar sentuh: target jari besar, tanpa perlu presisi */
+      @media (pointer: coarse) and (min-width: 700px) {
+        button, .btn, label.btn { min-height: 52px; }
+        .chip { min-height: 48px; padding: 0 18px; font-size: 16px; }
+        input, select, textarea { min-height: 52px; }
+        .mi { min-height: 56px; }
+        .bin, .pk, .card { touch-action: manipulation; }
+        .sw input[type="checkbox"] { width: 28px; height: 28px; }
+        .undobar button { min-height: 48px; }
+        .dr .rm { height: 56px; }
+        .dr-qty, .dr-rak { font-size: 20px; }
+        * { -webkit-tap-highlight-color: transparent; }
+      }
+      @media (min-width: 900px) { .burger { display: none !important; } }
+      @media (pointer: coarse) { #pgT:focus-visible { outline: none; } }
+      @media (pointer: coarse) and (min-width: 700px) { .pk { min-height: 64px; } .bin { min-height: 64px; } }
+      /* tablet dipegang miring: kartu clearing & statistik lebih lega */
+      @media (min-width: 700px) {
+        #clrList { grid-template-columns: repeat(2, 1fr); }
+        .kv.k3 dd { font-size: 18px; }
+        .stats { gap: 12px; }
+      }
+      @media (min-width: 1200px) {
+        #clrList { grid-template-columns: repeat(3, 1fr); }
+      }
+
+      .kv.k3 { grid-template-columns: repeat(3, 1fr); }
+      .kv.k3 dd small { display: block; font-size: 12px; font-weight: 600; color: var(--muted); }
+      .shsw { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .shsw input { width: 100%; min-width: 0; }
+      #clrShChips { margin-top: 6px; }
+
+      /* ---- v24: PIN dimatikan + ringan di HP ---- */
+      #uPin, #uPinL, #uPinH, #uResetPin, #uBoot { display: none !important; }
+      html { overscroll-behavior-y: none; }
+      .sh-body, .sd-m { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+      .bin, .card, .pk { content-visibility: auto; contain-intrinsic-size: auto 76px; }
+      @media (max-width: 899px) {
+        .tabs, .side { box-shadow: none; }
+        header { contain: layout paint; }
+      }

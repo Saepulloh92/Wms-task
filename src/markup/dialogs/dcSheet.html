@@ -1,0 +1,28 @@
+      <div class="sh-head">
+        <button class="x" id="dcX" aria-label="Tutup"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        <div><b id="dcName"></b><small id="dcKode"></small></div>
+      </div>
+      <div class="sh-body">
+        <div class="itembox">
+          <label for="dcSys" style="margin-top: 0">Stok sistem (QAD)</label>
+          <input id="dcSys" type="number" inputmode="numeric" min="0" step="1" />
+          <p class="fine" id="dcSysHint"></p>
+        </div>
+        <label id="dcSugL">Rak di WMS untuk item ini (ketuk untuk menambah)</label>
+        <div class="chips wrap" id="dcSug" role="group" aria-labelledby="dcSugL"></div>
+        <label id="dcRowsL">Hasil hitung per rak</label>
+        <div id="dcRows" role="group" aria-labelledby="dcRowsL"></div>
+        <button class="btn sec sm mt" id="dcAdd">Tambah rak</button>
+        <p class="fine" id="dcMiss"></p>
+        <div id="dcAdjWrap" hidden>
+          <label for="dcAdjRak">Catat selisih di rak</label>
+          <select id="dcAdjRak"></select>
+          <p class="fine">Selisih total dicatat pada satu rak untuk file Adjust.</p>
+        </div>
+        <datalist id="dcRakList"></datalist>
+      </div>
+      <div class="sh-foot">
+        <div class="err" id="dcErr" role="alert"></div>
+        <div class="tot" id="dcTot"></div>
+        <div class="row2"><button class="btn sec" id="dcDraft">Simpan draft</button><button class="btn pri" id="dcDone">Selesai</button></div>
+      </div>

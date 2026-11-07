@@ -1,0 +1,51 @@
+/* asal: index-fixd.html baris 892-941 */
+      /* ---- petugas & area ---- */
+      #user + .row2 { margin-top: 12px; }
+      .note.ok { background: var(--greenbg); color: var(--green); }
+      .note.info { background: var(--blue2); color: var(--blue); }
+      .note .btn { margin-top: 10px; }
+      .acts { display: flex; gap: 8px; }
+      .btn.inl { width: auto; padding: 0 16px; }
+      .panel h3 { margin: 0 0 4px; font-size: 18px; }
+      h3.sec { margin: 18px 0 8px; font-size: 17px; }
+      .chips.wrap { flex-wrap: wrap; overflow: visible; }
+
+      .kb { height: 8px; border-radius: 5px; background: #e4ecf3; overflow: hidden; margin: 6px 0 4px; }
+      .kb i { display: block; height: 100%; background: var(--blue); border-radius: 5px; }
+      .kb.ok i { background: var(--green); }
+
+      /* ---- hasil QA ---- */
+      .sd-m { overflow-y: auto; }
+      .stat strong { font-size: clamp(18px, 5.5vw, 24px); overflow-wrap: anywhere; }
+      .kv strong { font-size: 18px; overflow-wrap: anywhere; }
+      @media (max-width: 899px) {
+        .side { visibility: hidden; transition: transform 0.22s, visibility 0s 0.22s; }
+        .side.on { visibility: visible; transition: transform 0.22s; }
+      }
+
+      /* ---- DC harian ---- */
+      .dr { display: grid; grid-template-columns: 1fr 104px 46px; gap: 8px; margin-bottom: 10px; align-items: center; }
+      .dr .rm { height: 52px; border: 1px solid #efc5c1; background: #fff5f4; color: var(--red); border-radius: 10px; font-size: 22px; font-weight: 800; }
+      .dr-qty { text-align: right; font-weight: 800; font-size: 18px; }
+      .dr-h { grid-column: 1 / -1; font-size: 13px; color: var(--muted); margin-top: -4px; }
+      .dr-h:empty { display: none; }
+      .dr-h.warn { color: var(--amber); }
+      .tot { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .tot > div { background: var(--bg); border-radius: 10px; padding: 6px 10px; min-width: 0; }
+      .tot small { display: block; font-size: 12px; color: var(--muted); }
+      .tot strong { font-size: 20px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+      .tot .neg small, .tot .pos small { color: inherit; }
+      #dcSheet .sh-head > div { min-width: 0; }
+      #dcSheet .sh-head b { font-size: 17px; overflow-wrap: anywhere; }
+      .bin b { overflow-wrap: anywhere; }
+
+      #dcMiss { color: var(--amber); font-weight: 600; }
+      .fine:empty { display: none; }
+
+      .pk { display: flex; gap: 12px; align-items: center; width: 100%; text-align: left; padding: 12px; border: 1px solid #d5dfe8; border-radius: 12px; background: #fff; margin-bottom: 8px; min-height: 56px; }
+      .pk.on { border-color: var(--blue); background: var(--blue2); }
+      .pk .ck { flex: none; width: 26px; height: 26px; border-radius: 7px; border: 2px solid #9fb3c6; display: grid; place-items: center; font-weight: 900; color: #fff; }
+      .pk.on .ck { background: var(--blue); border-color: var(--blue); }
+      .pk b { display: block; overflow-wrap: anywhere; }
+      .pk small { color: var(--muted); }
+

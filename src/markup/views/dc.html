@@ -1,0 +1,16 @@
+          <h2>DC Harian</h2>
+          <p class="hint">Pilih item bebas, catat qty per rak, lalu cocokkan dengan stok sistem.</p>
+          <div class="stats" id="dcStats" aria-live="polite" aria-atomic="true"></div>
+          <div class="undobar" id="dcUndoBar" hidden><span id="dcUndoTxt"></span><button id="dcUndoBtn">Urungkan</button></div>
+          <button class="btn pri" id="dcPickBtn">Pilih item DC</button>
+          <div class="panel mt">
+            <label for="dcQ">Cari item</label>
+            <input id="dcQ" type="search" placeholder="Contoh: AW 6" autocomplete="off" />
+            <div class="chips" id="dcChips"></div>
+            <div id="dcList" class="bin-list"></div>
+          </div>
+          <button class="btn pri ximp" id="dcCsv">Unduh rekap DC (CSV)</button>
+          <button class="btn pri mt" id="dcSend" type="button">Salin &amp; kirim rekap ke Telegram</button>
+          <button class="ximp" id="dcCopy" type="button" tabindex="-1" aria-hidden="true">x</button>
+          <button class="ximp" data-tg="dcCopy" type="button" tabindex="-1" aria-hidden="true">x</button>
+          <button class="btn dng sm mt-lg" id="dcReset">Mulai DC baru</button>

@@ -1,0 +1,44 @@
+            <h2>Data acuan WMS</h2>
+            <p class="hint">
+              Impor Informasi Rak dari WMS (Excel atau CSV). Hasil pemeriksaan lama dikosongkan.
+            </p>
+            <div class="panel">
+              <label for="file">Pilih file</label
+              ><input id="file" type="file" accept=".xlsx,.xls,.csv,text/csv" />
+              <button class="btn pri mt-lg" id="btnImp">Impor data WMS</button>
+              <p class="fine">
+                Kolom wajib: Area, Rak (atau Bin), Kode Item, Nama Item, Onhand. Baris judul di atas header
+                diabaikan.
+              </p>
+            </div>
+            <div class="panel">
+              <h2 style="font-size: 18px">Sinkron Google Sheets</h2>
+              <p class="hint">Hasil periksa, DC, tugas, dan petugas disinkronkan antar perangkat dan tersalin ke Google Sheets Anda. Tanpa PIN.</p>
+              <label for="syUrl">URL Web app (Apps Script)</label>
+              <input id="syUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" spellcheck="false" />
+              <label for="syTok">Token</label>
+              <input id="syTok" type="password" autocomplete="off" spellcheck="false" />
+              <label class="sw"><input type="checkbox" id="syAuto" checked /><span>Sinkron otomatis<small>Kirim beberapa detik setelah ada perubahan dan cek pembaruan tiap 45 detik. Tanpa internet, data tetap aman di perangkat dan dikirim saat online.</small></span></label>
+              <p class="fine" id="syInfo"></p>
+              <button class="btn pri" id="syGo" type="button">Simpan dan sinkron</button>
+              <button class="btn sec mt" id="syNow" type="button">Sinkron sekarang</button>
+              <button class="btn dng sm mt" id="syOff" type="button" hidden>Putuskan</button>
+            </div>
+            <div class="panel">
+              <h2 style="font-size: 18px">Cadangan data</h2>
+              <p class="hint" id="bkInfo"></p>
+              <div class="meter" id="bkMeter"><i style="width: 0"></i></div>
+              <p class="fine" id="bkSt"></p>
+              <button class="btn pri ximp" id="bkNow">Unduh cadangan (.json)</button>
+              <label for="bkFile">Pulihkan dari file cadangan</label>
+              <input id="bkFile" type="file" accept=".json,application/json" />
+              <button class="btn sec mt" id="bkRestore">Pulihkan data</button>
+              <p class="fine">Cadangan memuat data WMS, hasil periksa, DC, petugas, dan status area. Simpan filenya di tempat aman (misalnya kirim ke WhatsApp sendiri).</p>
+            </div>
+            <div class="panel">
+              <div id="dataInfo" class="hint"></div>
+              <button class="btn sec sm" id="btnDemo">Kembalikan data contoh</button>
+              <button class="btn dng sm mt" id="btnClear">
+                Hapus semua hasil pemeriksaan
+              </button>
+            </div>

@@ -1,0 +1,36 @@
+          <h2>Beranda</h2>
+          <p class="hint">Mobil per wilayah dari Google Spreadsheet, dibandingkan dengan SPM yang dikerjakan di Laporan Muat.</p>
+          <div class="mon-bar">
+            <button class="btn sec sm inl" id="monRef">Muat ulang</button>
+            <span class="at" id="monAt"></span>
+          </div>
+          <div id="monCmp"></div>
+          <div id="monMsg"></div>
+          <div id="monOver"></div>
+          <div class="chips" id="monTools"></div>
+          <div id="monList"></div>
+          <button class="btn pri mt" id="monTg">Kirim ringkasan ke Telegram</button>
+          <details class="mt-lg" id="monSet">
+            <summary>Pengaturan sumber &amp; kolom</summary>
+            <div class="set">
+              <label for="monUrl">Alamat spreadsheet (Google Sheets atau link CSV)</label>
+              <input id="monUrl" placeholder="https://docs.google.com/spreadsheets/d/…" autocomplete="off" spellcheck="false" />
+              <p class="fine">Spreadsheet harus dibagikan "Siapa saja yang memiliki link (Pelihat)" atau di-publish ke web. Jika sheet bukan yang pertama, salin link saat tab sheet itu terbuka (ada gid=…).</p>
+              <div class="row2">
+                <div><label for="monStart">Data mulai baris ke</label><input id="monStart" type="number" inputmode="numeric" min="1" value="2" /></div>
+                <div><label for="monAuto">Muat ulang otomatis</label>
+                  <select id="monAuto"><option value="0">Mati</option><option value="1">tiap 1 menit</option><option value="2">tiap 2 menit</option><option value="5">tiap 5 menit</option><option value="10">tiap 10 menit</option></select></div>
+              </div>
+              <label id="monMapL">Kolom yang diambil</label>
+              <p class="fine">Isi huruf kolom (A, B, C …) atau sebagian judul kolom. Kosongkan jika tidak dipakai. Baris yang namanya "Total" atau "Jumlah" dilewati, total dihitung otomatis.</p>
+              <div id="monMap" role="group" aria-labelledby="monMapL"></div>
+              <button class="btn sec sm mt" id="monAdd" type="button">Tambah kolom lain</button>
+              <label class="sw"><input type="checkbox" id="monAlert" /><span>Kabari Telegram jika ada mobil gagal masuk baru<small>Dicek setiap data dimuat ulang. Perlu pengaturan Telegram.</small></span></label>
+              <button class="btn pri mt-lg" id="monSave">Simpan &amp; muat data</button>
+              <button class="btn sec mt" id="monPrevBtn">Lihat isi spreadsheet (pratinjau kolom)</button>
+              <div id="monPrev"></div>
+              <div class="ximp"><label for="monFile">Atau muat dari file (.csv / .xlsx)</label>
+              <input id="monFile" type="file" accept=".csv,.xls,.xlsx,text/csv" />
+              <p class="fine">Data dari file tidak diperbarui otomatis.</p></div>
+            </div>
+          </details>

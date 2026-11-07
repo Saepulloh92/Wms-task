@@ -1,0 +1,30 @@
+          <h2>Telegram</h2>
+          <p class="hint">Kirim informasi pemeriksaan ke grup atau chat Telegram lewat bot Anda.</p>
+          <div class="panel">
+            <label for="tgToken">Token bot</label>
+            <input id="tgToken" type="password" placeholder="123456789:AA…" autocomplete="off" spellcheck="false" />
+            <button class="btn sec sm mt" id="tgShow" type="button">Tampilkan token</button>
+            <label for="tgChat">Chat ID</label>
+            <input id="tgChat" placeholder="Contoh: -1001234567890" autocomplete="off" spellcheck="false" />
+            <button class="btn sec sm mt" id="tgFind" type="button">Ambil Chat ID otomatis</button>
+            <label for="tgThread">ID topik (opsional, untuk grup bertopik)</label>
+            <input id="tgThread" inputmode="numeric" placeholder="kosongkan jika tidak dipakai" autocomplete="off" />
+            <p class="fine">Buat bot lewat @BotFather, lalu masukkan bot ke grup (atau kirim satu pesan ke bot). Tombol "Ambil Chat ID" membaca pesan terakhir yang diterima bot.</p>
+          </div>
+          <div class="panel">
+            <h2 style="font-size: 18px">Kirim otomatis</h2>
+            <label class="sw"><input type="checkbox" id="swProb" /><span>Bin yang perlu review<small>Item beda atau selisih qty, saat disimpan.</small></span></label>
+            <label class="sw"><input type="checkbox" id="swAll" /><span>Setiap bin yang disimpan<small>Termasuk yang sesuai. Bisa ramai.</small></span></label>
+            <label class="sw"><input type="checkbox" id="swArea" /><span>Area ditutup atau dibuka kembali<small>Beserta capaian dan akurasi area.</small></span></label>
+            <label class="sw"><input type="checkbox" id="swDc" /><span>DC Harian selesai<small>Stok sistem, fisik, dan selisih per item.</small></span></label>
+            <p class="fine">Laporan lain (rekap DC, KPI, laporan muat, file Adjust) dikirim lewat tombol "Kirim ke Telegram" di halamannya masing-masing.</p>
+          </div>
+          <button class="btn pri" id="tgSave">Simpan pengaturan</button>
+          <button class="btn sec mt" id="tgTest">Kirim pesan tes</button>
+          <div id="tgRes" class="note" role="status"></div>
+          <div class="panel mt-lg">
+            <div class="tgq" id="tgStat"></div>
+            <button class="btn sec sm" id="tgRetry">Kirim ulang antrean</button>
+            <button class="btn dng sm mt" id="tgClear">Kosongkan antrean</button>
+            <p class="fine">Pesan yang gagal karena tidak ada sinyal ditahan di perangkat dan dikirim otomatis saat koneksi kembali. Token hanya disimpan di perangkat ini dan tidak ikut file cadangan. Siapa pun yang memegang perangkat ini bisa membacanya, jadi pakai bot khusus gudang.</p>
+          </div>

@@ -1,0 +1,99 @@
+/* asal: index-fixd.html baris 794-891 */
+      /* ---- penyempurnaan ringan ---- */
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+      .app {
+        min-height: 100dvh;
+      }
+      .mt {
+        margin-top: 8px;
+      }
+      .mt-lg {
+        margin-top: 12px;
+      }
+      .hint.flush {
+        margin: 10px 0 0;
+      }
+      .row2 label,
+      .panel > label:first-child {
+        margin-top: 0;
+      }
+      .bin-list {
+        gap: 10px;
+      }
+      section > h2 {
+        margin-top: 2px;
+      }
+      .bin-list > .bin-more { grid-column: 1 / -1; margin: 4px 0 0; text-align: center; }
+      .netb { flex: none; align-self: center; font-size: 12px; font-weight: 800; line-height: 1; padding: 6px 9px; border-radius: 4px; border: 1px solid #ffffff66; color: #fff; white-space: nowrap; }
+      .netb::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: currentColor; margin-right: 6px; }
+      .netb.ok::before { background: #6fd3a0; }
+      .netb.warn { background: var(--mark); border-color: var(--mark); color: var(--ink); }
+      .netb.bad { background: var(--red); border-color: var(--red); }
+      .stats:empty,
+      #adjWarn:empty,
+      #mnotes:empty {
+        display: none;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+        }
+      }
+
+      /* ---- penyempurnaan UX ---- */
+      body {
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      }
+      .q, .big, .kv strong, .stat strong, .bd, #pPct {
+        font-variant-numeric: tabular-nums;
+      }
+      button, .chip, .bin, .mi, label.btn {
+        touch-action: manipulation;
+      }
+      h2 + .hint {
+        margin-bottom: 14px;
+      }
+      /* ikon menu */
+      .mi svg {
+        width: 22px;
+        height: 22px;
+        flex: none;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .mi:active {
+        background: var(--bg);
+      }
+      /* status bin terbaca dari garis kiri, tidak hanya dari warna label */
+      .bin {
+        border-left-width: 6px;
+        border-left-color: #c3d0dc;
+      }
+      .bin.done-ok {
+        border-left-color: var(--green);
+      }
+      .bin.done-bad {
+        border-left-color: #d9a03a;
+      }
+      /* umpan balik sentuhan */
+      .btn:active:not(:disabled),
+      .choice button:active,
+      .qtyrow button:active {
+        filter: brightness(0.94);
+      }
+      .chip {
+        min-height: 44px;
+      }
+      .pill {
+        font-size: 13px;
+      }
+      input, select {
+        min-height: 52px;
+      }
+      /* toast tidak menutupi tombol Simpan saat lembar periksa terbuka */
+

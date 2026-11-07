@@ -1,0 +1,34 @@
+            <h2>Laporan Muat</h2>
+            <p class="hint">Unggah laporan muat (Excel), teks WhatsApp langsung jadi.</p>
+            <div class="panel">
+              <label class="btn pri fl" for="mf">Pilih file laporan muat</label
+              ><input type="file" id="mf" accept=".xls,.xlsx,.csv" hidden />
+              <p class="hint flush">
+                File: <b id="mfn">belum ada file</b>
+              </p>
+            </div>
+            <div class="stats" id="mkpi"></div>
+            <div id="mnotes"></div>
+            <button class="ximp" id="mcopy" type="button" tabindex="-1" aria-hidden="true">x</button>
+            <button class="ximp" data-tg="mcopy" type="button" tabindex="-1" aria-hidden="true">x</button>
+            <button class="btn pri" id="muSave" type="button">Simpan, salin &amp; kirim ke Telegram</button>
+            <pre class="rep" id="mout"></pre>
+            <h3 class="sec">Riwayat laporan tersimpan</h3>
+            <div id="muHist"></div>
+            <details class="mt-lg">
+              <summary>Pengaturan laporan</summary>
+              <div class="set">
+                <label for="mgudang">Nama gudang</label><input id="mgudang" value="Warehouse Pipa LA" />
+                <label for="mtgl">Tanggal laporan</label><input id="mtgl" type="date" />
+                <label for="mpelapor">Dilaporkan oleh</label><input id="mpelapor" value="Saepulloh" placeholder="Nama pelapor" />
+                <label for="mtotal">Total mobil/SPM (kosong = jumlah SPM di file)</label
+                ><input id="mtotal" type="number" inputmode="numeric" min="0" placeholder="otomatis" />
+                <label for="mdefcp">SPM dihitung "copy rekomendasi" jika</label
+                ><select id="mdefcp">
+                  <option value="any">ada minimal 1 item copy</option>
+                  <option value="all">semua itemnya copy</option>
+                </select>
+                <label for="mtdk">Mobil tidak diproses WMS (satu per baris)</label
+                ><textarea id="mtdk" placeholder="B 1234 XYZ - SPM 26092799"></textarea>
+              </div>
+            </details>
