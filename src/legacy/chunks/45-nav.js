@@ -15,6 +15,11 @@
         });
         curViewId = v;
         if (typeof menuSync === "function") menuSync();
+        // judul halaman sama dengan judul di bilah atas: sembunyikan secara visual (tetap terbaca pembaca layar); dijalankan setelah judul bilah atas diperbarui
+        setTimeout(() => {
+          const h = document.querySelector("#v-" + v + " > h2"), t = document.getElementById("pgT");
+          if (h && t) h.classList.toggle("dup", h.textContent.trim() === t.textContent.trim());
+        }, 0);
         $("tMenu").classList.toggle("on", ![...document.querySelectorAll("#tabs [data-v]")].some((b) => !b.hidden && b.dataset.v === v));
         try { localStorage.setItem("warehouse_so_view_v1", v); } catch (e) {}
         side(false);

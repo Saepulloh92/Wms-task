@@ -173,7 +173,7 @@
         $("clrCntInfo").style.color = clrErr ? "var(--red)" : "";
         $("clrLoad").disabled = clrBusy;
         $("clrRefresh").disabled = clrBusy;
-        $("clrRefresh").textContent = clrBusy ? "Memuat…" : "↻ Refresh hasil";
+        $("clrRefresh").textContent = clrBusy ? "Memuat…" : "↻ Refresh";
         $("clrLoad").textContent = clrBusy ? "Memuat…" : "Muat counting dari spreadsheet";
         const all = clrBuild(), n = (s) => all.filter((x) => x.st === s).length;
         $("clrStats").innerHTML = [

@@ -1,18 +1,18 @@
           <h2>Clearing</h2>
-          <p class="hint">Cocokkan No Voucher dan Qty dari Laporan Voucher dengan hasil counting. Hanya voucher dari laporan yang Anda impor yang dicocokkan; baris counting lain diabaikan. Jika satu voucher punya beberapa foto, yang dipakai adalah hasil counting terbaru. Counting dalam ikatan dihitung otomatis (qty × 25 sama dengan qty laporan dianggap cocok). SMS diambil dari 8 angka depan kode item hasil counting.</p>
-          <button class="btn sec sm" id="clrRefresh" type="button" title="Ambil ulang counting terbaru dan bersihkan hasil lama">↻ Refresh hasil</button>
-          <div class="stats" id="clrStats"></div>
-          <div id="clrRekap"></div>
+          <p class="hint">Cocokkan voucher dan qty laporan dengan hasil counting.</p>
+          <details class="hint-more"><summary>Cara kerja</summary><p class="fine">Hanya voucher dari laporan yang Anda impor yang dicocokkan; baris counting lain diabaikan. Jika satu voucher punya beberapa foto, dipakai counting terbaru. Counting dalam ikatan dibaca otomatis (qty × 25 sama dengan qty laporan dianggap cocok). SMS diambil dari 8 angka depan kode item hasil counting.</p></details>
           <div class="panel">
-            <label for="clrRepFile">1. Laporan Voucher (.xlsx / .csv)</label>
+            <label for="clrRepFile"><span class="stepno">1</span>Laporan Voucher (.xlsx / .csv)</label>
             <input id="clrRepFile" type="file" accept=".csv,.xls,.xlsx,text/csv" />
             <p class="fine" id="clrRepInfo"></p>
-            <label>2. Hasil counting</label>
+            <label><span class="stepno">2</span>Hasil counting</label>
             <p class="fine" id="clrCntInfo" role="status"></p>
-            <button class="btn pri" id="clrLoad" type="button">Muat counting dari spreadsheet</button>
+            <div class="row-act"><button class="btn pri" id="clrLoad" type="button">Muat counting dari spreadsheet</button><button class="btn sec" id="clrRefresh" type="button" title="Ambil ulang counting terbaru dan bersihkan hasil lama">↻ Refresh</button></div>
             <div class="ximp"><label for="clrCntFile">Atau muat counting dari file</label>
             <input id="clrCntFile" type="file" accept=".csv,.xls,.xlsx,text/csv" /></div>
           </div>
+          <div class="stats mt" id="clrStats"></div>
+          <div id="clrRekap"></div>
           <div class="panel mt">
             <div class="chips" id="clrChips"></div>
             <div class="chips" id="clrShChips"></div>

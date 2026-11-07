@@ -69,7 +69,7 @@
   "hidden": [
    "v-clr"
   ],
-  "text": "Clearing Cocokkan No Voucher dan Qty dari Laporan Voucher dengan hasil counting. Hanya voucher dari laporan yang Anda impor yang dicocokkan; baris counting lain diabaikan. Jika satu voucher punya beberapa foto, yang dipakai adalah hasil counting terbaru. SMS diambil dari 8 angka depan kode item hasil counting. ↻ Refresh hasil Cocok 0 Selisih / dobel 0 Belum dihitung 0 1. Laporan Voucher (.xlsx / .csv) Belum ada laporan. Pilih file Laporan Voucher. 2. Hasil counting Link spreadsheet counting belum diatur (Pengaturan di bawah), atau muat dari file. Muat counting dari spreadsheet Semua 0 Perlu dicek 0 Ditandai selesai 0 Cocok 0 Belum dihitung 0 Cari voucher / SMS / item Muat Laporan Voucher dan counting dulu. Salin data untuk input WMS Belum ada data untuk disimpan. Simpan, salin & kirim ke Telegram Riwayat clearing tersimpan Belum ada hasil clearing yang disimpan. Pengaturan spreadsheet counting"
+  "text": "Clearing Cocokkan voucher dan qty laporan dengan hasil counting. Cara kerja 1Laporan Voucher (.xlsx / .csv) Belum ada laporan. Pilih file Laporan Voucher. 2Hasil counting Link spreadsheet counting belum diatur (Pengaturan di bawah), atau muat dari file. Muat counting dari spreadsheet ↻ Refresh Cocok 0 Selisih / dobel 0 Belum dihitung 0 Semua 0 Perlu dicek 0 Ditandai selesai 0 Cocok 0 Belum dihitung 0 Cari voucher / SMS / item Muat Laporan Voucher dan counting dulu. Salin data untuk input WMS Belum ada data untuk disimpan. Simpan, salin & kirim ke Telegram Riwayat clearing tersimpan Belum ada hasil clearing yang disimpan. Pengaturan spreadsheet counting"
  },
  "kpi": {
   "title": "KPI Area",
@@ -93,7 +93,7 @@
   "hidden": [
    "v-mon"
   ],
-  "text": "Beranda Mobil per wilayah dari Google Spreadsheet, dibandingkan dengan SPM yang dikerjakan di Laporan Muat. Muat ulang Mobil keluar dan SPM dikerjakan Laporan Muat belum diimpor. Impor file laporan muat supaya jumlah mobil keluar bisa dibandingkan dengan SPM yang dikerjakan. Buka Laporan Muat Selamat datang. Hubungkan spreadsheet kiriman agar status mobil tampil di sini. Atur sumber data Kirim ringkasan ke Telegram Pengaturan sumber & kolom"
+  "text": "Beranda Posisi kiriman per wilayah. Ketuk wilayah untuk melihat detail. Muat ulang Selamat datang. Hubungkan spreadsheet kiriman agar status mobil tampil di sini. Atur sumber data Mobil keluar dan SPM dikerjakan Laporan Muat belum diimpor. Impor file laporan muat supaya jumlah mobil keluar bisa dibandingkan dengan SPM yang dikerjakan. Buka Laporan Muat Kirim ringkasan ke Telegram Pengaturan sumber & kolom"
  },
  "data": {
   "title": "Data WMS",
