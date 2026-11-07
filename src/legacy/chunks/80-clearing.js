@@ -163,6 +163,8 @@
         $("clrCntInfo").textContent = clrErr ? clrErr : clrCnt ? `Counting dari ${clrCnt.src === "url" ? "spreadsheet" : "file"}: ${fmt(clrCnt.rows.length)} baris, dimuat ${new Date(clrCnt.at).toLocaleString("id-ID")}.` : clr.url ? "Counting belum dimuat." : "Link spreadsheet counting belum diatur (Pengaturan di bawah), atau muat dari file.";
         $("clrCntInfo").style.color = clrErr ? "var(--red)" : "";
         $("clrLoad").disabled = clrBusy;
+        $("clrRefresh").disabled = clrBusy;
+        $("clrRefresh").textContent = clrBusy ? "Memuat…" : "↻ Refresh hasil";
         $("clrLoad").textContent = clrBusy ? "Memuat…" : "Muat counting dari spreadsheet";
         const all = clrBuild(), n = (s) => all.filter((x) => x.st === s).length;
         $("clrStats").innerHTML = [
@@ -191,7 +193,7 @@
         let rows = null, last = "";
         for (const u of cands) {
           try {
-            const r = await fetch(u, { cache: "no-store" });
+            const r = await fetch(u + (u.includes("?") ? "&" : "?") + "_=" + Date.now(), { cache: "no-store" }); // _= : lewati cache Google/CDN
             if (!r.ok) throw new Error("HTTP " + r.status);
             const t = await r.text();
             if (/^\s*<(!doctype|html)/i.test(t)) throw new Error("minta login");
@@ -271,6 +273,19 @@
         clrFetch(true);
       };
       $("clrLoad").onclick = () => clrFetch(true);
+      /* Refresh: buang hasil counting lama dari memori, reset filter, lalu ambil ulang dari spreadsheet (tanpa cache) */
+      $("clrRefresh").onclick = async () => {
+        if (clrBusy) return;
+        clrF = "all"; clrShF = "all"; $("clrQ").value = ""; clrErr = "";
+        $("clrCntFile").value = ""; $("clrRepFile").value = "";
+        if (clr.url) {
+          clrCnt = null; sv(K_CLRC, null);
+          await clrFetch(true);
+        } else {
+          renderClr();
+          toast("Tidak ada link spreadsheet. Pilih ulang file counting untuk memperbarui.");
+        }
+      };
       { let _t = 0; $("clrQ").oninput = () => { clearTimeout(_t); _t = setTimeout(renderClr, 200); }; }
       $("clrShChips").onclick = (e) => {
         const sb = e.target.closest("[data-sh]");
