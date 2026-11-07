@@ -14,3 +14,7 @@
 .mg-grp:not([data-single="1"]) > .mg-sub > .mg-in { margin-left: 16px; border-left: 2px solid rgba(128, 128, 128, .22); }
 .mg-grp:not([data-open="1"]) > .mg-sub .mi { visibility: hidden; }
 @media (prefers-reduced-motion: reduce) { .mg-sub, .mg::after { transition: none !important; } }
+.mg-grp[data-stat="1"] > .mg-sub > .mg-in { margin-left: 0; border-left: 0; }
+.mg-grp[data-stat="1"][data-open="1"] > .mg-sub > .mg-in { padding: 4px 0 8px; }
+.sd-m .mg-grp[data-stat="1"] > .dsp-h { padding: 10px 12px; }
+.mg-grp[data-stat="1"]:not([data-open="1"]) > .mg-sub * { visibility: hidden; }

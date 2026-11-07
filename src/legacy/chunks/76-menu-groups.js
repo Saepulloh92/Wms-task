@@ -3,12 +3,10 @@
         const box = document.querySelector("#side .sd-m");
         if (!box) return;
         let n = 0;
-        [...box.querySelectorAll(".mg")].forEach((h) => {
-          const items = [];
-          for (let e = h.nextElementSibling; e && e.classList.contains("mi"); e = e.nextElementSibling) items.push(e);
-          if (!items.length) return;
+        const build = (h, items, stat) => {
           const id = "mgs" + ++n, grp = document.createElement("div"), sub = document.createElement("div"), inn = document.createElement("div");
           grp.className = "mg-grp";
+          if (stat) grp.dataset.stat = "1";
           sub.className = "mg-sub";
           sub.id = id;
           inn.className = "mg-in";
@@ -16,9 +14,11 @@
           grp.append(h, sub);
           sub.append(inn);
           items.forEach((i) => inn.append(i));
+          h.classList.add("mg");
           h.removeAttribute("role");
           h.removeAttribute("aria-level");
           h.setAttribute("aria-controls", id);
+          if (stat) { h.tabIndex = 0; h.setAttribute("role", "button"); h.setAttribute("aria-expanded", "false"); grp.dataset.open = "0"; }
           const tgl = () => {
             if (grp.dataset.single) return;
             const open = grp.dataset.open !== "1";
@@ -28,11 +28,24 @@
           };
           h.onclick = tgl;
           h.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); tgl(); } };
+        };
+        [...box.querySelectorAll(".mg")].forEach((h) => {
+          const items = [];
+          for (let e = h.nextElementSibling; e && e.classList.contains("mi"); e = e.nextElementSibling) items.push(e);
+          if (items.length) build(h, items, false);
         });
+        /* Tampilan lapangan (ukuran teks, outdoor, bunyi) = grup yang sama, tertutup bawaan */
+        const dh = document.getElementById("dspH");
+        if (dh) {
+          const items = [];
+          for (let e = dh.nextElementSibling; e; e = e.nextElementSibling) items.push(e);
+          build(dh, items, true);
+        }
         window.menuSync = function () {
           const grps = [...box.querySelectorAll(".mg-grp")];
           let act = null;
           grps.forEach((g) => {
+            if (g.dataset.stat) return;
             const vis = [...g.querySelectorAll(".mi")].filter((b) => !b.hidden && b.style.display !== "none");
             g.hidden = !vis.length;
             const single = vis.length <= 1, h = g.querySelector(".mg");
