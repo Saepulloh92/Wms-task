@@ -152,7 +152,6 @@
       }
       function tgArea(a, shut) {
         if (!tgReady() || !tg.on.area) return;
-        if (!DATA.some((x) => x.area === a)) return; // area mandiri: tidak ada data bin untuk dirangkum
         const k = kpiOf(DATA.filter((x) => x.area === a));
         tgSend(
           `${shut ? "🔒 *Area " + md(a) + " ditutup*" : "🔓 *Area " + md(a) + " dibuka kembali*"}\n${k.done}/${k.total} bin diperiksa · akurasi ${pc(k.ok, k.done)}\n${curName() ? md(curName()) + " · " : ""}${tgTime()}`,
