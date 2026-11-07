@@ -4,14 +4,8 @@
       const K_U = "warehouse_so_users_v1",
         K_X = "warehouse_so_closed_v1",
         K_CU = "warehouse_so_curuser_v1";
-      /* DATA DUMMY: user & PIN bawaan supaya langsung bisa dipakai. Hanya dipakai bila daftar user masih kosong (belum pernah disimpan).
-         Admin PIN 1234 | Budi 1111 | Sari 2222 | Andi 3333. Segera ganti di menu User & Area. */
-      const PIN_BAWAAN = false; // false = langsung terbuka tanpa PIN (tanpa layar login). Ubah ke true untuk mengaktifkan PIN dummy.
-      const DEFAULT_USERS = () => {
-        const sub = typeof crypto !== "undefined" && !!crypto.subtle, H = { ua0admin: ["e9463b5439eacaa2ab6640549fceff27090a804a813ff72cd841a187728fee1d", "w-1941185371"], ua1budi: ["e593e12cea83d55ae67515a24de65e0a6fd71b5fa1f202d1d74403e46399b3b5", "w-1941186529"], ua2sari: ["256d86ab5e6bf273a653f7f80b42b8ab9c75258223771b04752e9d8841283977", "w-1941149469"], ua3andi: ["ca96fd1ae202310466b22913183ab9742b8b3beeefd39bd803a78c725230ec7b", "w-1941112409"] };
-        const mk = (id, name, role, ix) => ({ id, name, role, active: true, areas: role === "admin" ? [] : ["B1"], ...(PIN_BAWAAN ? { pin: H[id][sub ? 0 : 1] } : {}) });
-        return [mk("ua0admin", "Admin", "admin"), mk("ua1budi", "Budi", "petugas"), mk("ua2sari", "Sari", "petugas"), mk("ua3andi", "Andi", "petugas")];
-      };
+      /* Bawaan: hanya satu akun Admin tanpa PIN (mode terbuka). Tambah petugas dan PIN dari menu User & Area. */
+      const DEFAULT_USERS = () => [{ id: "ua0admin", name: "Admin", role: "admin", active: true, areas: [] }];
       let users = ld(K_U, null) || DEFAULT_USERS(),
         closed = ld(K_X, {}),
         curU = ld(K_CU, ""),

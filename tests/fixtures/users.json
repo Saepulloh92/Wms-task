@@ -1,0 +1,1 @@
+[{"id":"ua0admin","name":"Admin","role":"admin","active":true,"areas":[]},{"id":"ua1budi","name":"Budi","role":"petugas","active":true,"areas":["B1"]},{"id":"ua2sari","name":"Sari","role":"petugas","active":true,"areas":["B1"]},{"id":"ua3andi","name":"Andi","role":"petugas","active":true,"areas":["B1"]}]

@@ -4,7 +4,7 @@ Cari fitur di sini, buka **hanya satu file**. Semua chunk `NN-*.js` dijalankan b
 
 | File (`src/legacy/chunks/`) | Baris | Isi | Fungsi utama | Kunci localStorage |
 |---|---|---|---|---|
-| `00-demo-data.js` | 509 | Data contoh bawaan (DEMO_DATA) | – | – |
+| `00-demo-data.js` | 2 | DEMO_DATA kosong (tanpa data contoh) | – | – |
 | `10-core.js` | 216 | Inti: penyimpanan (ld/sv), state global, util (fmt/esc/stat), toast, dialog ask | pinHash, supAuth, markInvalid, clearInvalid, toast, hideToast, ask, askType | warehouse_dc_v1<br>warehouse_so_backup_v1<br>warehouse_so_cfg_v1<br>warehouse_so_codefix_v1<br>warehouse_so_counts_v2<br>warehouse_so_master_v2<br>warehouse_so_tasks_v1<br>warehouse_so_users_v1 |
 | `20-bins-sheet.js` | 119 | Daftar bin + lembar periksa | chipsHtml, renderBins, metrics, addLine, navTarget | – |
 | `25-check-draft-undo.js` | 264 | Draft isian, buka/simpan sheet periksa, urungkan | draftNow, draftDrop, clearDrafts, wakeOn, wakeOff, open, close, choice, prev, save … | warehouse_so_draft_v1 |

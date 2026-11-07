@@ -126,27 +126,6 @@
         };
         x ? r.readAsArrayBuffer(f) : r.readAsText(f);
       };
-      $("btnDemo").onclick = async () => {
-        if (await ask("Kembalikan data contoh?", "Hasil pemeriksaan saat ini dihapus.", "Kembalikan", true)) {
-          DATA = DEMO_DATA;
-          counts = {};
-        closed = {};
-        sv(K_X, closed);
-        tasks = {};
-        sv(K_T, tasks);
-        dc = {};
-        sv(K_D, dc);
-        dcPick = {};
-        sv(K_DP, dcPick);
-        codeFix = {};
-          sv(K_M, DATA);
-          sv(K_C, counts);
-          clearDrafts();
-          sv(K_F, codeFix);
-          initAll();
-          go("so");
-        }
-      };
       $("btnClear").onclick = async () => {
         if (
           await ask(

@@ -5,7 +5,7 @@ backend Google Apps Script (folder `gas/`). Bahasa UI dan komentar: Indonesia.
 
 ## Aturan hemat token (WAJIB)
 1. **Jangan baca satu folder penuh.** Mulai dari `docs/MODULE_MAP.md` (1 halaman), cari menu/fungsi, buka SATU file.
-2. Satu tugas = satu file kecil (rata-rata 100–450 baris). Chunk legacy yang besar: `00-demo-data.js` (data, jangan dibuka) dan `55-muat.js`.
+2. Satu tugas = satu file kecil (rata-rata 100–450 baris). Chunk legacy yang besar: `55-muat.js`.
 3. Pakai `grep -n "namaFungsi" src/legacy/chunks/*.js` lalu `Read` dengan offset/limit; bukan membaca seluruh file.
 4. Jangan membaca `dist/`, `node_modules/`, `tests/snapshots/`. Jangan `cat gas/*.gs` (seed data panjang ada di `gas/05-seed.gs`).
 

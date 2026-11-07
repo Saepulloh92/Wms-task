@@ -74,11 +74,7 @@
           sv(K_CFG, cfg);
         }
       });
-      const isDemoData = () =>
-        DATA === DEMO_DATA ||
-        (DATA.length === DEMO_DATA.length &&
-          DATA[0].bin === DEMO_DATA[0].bin && DATA[0].kode === DEMO_DATA[0].kode &&
-          DATA[DATA.length - 1].bin === DEMO_DATA[DEMO_DATA.length - 1].bin);
+      const isDemoData = () => false;
       let saveBusy = false;
       const K_T = "warehouse_so_tasks_v1";
       let tasks = ld(K_T, {});

@@ -9,7 +9,7 @@ function setup() {
   stateSheet_();
   Object.keys(SH).forEach(function (k) { if (k !== 'state') sheet_(SH[k]); });
   var seeded = seed_();
-  Logger.log(seeded ? 'Data awal dimuat: ' + SEED_MASTER.length + ' bin.' : 'Data sudah ada, tidak ditimpa.');
+  Logger.log(seeded ? 'Server diinisialisasi kosong (siap go live). Impor data WMS dari aplikasi.' : 'Data sudah ada, tidak ditimpa.');
   Logger.log('API_TOKEN = ' + token);
   Logger.log('Selanjutnya: Deploy > New deployment > Web app (Anyone).');
   return token;
@@ -23,7 +23,7 @@ function setupTriggers() {
   Logger.log('Cadangan harian aktif (jam 22:00).');
 }
 
-// isi data awal hanya jika server masih kosong (tidak pernah menimpa data yang ada)
+// inisialisasi state kosong hanya jika server belum berisi (tidak pernah menimpa data yang ada)
 function seed_() {
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);

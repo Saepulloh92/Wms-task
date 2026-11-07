@@ -9,7 +9,10 @@ const SNAP = new URL("./snapshots/views.json", import.meta.url);
 const update = process.argv.includes("--update");
 const url = update ? "file://" + process.env.ORIGINAL : process.env.APP_URL || "http://localhost:4173/";
 
-const seed = () => {
+const FX = (n) => JSON.parse(fs.readFileSync(new URL("./fixtures/" + n, import.meta.url), "utf8"));
+const seed = (fx) => {
+  localStorage.setItem("warehouse_so_master_v2", JSON.stringify(fx.master)); // fixture uji (bukan data aplikasi)
+  localStorage.setItem("warehouse_so_users_v1", JSON.stringify(fx.users));
   const iso = (m) => new Date(Date.UTC(2026, 10, 7, 1, m)).toISOString();
   localStorage.setItem("warehouse_so_counts_v2", JSON.stringify({
     "B1-01-A": { itemMatch: true, actualItems: [], actualItem: "PIPA", actualQty: 630, note: "", savedAt: iso(0), by: "Andi", systemQty: 630 },
@@ -25,7 +28,7 @@ const page = await browser.newPage({ viewport: { width: 420, height: 900 } });
 await page.route(/^https?:\/\/(?!localhost)/, (r) => r.abort());
 const errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
-await page.addInitScript(seed);
+await page.addInitScript(seed, { master: FX("master.json"), users: FX("users.json") });
 await page.goto(url);
 await page.waitForFunction(() => document.getElementById("pgT")?.textContent.trim());
 await page.waitForTimeout(500);
@@ -43,11 +46,13 @@ for (const v of VIEWS) {
 await browser.close();
 if (update) { fs.writeFileSync(SNAP, JSON.stringify(out, null, 1)); console.log("snapshot ditulis:", VIEWS.length, "menu"); process.exit(0); }
 const want = JSON.parse(fs.readFileSync(SNAP, "utf8"));
+const acc = (process.argv.find((a) => a.startsWith("--accept=")) || "").slice(9).split(",").filter(Boolean); // --accept=so,data : terima beda yang disengaja
+if (acc.length) { acc.forEach((v) => (want[v] = out[v])); fs.writeFileSync(SNAP, JSON.stringify(want, null, 1)); console.log("snapshot diperbarui:", acc.join(",")); }
 let bad = 0;
 for (const v of VIEWS) {
   const same = JSON.stringify(out[v]) === JSON.stringify(want[v]);
   console.log((same ? "OK   " : "BEDA ") + v);
-  if (!same) { bad++; console.log("  asli :", JSON.stringify(want[v]).slice(0, 400)); console.log("  baru :", JSON.stringify(out[v]).slice(0, 400)); }
+  if (!same) { bad++; {const a=want[v].text,b=out[v].text;let i=0;while(a[i]===b[i])i++;console.log("  beda di:",JSON.stringify(a.slice(Math.max(0,i-60),i+80)),"=>",JSON.stringify(b.slice(Math.max(0,i-60),i+80)));} }
 }
 if (errors.length) { console.log("JS error:", errors); bad++; }
 process.exit(bad ? 1 : 0);
