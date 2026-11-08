@@ -69,7 +69,7 @@
   "hidden": [
    "v-clr"
   ],
-  "text": "Clearing Cocokkan voucher dan qty laporan dengan hasil counting. Cara kerja 1Laporan Voucher (.xlsx / .csv) Belum ada laporan. Pilih file Laporan Voucher. 2Hasil counting Link spreadsheet counting belum diatur (Pengaturan di bawah), atau muat dari file. Muat counting dari spreadsheet ↻ Refresh 0 Cocok 0% 0 Selisih / dobel 0% 0 Belum dihitung 0% Semua 0 Perlu dicek 0 Ditandai selesai 0 Cocok 0 Belum dihitung 0 Cari voucher / SMS / item Muat Laporan Voucher dan counting dulu. Salin data untuk input WMS Belum ada data untuk disimpan. Simpan, salin & kirim ke Telegram Riwayat clearing tersimpan Belum ada hasil clearing yang disimpan. Pengaturan spreadsheet counting"
+  "text": "Clearing Cocokkan voucher dan qty laporan dengan hasil counting. Cara kerja 1Laporan Voucher (.xlsx / .csv) Belum ada laporan. Pilih file Laporan Voucher. 2Hasil counting Link spreadsheet counting belum diatur (Pengaturan di bawah), atau muat dari file. Muat counting dari spreadsheet ↻ Refresh 0 Cocok 0% 0 Selisih / dobel 0% 0 Belum dihitung 0% Semua 0 Perlu dicek 0 Ditandai selesai 0 Cocok 0 Belum dihitung 0 Cari voucher / item Muat Laporan Voucher dan counting dulu. Salin data untuk input WMS Belum ada data untuk disimpan. Simpan, salin & kirim ke Telegram Riwayat clearing tersimpan Belum ada hasil clearing yang disimpan. Pengaturan spreadsheet counting"
  },
  "kpi": {
   "title": "KPI Area",
