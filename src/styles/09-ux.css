@@ -28,3 +28,9 @@ input[type="file"]::file-selector-button { margin-right: 12px; padding: 10px 16p
 /* Filter posisi rak (bawah/atas) di Periksa Bin: baris sendiri di atas chip status */
 #chipsR { padding-bottom: 4px; }
 #chipsR[hidden] { display: none; }
+
+/* Tombol aksi kartu user: satu baris, teks tidak terpotong */
+.acts { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 8px; }
+.acts .btn { white-space: nowrap; padding-left: 6px; padding-right: 6px; font-size: 14px; }
+/* Tabel yang bisa digeser: kolom teks cukup lebar supaya baris tidak menjulang */
+#v-kes td.tx:last-child, #v-muat td.tx:last-child { min-width: 280px; }

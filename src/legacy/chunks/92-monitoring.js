@@ -291,7 +291,8 @@
         const msg = [];
         if (monErr) msg.push(`<div class="note">${esc(monErr)}</div>`);
         if (!monCache) {
-          $("monMsg").innerHTML = msg.join("") || '<div class="note info"><b>Selamat datang.</b> Hubungkan spreadsheet kiriman agar status mobil tampil di sini.<br><button class="btn pri sm mt" id="monOpenSet" type="button">Atur sumber data</button></div>';
+          $("monMsg").innerHTML = msg.join(""); // belum terhubung: cukup satu petunjuk dari Dashboard Delivery, tidak ganda
+          $("monCmp").innerHTML = "";
           $("monOver").innerHTML = $("monList").innerHTML = $("monTools").innerHTML = "";
           $("monAt").className = "sync";
           $("monAt").textContent = "";
