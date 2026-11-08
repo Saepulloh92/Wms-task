@@ -1,5 +1,5 @@
 // Uji logika murni aging:  node tests/aging.mjs
-import { buildAging, normSignal, checklist, groupByClass } from "../src/lib/aging.js";
+import { buildAging, normSignal, checklist, groupByClass, buildPool, suggest } from "../src/lib/aging.js";
 let fail = 0; const ok = (c, m) => { console.log((c ? "OK   " : "GAGAL ") + m); if (!c) fail++; };
 ok(normSignal(" KUNING  2 ") === "Kuning 2" && normSignal("merah") === "Merah" && normSignal("x") === "", "normSignal");
 const rows = [
@@ -30,4 +30,11 @@ ok(cp.map((x) => x.bin).join() === "A-1,A-2,B-1,C-1,X-1", "urutan prioritas: kel
 const gc = groupByClass(cp, kc);
 ok(gc.map((g) => g.c + g.items.length + "m" + g.merah).join() === "A2m1,B1m0,C1m1,-1m0", "grup per kelas + hitung merah");
 ok(checklist(rows).map((x) => x.bin).join() === "A-05,A-03,A-02", "urutan lama (terparah) tetap sama");
+// pilihan tumpak/item: campuran huruf+angka, nilai sistem di atas, saring saat mengetik
+const pool = buildPool([{ v: "AJ896", area: "F" }, { v: "AJ896", area: "F" }, { v: "AJ767", area: "F" }, { v: "AK140", area: "G" }, { v: " ", area: "F" }, { v: "Sesuai" }, { v: "AJ10", area: "P" }]);
+ok(pool.length === 4, "pool unik, abaikan kosong dan 'Sesuai'");
+ok(suggest(pool, "", { pin: "AK140", area: "F" }).join() === "AK140,AJ896,AJ767,AJ10", "pilihan: nilai sistem dulu, lalu searea/terbanyak");
+ok(suggest(pool, "aj", { area: "F" }).join() === "AJ896,AJ767,AJ10", "saring 'aj' (tidak peka huruf besar)");
+ok(suggest(pool, "AJ896").length === 0, "nilai yang sudah sama persis tidak ditawarkan lagi");
+ok(suggest(pool, "", { limit: 2 }).length === 2, "batas jumlah pilihan");
 process.exit(fail ? 1 : 0);

@@ -78,3 +78,27 @@ export function agingText({ area, agg, pic, done, total, date }) {
   L.push(`Total: ${agg.kuningTotal}`, "", `Sudah dicek fisik: ${done} dari ${total}`);
   return L.join("\n");
 }
+
+/** Kumpulan pilihan unik (tumpak atau nama item) beserta jumlah kemunculan dan area asalnya. items = [{ v, area }] */
+export function buildPool(items) {
+  const m = new Map();
+  items.forEach(({ v, area }) => {
+    const t = String(v == null ? "" : v).trim();
+    if (!t || t === "Sesuai") return;
+    const r = m.get(t) || { v: t, n: 0, areas: new Set() };
+    r.n++;
+    if (area) r.areas.add(area);
+    m.set(t, r);
+  });
+  return [...m.values()];
+}
+/** Pilihan untuk kolom isian: nilai sistem rak ini (pin) paling atas, lalu yang cocok dengan ketikan (awalan dulu), lalu yang sering/searea. */
+export function suggest(pool, q, { pin = "", area = "", limit = 10 } = {}) {
+  const ql = String(q || "").trim().toLowerCase();
+  const sw = (r) => (ql && r.v.toLowerCase().startsWith(ql) ? 1 : 0);
+  return pool
+    .filter((r) => (!ql || r.v.toLowerCase().includes(ql)) && r.v.toLowerCase() !== ql)
+    .sort((a, b) => (b.v === pin) - (a.v === pin) || sw(b) - sw(a) || b.areas.has(area) - a.areas.has(area) || b.n - a.n || a.v.localeCompare(b.v, "id", { numeric: true }))
+    .slice(0, limit)
+    .map((r) => r.v);
+}

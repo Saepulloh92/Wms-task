@@ -90,3 +90,6 @@
 .agi-filter { margin: 4px 0 8px; }
 .agi-filter > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-size: 14px; font-weight: 700; color: var(--muted, #6b7a89); }
 .agi-alert { margin-top: 6px; }
+.agi-opts { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 2px; max-height: 148px; overflow-y: auto; }
+.agi-opt { min-height: 44px; max-width: 100%; padding: 6px 12px; border: 1px solid var(--line, #d5dde6); border-radius: 10px; background: #fff; font: inherit; font-size: 14px; font-weight: 600; text-align: left; overflow-wrap: anywhere; cursor: pointer; }
+.agi-opt:active { background: #e6efff; border-color: #0a5bd3; }

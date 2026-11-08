@@ -31,6 +31,20 @@ ok(await p.locator("#v-agi .agi-rak").count()===2,"filter merah menampilkan 2 ra
 await p.locator(".agi-alert").click();
 // satu ketukan 'Semua sama' pada rak pertama -> tersimpan + rak berikutnya terbuka
 await p.locator("#v-agi .agi-rak > summary").first().click();
+const tI = p.locator("#v-agi .agi-rak[open] .agi-form input").nth(0), iI = p.locator("#v-agi .agi-rak[open] .agi-form input").nth(1);
+const tChips = p.locator('#v-agi .agi-rak[open] [aria-label="Pilihan tumpak"] button');
+ok(((await tChips.count()) > 0) && (await tChips.count()) <= 10, "ada pilihan tumpak (maks 10)");
+await tI.fill("aj8");
+const filt = await tChips.allInnerTexts();
+ok(filt.length > 0 && filt.every((t) => t.toLowerCase().includes("aj8")), "pilihan tumpak tersaring saat mengetik: " + filt.join(","));
+await tChips.first().click();
+ok((await tI.inputValue()) === filt[0], "tap pilihan tumpak mengisi kolom");
+await iI.fill("aw 1");
+const iChips = p.locator('#v-agi .agi-rak[open] [aria-label="Pilihan item"] button');
+const ifilt = await iChips.allInnerTexts();
+ok(ifilt.length > 0 && ifilt.every((t) => t.toLowerCase().includes("aw 1")), "pilihan item tersaring: " + ifilt.length + " item");
+await iChips.first().click();
+ok((await iI.inputValue()).replace(/\s+/g, " ") === ifilt[0].replace(/\s+/g, " "), "tap pilihan item mengisi kolom (spasi ganda di data dipadatkan hanya untuk perbandingan)");
 await p.getByText("Semua sama dengan sistem").first().click();await p.waitForTimeout(500);
 const rec=await p.evaluate(()=>JSON.parse(localStorage.getItem("warehouse_so_aging_v1")||"{}"));
 ok(rec["P-77"]?.sesuai===true&&rec["P-77"].qty==="800","Semua sama: qty sistem tersimpan, sesuai=true");
