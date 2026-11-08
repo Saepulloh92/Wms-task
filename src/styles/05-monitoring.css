@@ -160,3 +160,7 @@
       .dlv .dfold[open] > summary .dsum { display: none; }
       .dlv .dfold > :not(summary) { margin-left: 14px; margin-right: 14px; }
       .dlv .dfold > :last-child { margin-bottom: 14px; }
+      /* Beranda fokus Dashboard Delivery: tampilan Monitoring Kiriman lama (filter, peringatan kolom, kartu SPM, Ringkas/Kartu/Tabel, daftar wilayah, pengaturan) disembunyikan. Logikanya tetap ada di 92-monitoring.js. */
+      #v-mon > .dh,
+      #v-mon > #dlvPanel ~ * { display: none !important; }
+      #v-mon > #dlvPanel { margin-top: 4px; }

@@ -93,7 +93,7 @@
   "hidden": [
    "v-mon"
   ],
-  "text": "Monitoring Kiriman Pantau status kiriman Anda Dashboard delivery belum terhubung. Isi alamat spreadsheet di \"Sumber dashboard delivery\" di bawah. Atur sumber data Sumber dashboard delivery Periode Hari ini 7 Hari 30 Hari Unit / Area Semua Unit Muat ulang Kirim ringkasan ke Telegram Pengaturan sumber & kolom"
+  "text": "Dashboard delivery belum terhubung. Isi alamat spreadsheet di \"Sumber dashboard delivery\" di bawah. Atur sumber data Sumber dashboard delivery"
  },
  "data": {
   "title": "Data WMS",

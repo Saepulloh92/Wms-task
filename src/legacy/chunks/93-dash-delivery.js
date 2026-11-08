@@ -146,8 +146,8 @@
         }
         const age = (Date.now() - dlvCache.at) / 60000,
           stale = dlv.auto && age > dlv.auto * 2 + 1;
-        // lencana hanya muncul jika data lama, atau lencana Monitoring di atasnya kosong (hindari "Tersinkron" ganda)
-        const showAt = stale || !$("monAt").textContent;
+        // Beranda hanya berisi dashboard delivery: lencana sinkron panel ini selalu tampil
+        const showAt = true;
         $("dlvAt").className = "sync " + (stale ? "old" : "ok");
         $("dlvAt").textContent = showAt ? (stale ? "Data lama" : "Tersinkron") + " · " + new Date(dlvCache.at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : "";
         const ttl = dlvC("F2"),
