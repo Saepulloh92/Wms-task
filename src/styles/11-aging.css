@@ -56,3 +56,8 @@
 .agi-rak[open] { border-color: var(--blue, #1d4ed8); }
 .agi-row { grid-template-columns: 76px 1fr 40px; }
 .agi-tb th.sticky, .agi-tb tbody th { position: sticky; left: 0; background: var(--card, #fff); }
+/* Centang "tumpak & item sama": cukup isi qty */
+.agi-form label.agi-same { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border: 1.5px solid var(--line, #cbd5e1); border-radius: 10px; font-size: 15px; cursor: pointer; }
+.agi-same input { flex: none; width: 24px; height: 24px; margin: 1px 0 0; accent-color: var(--green, #16a34a); }
+.agi-same small { display: block; margin-top: 2px; font-weight: 400; color: var(--muted, #6b7a89); }
+.agi-same:has(input:checked) { border-color: var(--green, #16a34a); background: rgba(22, 163, 74, .08); }

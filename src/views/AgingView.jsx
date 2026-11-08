@@ -147,14 +147,14 @@ export default function AgingView() {
 }
 
 function RakCard({ x, a, kelas, onClass, onSave, onClear }) {
-  const [f, setF] = useState({ tumpak: a?.tumpak || "", pipa: a?.pipa || "", qty: a?.qty ?? "" });
+  const [f, setF] = useState({ tumpak: a?.sesuai ? "" : a?.tumpak || "", pipa: a?.sesuai ? "" : a?.pipa || "", qty: a?.qty ?? "", sesuai: !!a?.sesuai });
   const sig = normSignal(x.sinyal);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   return (
     <details className={"card agi-rak" + (a ? " done" : "")}>
       <summary>
         <span className="agi-sg" style={{ background: SIGNAL_COLOR[sig] || "#ccc", color: sig === "Kuning 3" || sig === "Hijau 2" || sig === "Merah" ? "#fff" : "#222" }}>{sig || "?"}</span>
-        <span className="agi-bn"><b>{x.bin}</b><span className="agi-it">{x.item}</span><small>{x.aging} hari · stok {fmt(x.onhand)}</small></span>
+        <span className="agi-bn"><b>{x.bin}</b><span className="agi-it">{x.item}</span><small>{x.aging} hari · stok {fmt(x.onhand)}{a ? " · cek " + fmt(a.qty ?? 0) + (a.sesuai ? " (sesuai)" : "") : ""}</small></span>
         <span className={"agi-ck" + (a ? " on" : "")} aria-label={a ? "Sudah dicek" : "Belum dicek"}>{a ? "✓" : ""}</span>
       </summary>
       <div className="agi-form">
@@ -164,14 +164,20 @@ function RakCard({ x, a, kelas, onClass, onSave, onClear }) {
             {CLASSES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </label>
-        <div className="row2">
-          <label>Actual tumpak<input value={f.tumpak} onChange={set("tumpak")} placeholder="AK140" autoCapitalize="characters" /></label>
-          <label>Actual pipa<input value={f.pipa} onChange={set("pipa")} placeholder="AW 3" /></label>
-        </div>
-        <label>Actual qty<input inputMode="numeric" value={f.qty} onChange={(e) => setF({ ...f, qty: e.target.value.replace(/[^\d]/g, "") })} placeholder="0" /></label>
+        <label className="agi-same">
+          <input type="checkbox" checked={f.sesuai} onChange={(e) => setF({ ...f, sesuai: e.target.checked })} />
+          <span>No. tumpak & item sama dengan sistem<small>Centang jika sesuai, cukup isi qty.</small></span>
+        </label>
+        {!f.sesuai && (
+          <div className="row2">
+            <label>Actual tumpak<input value={f.tumpak} onChange={set("tumpak")} placeholder="AK140" autoCapitalize="characters" /></label>
+            <label>Actual pipa<input value={f.pipa} onChange={set("pipa")} placeholder="AW 3" /></label>
+          </div>
+        )}
+        <label>Actual qty<input inputMode="numeric" autoFocus={f.sesuai && !a} value={f.qty} onChange={(e) => setF({ ...f, qty: e.target.value.replace(/[^\d]/g, "") })} placeholder="0" /></label>
         <div className="row-act">
-          <button className="btn pri" disabled={!(f.tumpak || f.pipa || f.qty !== "")} onClick={() => onSave(x.bin, f)}>Simpan cek</button>
-          {a && <button className="btn sec inl" onClick={() => { onClear(x.bin); setF({ tumpak: "", pipa: "", qty: "" }); }}>Hapus</button>}
+          <button className="btn pri" disabled={f.sesuai ? f.qty === "" : !(f.tumpak || f.pipa || f.qty !== "")} onClick={() => onSave(x.bin, f.sesuai ? { tumpak: "Sesuai", pipa: "Sesuai", qty: f.qty, sesuai: true } : { tumpak: f.tumpak, pipa: f.pipa, qty: f.qty })}>Simpan cek</button>
+          {a && <button className="btn sec inl" onClick={() => { onClear(x.bin); setF({ tumpak: "", pipa: "", qty: "", sesuai: false }); }}>Hapus</button>}
         </div>
       </div>
     </details>
