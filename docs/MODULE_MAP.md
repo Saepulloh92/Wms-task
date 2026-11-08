@@ -22,7 +22,7 @@ Cari fitur di sini, buka **hanya satu file**. Semua chunk `NN-*.js` dijalankan b
 | `85-a11y-bin-nav.js` | 174 | Aksesibilitas + navigasi bin + input | navTo, holdStep | – |
 | `88-backup.js` | 175 | Cadangan & peringatan penyimpanan | stCheck, guardUi, doBackup, bkCheck, applyRestore | warehouse_so_dest_v1 |
 | `90-telegram.js` | 252 | Telegram | outText, tgRun, tgChunks, tgSend, tgApi, tgPost, tgNote, tgFlush, tgBin, tgArea … | warehouse_so_tg_v1<br>warehouse_so_tgq_v1 |
-| `92-monitoring.js` | 440 | Monitoring kiriman / Beranda | monCSV, monUrls, monNum, monCol, monBuild, monCmp, monPct, monSeg, monRender, monLoad … | warehouse_so_mon_v1<br>warehouse_so_monc_v1<br>warehouse_so_mong_v1 |
+| `92-monitoring.js` | 584 | Monitoring Kiriman / Beranda (dashboard KPI, tren, status, daftar wilayah) | monCSV, monBuild, monSumOf, monSnap, monDash, monTrendSvg, monDetail, monRender, monLoad … | warehouse_so_mon_v1<br>warehouse_so_monc_v1<br>warehouse_so_mong_v1<br>warehouse_so_monh_v1 |
 | `95-tasks.js` | 210 | Tugas Bin | taskBadges, renderTaskBar, tkPick, renderTask, tkIngest | – |
 | `97-bridge-links.js` | 9 | Jembatan: membuka state & helper legacy ke React lewat window.WMS (lihat src/legacy/bridge.js). | – | – |
 | `76-menu-groups.js` | 50 | Menu samping bertingkat (accordion) | menuSync | – |

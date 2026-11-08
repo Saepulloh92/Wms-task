@@ -1,9 +1,12 @@
-          <h2>Beranda</h2>
-          <p class="hint">Posisi kiriman per wilayah. Ketuk wilayah untuk melihat detail.</p>
-          <div class="mon-bar">
-            <button class="btn sec sm inl" id="monRef">Muat ulang</button>
-            <span class="at" id="monAt"></span>
+          <div class="dh">
+            <div><h2>Monitoring Kiriman</h2><p class="hint">Pantau status kiriman Anda</p></div>
+            <span class="sync" id="monAt" role="status"></span>
           </div>
+          <div class="dflt">
+            <label class="dsel"><small>Periode</small><select id="monPer"><option value="1">Hari ini</option><option value="7">7 Hari</option><option value="30">30 Hari</option></select></label>
+            <label class="dsel"><small>Unit / Area</small><select id="monUnit"><option value="">Semua Unit</option></select></label>
+          </div>
+          <div class="mon-bar"><button class="btn sec sm inl" id="monRef">Muat ulang</button></div>
           <div id="monMsg"></div>
           <div id="monOver"></div>
           <div id="monCmp"></div>

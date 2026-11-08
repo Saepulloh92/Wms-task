@@ -3,7 +3,8 @@
       /* ---------- monitoring kiriman ---------- */
       const K_MON = "warehouse_so_mon_v1",
         K_MONC = "warehouse_so_monc_v1",
-        K_MONG = "warehouse_so_mong_v1";
+        K_MONG = "warehouse_so_mong_v1",
+        K_MONH = "warehouse_so_monh_v1";
       const MON_DEF = [
         { role: "nama", label: "Wilayah / nama baris", col: "A", type: "teks" },
         { role: "total", label: "Total mobil", col: "B", type: "angka" },
@@ -23,11 +24,14 @@
         fields: Array.isArray(monS.fields) && monS.fields.length ? monS.fields : MON_DEF.map((f) => ({ ...f })),
       };
       let monCache = ld(K_MONC, null), // { at, rows, src }
-        monView = "kartu",
+        monView = "ringkas",
         monQ = "",
         monTimer = 0,
         monBusy = false,
         monErr = "";
+      let monUnit = "", monPer = 1, monTr = 7;
+      const monH = ld(K_MONH, {}), // riwayat harian { "YYYY-MM-DD": {total,keluar,masuk,proses,belum,gagal,u:{wilayah:{...}}} }
+        monOpen = new Set();
       const monLetter = (i) => {
         let s2 = "";
         for (i++; i > 0; i = Math.floor((i - 1) / 26)) s2 = String.fromCharCode(65 + ((i - 1) % 26)) + s2;
@@ -86,6 +90,17 @@
         const k = nrm(spec);
         return k ? hdr.findIndex((h) => nrm(h).includes(k)) : -1;
       }
+      function monSumOf(groups) {
+        const sum = {};
+        ["total", "belum", "masuk", "proses", "keluar"].forEach((k) => {
+          const v = groups.map((g) => g.n[k]).filter((x) => x != null);
+          sum[k] = v.length ? v.reduce((a, b) => a + b, 0) : null;
+        });
+        sum.gagal = groups.reduce((a, g) => a + g.gagalN, 0);
+        const pv = groups.map((g) => g.n.progress).filter((x) => x != null);
+        sum.progress = sum.total && sum.keluar != null ? (sum.keluar / sum.total) * 100 : pv.length ? pv.reduce((a, b) => a + b, 0) / pv.length : null;
+        return sum;
+      }
       function monBuild(rows) {
         const hdr = rows[Math.max(0, mon.start - 2)] || [];
         const F = mon.fields.map((f) => ({ ...f, i: monCol(f.col, hdr) }));
@@ -118,14 +133,7 @@
             if (n.progress == null && n.total && n.keluar != null) n.progress = (n.keluar / n.total) * 100;
             groups.push(g);
           });
-        const sum = {};
-        ["total", "belum", "masuk", "proses", "keluar"].forEach((k) => {
-          const v = groups.map((g) => g.n[k]).filter((x) => x != null);
-          sum[k] = v.length ? v.reduce((a, b) => a + b, 0) : null;
-        });
-        sum.gagal = groups.reduce((a, g) => a + g.gagalN, 0);
-        const pv = groups.map((g) => g.n.progress).filter((x) => x != null);
-        sum.progress = sum.total && sum.keluar != null ? (sum.keluar / sum.total) * 100 : pv.length ? pv.reduce((a, b) => a + b, 0) / pv.length : null;
+        const sum = monSumOf(groups);
         return { F, groups, sum, missing, hasName: !!(nf && nf.i >= 0) };
       }
 
@@ -173,6 +181,111 @@
         return parts.map(([k, v]) => (v ? `<i class="c-${k}" style="width:${(v / tot) * 100}%"></i>` : "")).join("");
       }
       const MON_LBL = (b, r) => (b.F.find((f) => f.role === r) || {}).label || r;
+      /* ---- dashboard: riwayat harian, KPI, tren, status ---- */
+      function monSnap(b) {
+        if (!b.groups.length) return;
+        const pick = (S) => ({ total: S.total, keluar: S.keluar, masuk: S.masuk, proses: S.proses, belum: S.belum, gagal: S.gagal }),
+          u = {};
+        b.groups.forEach((g) => (u[g.name] = pick({ ...g.n, gagal: g.gagalN })));
+        monH[mISO(new Date())] = { ...pick(b.sum), u };
+        Object.keys(monH).sort().slice(0, -60).forEach((k) => delete monH[k]);
+        sv(K_MONH, monH);
+      }
+      const monSnapOf = (sn, unit) => (sn ? (unit ? (sn.u || {})[unit] : sn) || null : null);
+      function monPrevSnap(per) {
+        const lim = new Date();
+        lim.setHours(0, 0, 0, 0);
+        lim.setDate(lim.getDate() - per);
+        const lk = mISO(lim), today = mISO(new Date()), k = Object.keys(monH).filter((x) => x <= lk && x < today).sort().pop();
+        return k ? { k, s: monH[k] } : null;
+      }
+      function monTrend(days, unit) {
+        const pts = [];
+        for (let i = days - 1; i >= 0; i--) {
+          const d = new Date();
+          d.setHours(0, 0, 0, 0);
+          d.setDate(d.getDate() - i);
+          const s2 = monSnapOf(monH[mISO(d)], unit);
+          pts.push({ d, t: s2 ? s2.total : null, k: s2 ? s2.keluar : null });
+        }
+        return pts;
+      }
+      function monTrendSvg(pts) {
+        const vals = pts.flatMap((p) => [p.t, p.k]).filter((v) => v != null);
+        if (!vals.length) return '<div class="empty">Belum ada riwayat. Tren terbentuk dari data yang dimuat setiap hari.</div>';
+        const W = 340, H = 190, L0 = 30, R = 10, T = 12, B = 28,
+          mx = Math.max(...vals, 1),
+          step = [1, 2, 5, 10, 20, 25, 50, 100, 200, 500, 1000, 2000, 5000].find((q) => mx / q <= 4) || Math.ceil(mx / 4),
+          top = Math.ceil(mx / step) * step,
+          x = (i) => L0 + (pts.length === 1 ? (W - L0 - R) / 2 : (i * (W - L0 - R)) / (pts.length - 1)),
+          y = (v) => T + (H - T - B) * (1 - v / top),
+          DAY = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"],
+          long = pts.length > 10;
+        let grid = "";
+        for (let v = 0; v <= top; v += step) grid += `<line class="g" x1="${L0}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L0 - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+        const lab = pts.map((p, i) => ((pts.length - 1 - i) % (long ? 5 : 1) === 0 ? `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${long ? p.d.getDate() + "/" + (p.d.getMonth() + 1) : DAY[p.d.getDay()]}</text>` : "")).join("");
+        const series = (key, col) => {
+          const segs = [];
+          let cur = [];
+          pts.forEach((p, i) => {
+            if (p[key] == null) { if (cur.length) segs.push(cur); cur = []; } else cur.push([x(i), y(p[key])]);
+          });
+          if (cur.length) segs.push(cur);
+          const line = segs.filter((g) => g.length > 1).map((g) => `<path d="M${g.map((q) => q.join(",")).join(" L")}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round"/>`).join("");
+          const area = segs.filter((g) => g.length > 1).map((g) => `<path d="M${g.map((q) => q.join(",")).join(" L")} L${g[g.length - 1][0]},${y(0)} L${g[0][0]},${y(0)}Z" fill="${col}" opacity=".08"/>`).join("");
+          const dots = segs.flat().map((q) => `<circle cx="${q[0]}" cy="${q[1]}" r="4" fill="${col}"/>`).join("");
+          return area + line + dots;
+        };
+        return `<svg class="dch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Grafik tren total dan terkirim ${pts.length} hari terakhir">${grid}${lab}${series("t", "#0a5bd3")}${series("k", "#2e9e68")}</svg>`;
+      }
+      const monIco = {
+        tot: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 6h11v9H2zM14 9h4l3 3.5V15h-7z"/><circle cx="7" cy="17.5" r="2" style="stroke:#0a5bd3" stroke-width="1.5"/><circle cx="17" cy="17.5" r="2" style="stroke:#0a5bd3" stroke-width="1.5"/></svg>',
+        ok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+        wip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg>',
+      };
+      const monStat = (g) => {
+        const n = g.n;
+        return g.gagalN ? ["Gagal masuk", "red"] : (n.total && n.keluar >= n.total) || n.progress >= 100 ? ["Terkirim", "ok"] : n.proses || n.masuk ? ["Dalam Proses", "wip"] : ["Pending", "pd"];
+      };
+      function monDash(S) {
+        const sum2 = (o) => (o && (o.masuk != null || o.proses != null) ? (o.masuk || 0) + (o.proses || 0) : null),
+          prs = sum2(S),
+          bel = S.belum || 0,
+          kel = S.keluar,
+          ps = monPrevSnap(monPer),
+          pv = ps && monSnapOf(ps.s, monUnit),
+          ttl = ps ? "Dibanding " + ps.k.split("-").reverse().join("/") : "Belum ada riwayat pembanding";
+        const chip = (c, p) => {
+          if (c == null || !p) return `<span class="dchip eq" title="${ttl}">–</span>`;
+          const d = Math.round(((c - p) / p) * 100);
+          return `<span class="dchip${d ? "" : " eq"}" title="${ttl}">${d > 0 ? "↑ +" : d < 0 ? "↓ " : ""}${d}%</span>`;
+        };
+        const card = (cls, v, lb, p) => `<div class="kc ${cls}"><div class="kh"><span class="ki">${monIco[cls]}</span><b>${v == null ? "–" : fmt(v)}</b></div><div class="kl">${lb}</div>${chip(v, p)}</div>`;
+        const segs = [["Terkirim", kel || 0, "#0a5bd3"], ["Dalam Proses", prs || 0, "#f5a623"], ["Pending", bel, "#9aa5b8"]],
+          tot = segs.reduce((a, q) => a + q[1], 0),
+          C = 2 * Math.PI * 40;
+        let off = 0;
+        const arcs = tot
+          ? segs.map(([, v, c]) => {
+              if (!v) return "";
+              const len = (v / tot) * C,
+                r = `<circle cx="50" cy="50" r="40" fill="none" stroke="${c}" stroke-width="14" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-off}" transform="rotate(-90 50 50)"/>`;
+              off += len;
+              return r;
+            }).join("")
+          : '<circle cx="50" cy="50" r="40" fill="none" stroke="#e6edf3" stroke-width="14"/>';
+        const pct = tot ? Math.round(((kel || 0) / tot) * 100) : 0;
+        return (
+          `<div class="kcs">${card("tot", S.total, "Total Kiriman", pv && pv.total)}${card("ok", kel, "Terkirim", pv && pv.keluar)}${card("wip", prs, "Dalam Proses", sum2(pv))}</div>` +
+          `<section class="dcard"><div class="dtop"><h3>Tren Kiriman</h3><div class="seg2" role="group" aria-label="Rentang tren"><button type="button" data-tr="7" class="${monTr === 7 ? "on" : ""}">7 Hari</button><button type="button" data-tr="30" class="${monTr === 30 ? "on" : ""}">30 Hari</button></div></div>${monTrendSvg(monTrend(monTr, monUnit))}<div class="dlg"><span class="a">Total</span><span class="b">Terkirim</span></div></section>` +
+          `<section class="dcard"><div class="dtop"><h3>Status Kiriman</h3></div><div class="dnut"><svg viewBox="0 0 100 100" role="img" aria-label="${pct}% terkirim">${arcs}<text x="50" y="52" text-anchor="middle" class="dv">${pct}%</text><text x="50" y="64" text-anchor="middle" class="ds">Terkirim</text></svg><div class="dnl">${segs.map(([lb, v, c]) => `<div><i style="background:${c}"></i><span>${lb}</span><b>${fmt(v)}</b><span class="p">${tot ? Math.round((v / tot) * 100) : 0}%</span></div>`).join("")}</div></div></section>`
+        );
+      }
+      function monDetail(b, g, L, has) {
+        const n = g.n,
+          mini = ["total", "belum", "masuk", "proses", "keluar"].filter((k) => has(k)).map((k) => `<div class="c-${k}"><small>${L(k)}</small><strong>${n[k] == null ? "–" : fmt(n[k])}</strong></div>`).join("");
+        return `<div class="dd"><div class="mg5">${mini}</div>${g.gagalN ? `<div class="gg"><b>${L("gagal")} (${g.gagalN}):</b>${g.gagal.map((x) => `<span>${esc(x)}</span>`).join("")}</div>` : ""}${g.extra.filter((e) => e.text).map((e) => `<div class="xk">${esc(e.label)}: <b>${esc(e.text)}</b></div>`).join("")}</div>`;
+      }
       function monRender() {
         monCmp();
         const msg = [];
@@ -180,6 +293,7 @@
         if (!monCache) {
           $("monMsg").innerHTML = msg.join("") || '<div class="note info"><b>Selamat datang.</b> Hubungkan spreadsheet kiriman agar status mobil tampil di sini.<br><button class="btn pri sm mt" id="monOpenSet" type="button">Atur sumber data</button></div>';
           $("monOver").innerHTML = $("monList").innerHTML = $("monTools").innerHTML = "";
+          $("monAt").className = "sync";
           $("monAt").textContent = "";
           $("monTg").disabled = true;
           return;
@@ -188,24 +302,28 @@
         $("monTg").disabled = !b.groups.length;
         const age = (Date.now() - monCache.at) / 60000,
           stale = mon.auto && monCache.src !== "file" && age > mon.auto * 2 + 1;
-        $("monAt").className = "at" + (stale ? " old" : "");
-        $("monAt").textContent = (monCache.src === "file" ? "Dari file · " : "Diperbarui ") + monClock(monCache.at) + (stale ? " · data sudah lama" : "");
+        $("monAt").className = "sync " + (stale ? "old" : monCache.src === "file" ? "file" : "ok");
+        $("monAt").textContent = (monCache.src === "file" ? "Dari file" : stale ? "Data lama" : "Tersinkron") + " · " + new Date(monCache.at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
         if (!b.hasName) msg.push('<div class="note">Kolom nama wilayah belum diatur atau tidak ditemukan. Cek pengaturan kolom.</div>');
         else if (!b.groups.length) msg.push(`<div class="note">Tidak ada baris data mulai baris ke-${mon.start}. Cek "Data mulai baris ke".</div>`);
         if (b.missing.length) msg.push(`<div class="note">Kolom tidak ditemukan: ${esc(b.missing.join(", "))}.</div>`);
         const gg = b.groups.filter((g) => g.gagalN);
         if (gg.length) msg.unshift(`<div class="note" role="alert">⚠️ <b>${fmt(gg.reduce((a, g) => a + g.gagalN, 0))} mobil gagal masuk</b> di ${gg.map((g) => esc(g.name)).join(", ")}.</div>`);
         $("monMsg").innerHTML = msg.join("");
-        const S = b.sum, L = (r) => esc(MON_LBL(b, r));
-        const cell = (r, k) => (S[r] == null ? "" : `<div class="c-${k}"><small>${L(r)}</small><strong>${fmt(S[r])}</strong></div>`);
-        $("monOver").innerHTML = b.groups.length
-          ? `<div class="ov"><div class="t"><span>${L("progress")} keseluruhan</span><b>${pr(S.progress)}</b></div><div class="pbar" role="progressbar" aria-valuenow="${Math.round(S.progress || 0)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${Math.min(100, S.progress || 0)}%"></i></div><div class="seg">${monSeg(S)}</div><div class="lg"><span class="c-belum">${L("belum")}</span><span class="c-masuk">${L("masuk")}</span><span class="c-proses">${L("proses")}</span><span class="c-keluar">${L("keluar")}</span></div><div class="mg5">${S.total != null ? `<div><small>${L("total")}</small><strong>${fmt(S.total)}</strong></div>` : ""}${cell("belum", "belum")}${cell("masuk", "masuk")}${cell("proses", "proses")}${cell("keluar", "keluar")}${b.F.some((f) => f.role === "gagal" && f.i >= 0) ? `<div class="c-gagal" style="border-top-color:var(--red)"><small>${L("gagal")}</small><strong style="color:${S.gagal ? "var(--red)" : "inherit"}">${fmt(S.gagal)}</strong></div>` : ""}</div></div>`
-          : "";
+        const names = b.groups.map((g) => g.name);
+        if (monUnit && !names.includes(monUnit)) monUnit = "";
+        $("monUnit").innerHTML = '<option value="">Semua Unit</option>' + names.map((n) => `<option value="${esc(n)}">${esc(n)}</option>`).join("");
+        $("monUnit").value = monUnit;
+        $("monPer").value = String(monPer);
+        const UG = monUnit ? b.groups.filter((g) => g.name === monUnit) : b.groups,
+          S = monUnit ? monSumOf(UG) : b.sum,
+          L = (r) => esc(MON_LBL(b, r));
+        $("monOver").innerHTML = UG.length ? monDash(S) : "";
         $("monTools").innerHTML =
-          chipsHtml(monView, [["kartu", "Kartu", ""], ["tabel", "Tabel", ""]]) +
+          chipsHtml(monView, [["ringkas", "Ringkas", ""], ["kartu", "Kartu", ""], ["tabel", "Tabel", ""]]) +
           `<input id="monQ" type="search" placeholder="Cari wilayah" value="${esc(monQ)}" style="flex:1;min-width:140px;min-height:40px;border-radius:99px;padding:6px 14px" autocomplete="off" aria-label="Cari wilayah" />`;
         const q = monQ.toLowerCase().trim(),
-          G = b.groups.filter((g) => !q || g.name.toLowerCase().includes(q));
+          G = b.groups.filter((g) => (!monUnit || g.name === monUnit) && (!q || g.name.toLowerCase().includes(q)));
         if (!G.length) {
           $("monList").innerHTML = b.groups.length ? '<div class="empty">Tidak ada wilayah yang cocok.</div>' : "";
           return;
@@ -225,6 +343,16 @@
           return;
         }
         const has = (r) => b.F.some((f) => f.role === r && f.i >= 0);
+        if (monView === "ringkas") {
+          $("monList").innerHTML =
+            `<div class="dcard"><div class="dtop"><h3>Per Wilayah</h3><span class="fine">${G.length} wilayah · ketuk untuk detail</span></div>` +
+            G.map((g) => {
+              const n = g.n, st = monStat(g);
+              return `<details class="drow" data-n="${esc(g.name)}"${monOpen.has(g.name) ? " open" : ""}><summary><span class="pill2 ${st[1]}">${st[0]}</span><span class="dnm"><b>${esc(g.name)}</b><small>${n.keluar == null ? "–" : fmt(n.keluar)}${n.total != null ? " / " + fmt(n.total) : ""} mobil keluar</small></span><span class="dpc">${pr(n.progress)}</span></summary>${monDetail(b, g, L, has)}</details>`;
+            }).join("") +
+            "</div>";
+          return;
+        }
         $("monList").innerHTML =
           '<div class="mgrid">' +
           G.map((g) => {
@@ -253,6 +381,16 @@
           if (i) { i.focus(); try { i.setSelectionRange(p, p); } catch (x) {} }
         }
       };
+      $("monOver").onclick = (e) => {
+        const t = e.target.closest("[data-tr]");
+        if (t) { monTr = Number(t.dataset.tr); monRender(); }
+      };
+      $("monPer").onchange = () => { monPer = Number($("monPer").value) || 1; monRender(); };
+      $("monUnit").onchange = () => { monUnit = $("monUnit").value; monRender(); };
+      $("monList").addEventListener("toggle", (e) => {
+        const d = e.target;
+        if (d.classList && d.classList.contains("drow")) d.open ? monOpen.add(d.dataset.n) : monOpen.delete(d.dataset.n);
+      }, true);
       async function monLoad(manual) {
         if (monBusy) return;
         const cands = monUrls(mon.url);
@@ -288,6 +426,7 @@
         monErr = "";
         monCache = { at: Date.now(), rows: rows.slice(0, 600).map((r) => r.slice(0, 40)), src: "url" };
         sv(K_MONC, monCache);
+        monSnap(monBuild(monCache.rows));
         monRender();
         monAlertCheck();
         if (manual) toast("Data dimuat: " + monBuild(monCache.rows).groups.length + " baris");
@@ -406,6 +545,7 @@
             monRead();
             monCache = { at: Date.now(), rows: rows.slice(0, 600).map((q) => q.slice(0, 40).map(String)), src: "file" };
             sv(K_MONC, monCache);
+        monSnap(monBuild(monCache.rows));
             monErr = "";
             monRender();
             toast("Data dimuat dari file");
