@@ -2,7 +2,7 @@
             <div><h2>Clearing</h2><p class="hint">Cocokkan voucher dan qty laporan dengan hasil counting.</p></div>
             <span class="sync" id="clrAt" role="status"></span>
           </div>
-          <details class="hint-more"><summary>Cara kerja</summary><p class="fine">Hanya voucher dari laporan yang Anda impor yang dicocokkan; baris counting lain diabaikan. Jika satu voucher punya beberapa foto, dipakai counting terbaru. Counting dalam ikatan dibaca otomatis (qty × 25 sama dengan qty laporan dianggap cocok). SMS diambil dari 8 angka depan kode item hasil counting.</p></details>
+          <details class="hint-more"><summary>Cara kerja</summary><p class="fine">Hanya voucher dari laporan yang Anda impor yang dicocokkan; baris counting lain diabaikan. Jika satu voucher punya beberapa foto, dipakai counting terbaru. Counting dalam ikatan dibaca otomatis (qty × 25 sama dengan qty laporan dianggap cocok).</p></details>
           <div class="panel">
             <label for="clrRepFile"><span class="stepno">1</span>Laporan Voucher (.xlsx / .csv)</label>
             <input id="clrRepFile" type="file" accept=".csv,.xls,.xlsx,text/csv" />
@@ -18,12 +18,12 @@
           <div class="panel mt">
             <div class="chips" id="clrChips"></div>
             <div class="chips" id="clrShChips"></div>
-            <label for="clrQ">Cari voucher / SMS / item</label>
+            <label for="clrQ">Cari voucher / item</label>
             <input id="clrQ" type="search" placeholder="Contoh: 4043814" autocomplete="off" />
             <div id="clrList" class="bin-list"></div>
           </div>
           <button class="btn pri mt ximp" id="clrCsv" type="button">Unduh hasil clearing (CSV)</button>
-          <details class="mt"><summary>Salin data untuk input WMS</summary><button class="btn sec mt" id="clrCopy" type="button">Salin No Voucher + SMS + Qty</button></details>
+          <details class="mt"><summary>Salin data untuk input WMS</summary><button class="btn sec mt" id="clrCopy" type="button">Salin No Voucher + Qty</button></details>
           <div class="panel mt" id="clrSavePanel">
             <p class="fine" id="clrSaveInfo" role="status" style="margin:0 0 10px"></p>
             <button class="btn pri" id="clrSaveHist" type="button">Simpan, salin &amp; kirim ke Telegram</button>
@@ -44,7 +44,7 @@
               <input id="clrCV" placeholder="Huruf kolom (A, B…) atau judul, contoh: No Voucher" autocomplete="off" />
               <label for="clrCQ">Kolom Qty counting</label>
               <input id="clrCQ" placeholder="Contoh: Qty" autocomplete="off" />
-              <label for="clrCK">Kolom Kode Item (sumber SMS, 8 angka depan)</label>
+              <label for="clrCK">Kolom Kode Item</label>
               <input id="clrCK" placeholder="Contoh: Kode Item" autocomplete="off" />
               <p class="fine">Shift dibaca dari kolom Shift di laporan voucher; kalau tidak ada, dihitung dari jam foto counting (Shift 1 mulai 07.00, Shift 2 15.00, Shift 3 23.00). Kolom No Lori dibaca dari kolom berjudul lori / nopol / plat.</p>
               <label for="clrAutoSel">Muat ulang counting otomatis</label>
