@@ -24,3 +24,7 @@ input[type="file"]::file-selector-button { margin-right: 12px; padding: 10px 16p
 .shr { display: grid; grid-template-columns: 70px 1fr 64px; gap: 10px; align-items: center; font-size: 14px; }
 .shr .pbar { margin: 0; }
 .shr b { text-align: right; }
+
+/* Filter posisi rak (bawah/atas) di Periksa Bin: baris sendiri di atas chip status */
+#chipsR { padding-bottom: 4px; }
+#chipsR[hidden] { display: none; }

@@ -87,6 +87,14 @@
           renderBins();
         }
       };
+      $("chipsR").onclick = (e) => {
+        const b = e.target.closest("[data-k]");
+        if (b) {
+          rf = b.dataset.k;
+          sv(K_RF, rf);
+          renderBins();
+        }
+      };
       $("chipsC").onclick = (e) => {
         const b = e.target.closest("[data-k]");
         if (b) {
@@ -115,6 +123,7 @@
             }
             $("area").value = x.area;
             lf = "all";
+            rf = "all"; // bin tujuan harus tampil, apa pun filter posisi rak sebelumnya
             $("search").value = "";
             renderBins();
             open(x.bin);

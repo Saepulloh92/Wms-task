@@ -17,15 +17,38 @@
           .join("");
       }
       const BIN_MAX = 120; // batas bin yang digambar sekaligus, supaya HP low-end tidak macet
+      /* Posisi rak dari huruf akhir nama bin: B = bawah, A = atas, "-" = tanpa huruf (mis. G-02).
+         Dikenali "B1-09B" maupun "B1-09-B"; huruf harus didahului angka supaya nama area/rak lain tidak ikut terhitung. */
+      const rakLv = (bin) => {
+        const m = /\d-?([AB])$/i.exec(String(bin).trim());
+        return m ? m[1].toUpperCase() : "-";
+      };
+      const K_RF = "warehouse_so_rakfilter_v1";
+      let rf = ld(K_RF, "all");
+      if (!["all", "A", "B", "-"].includes(rf)) rf = "all";
       function renderBins() {
         const area = $("area").value,
           q = $("search").value.toLowerCase().trim();
-        const base = DATA.filter(
+        const baseAll = DATA.filter(
           (x) =>
             (inScope(x.area) || (curU && tasks[x.bin] && tasks[x.bin].u === curU)) &&
             (area === "*" || x.area === area) &&
             (!q || [x.bin, x.kode, x.item].join(" ").toLowerCase().includes(q)),
         );
+        // filter posisi rak hanya tampil jika data punya rak berhuruf A/B; selain itu diabaikan (tanpa mengubah pilihan tersimpan)
+        const hasAB = DATA.some((x) => rakLv(x.bin) !== "-"),
+          rfx = hasAB ? rf : "all",
+          rn = (k) => baseAll.filter((x) => rakLv(x.bin) === k).length;
+        $("chipsR").hidden = !hasAB;
+        $("chipsR").innerHTML = hasAB
+          ? chipsHtml(rfx, [
+              ["all", "Semua rak", baseAll.length],
+              ...[["B", "Bawah (B)"], ["A", "Atas (A)"], ["-", "Tanpa huruf"]]
+                .filter(([k]) => rn(k) || rfx === k)
+                .map(([k, l]) => [k, l, rn(k)]),
+            ])
+          : "";
+        const base = rfx === "all" ? baseAll : baseAll.filter((x) => rakLv(x.bin) === rfx);
         const n = (s) => base.filter((x) => stat(x) === s).length;
         renderAreaBar(area);
         renderTaskBar();
