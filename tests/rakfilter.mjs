@@ -41,7 +41,8 @@ const all = await bins();
 const nB = all.filter(isB).length, nA = all.filter(isA).length, nN = all.length - nA - nB;
 ok(await page.locator("#chipsR").isVisible(), "baris filter rak tampil");
 ok(all.length === 38 && nB === 19 && nA === 18 && nN === 1, `data uji: total ${all.length}, B ${nB}, A ${nA}, tanpa huruf ${nN}`);
-ok((await chip(/Bawah \(B\)\s*19/).count()) === 1 && (await chip(/Atas \(A\)\s*18/).count()) === 1 && (await chip(/Tanpa huruf\s*1/).count()) === 1, "jumlah di chip sesuai");
+ok((await chip(/Bawah \(B\)\s*19/).count()) === 1 && (await chip(/Atas \(A\)\s*18/).count()) === 1, "jumlah di chip sesuai");
+ok((await chip(/Tanpa huruf/).count()) === 0, "tidak ada chip untuk rak tanpa huruf");
 
 await press(/Bawah/);
 let l = await bins();
@@ -53,9 +54,7 @@ await press(/Atas/);
 l = await bins();
 ok(l.length === nA && l.every(isA), `Atas: ${l.length} bin, semuanya berakhiran A`);
 
-await press(/Tanpa huruf/);
-l = await bins();
-ok(l.length === 1 && l[0] === "G-02", "Tanpa huruf: hanya G-02");
+ok(!l.includes("G-02"), "G-02 (tanpa huruf) tidak ikut di filter Atas");
 
 await press(/Bawah/);
 await page.reload();
@@ -66,7 +65,8 @@ l = await bins();
 ok(l.length === nB && l.every(isB), "pilihan Bawah tersimpan setelah muat ulang");
 
 await press(/Semua rak/);
-ok((await bins()).length === all.length, "Semua rak: kembali ke seluruh bin");
+const back = await bins();
+ok(back.length === all.length && back.includes("G-02"), "Semua rak: kembali ke seluruh bin, G-02 tetap ada");
 ok(errors.length === 0, "tanpa error JavaScript" + (errors.length ? ": " + errors.join("; ") : ""));
 
 await browser.close();

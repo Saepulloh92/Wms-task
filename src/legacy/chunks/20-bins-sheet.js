@@ -17,7 +17,7 @@
           .join("");
       }
       const BIN_MAX = 120; // batas bin yang digambar sekaligus, supaya HP low-end tidak macet
-      /* Posisi rak dari huruf akhir nama bin: B = bawah, A = atas, "-" = tanpa huruf (mis. G-02).
+      /* Posisi rak dari huruf akhir nama bin: B = bawah, A = atas. Rak tanpa huruf (mis. G-02) tidak ikut filter, hanya tampil di "Semua rak".
          Dikenali "B1-09B" maupun "B1-09-B"; huruf harus didahului angka supaya nama area/rak lain tidak ikut terhitung. */
       const rakLv = (bin) => {
         const m = /\d-?([AB])$/i.exec(String(bin).trim());
@@ -25,7 +25,7 @@
       };
       const K_RF = "warehouse_so_rakfilter_v1";
       let rf = ld(K_RF, "all");
-      if (!["all", "A", "B", "-"].includes(rf)) rf = "all";
+      if (!["all", "A", "B"].includes(rf)) rf = "all";
       function renderBins() {
         const area = $("area").value,
           q = $("search").value.toLowerCase().trim();
@@ -43,7 +43,7 @@
         $("chipsR").innerHTML = hasAB
           ? chipsHtml(rfx, [
               ["all", "Semua rak", baseAll.length],
-              ...[["B", "Bawah (B)"], ["A", "Atas (A)"], ["-", "Tanpa huruf"]]
+              ...[["B", "Bawah (B)"], ["A", "Atas (A)"]]
                 .filter(([k]) => rn(k) || rfx === k)
                 .map(([k, l]) => [k, l, rn(k)]),
             ])

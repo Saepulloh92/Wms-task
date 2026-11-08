@@ -37,7 +37,7 @@ Cari fitur di sini, buka **hanya satu file**. Semua chunk `NN-*.js` dijalankan b
 
 | Menu (id) | Markup (`src/markup/views/`) | Logika | Status |
 |---|---|---|---|
-| so — Periksa Bin | so.html + dialogs/sheet.html | 20-bins-sheet (filter posisi rak: rakLv, rf; klik chip di 45-nav), 25-check-draft-undo | legacy |
+| so — Periksa Bin | so.html + dialogs/sheet.html | 20-bins-sheet (filter rak berakhiran A/B: rakLv, rf; klik chip di 45-nav), 25-check-draft-undo | legacy |
 | dc — DC Harian | dc.html + dialogs/dcSheet, dcPickSheet | 70-dc | legacy |
 | check — Review Supervisor | check.html | 30-review | legacy |
 | adj — File Adjust | adj.html | 35-adjust | legacy |
