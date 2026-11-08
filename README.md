@@ -23,5 +23,8 @@ dan isi URL + token di aplikasi (menu Data → Sinkron) atau di `.env.local`.
 Repo → Settings → Pages → Source: **GitHub Actions**. Opsional: Settings → Secrets → Actions untuk `VITE_SYNC_URL`, `VITE_SYNC_TOKEN`
 (ingat: nilai ini terbaca di bundel publik; untuk repo/hosting publik lebih baik dikosongkan dan diisi dari aplikasi).
 
+## Tes
+`npm run test:rak` dan `npm run test:parity` (butuh `playwright` + `npx vite preview --port 4173`).
+
 ## Struktur & kontribusi
 Lihat `CLAUDE.md` (aturan kerja), `docs/MODULE_MAP.md` (peta fitur → file), `docs/MIGRATION.md` (migrasi ke React bertahap).
