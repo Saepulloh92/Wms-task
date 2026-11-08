@@ -170,13 +170,13 @@ function RakCard({ x, a, kelas, onClass, onSave, onClear }) {
         </label>
         {!f.sesuai && (
           <div className="row2">
-            <label>Actual tumpak<input value={f.tumpak} onChange={set("tumpak")} placeholder="AK140" autoCapitalize="characters" /></label>
-            <label>Actual pipa<input value={f.pipa} onChange={set("pipa")} placeholder="AW 3" /></label>
+            <label>Actual tumpak<input value={f.tumpak} onChange={set("tumpak")} placeholder="AK140" autoCapitalize="characters" autoComplete="off" autoCorrect="off" spellCheck={false} enterKeyHint="next" /></label>
+            <label>Actual pipa<input value={f.pipa} onChange={set("pipa")} placeholder="AW 3" autoComplete="off" autoCorrect="off" spellCheck={false} enterKeyHint="next" /></label>
           </div>
         )}
-        <label>Actual qty<input inputMode="numeric" autoFocus={f.sesuai && !a} value={f.qty} onChange={(e) => setF({ ...f, qty: e.target.value.replace(/[^\d]/g, "") })} placeholder="0" /></label>
+        <label>Actual qty<input inputMode="numeric" enterKeyHint="done" autoComplete="off" autoFocus={f.sesuai && !a} value={f.qty} onChange={(e) => setF({ ...f, qty: e.target.value.replace(/[^\d]/g, "") })} placeholder="0" /></label>
         <div className="row-act">
-          <button className="btn pri" disabled={f.sesuai ? f.qty === "" : !(f.tumpak || f.pipa || f.qty !== "")} onClick={() => onSave(x.bin, f.sesuai ? { tumpak: "Sesuai", pipa: "Sesuai", qty: f.qty, sesuai: true } : { tumpak: f.tumpak, pipa: f.pipa, qty: f.qty })}>Simpan cek</button>
+          <button className="btn pri" disabled={f.sesuai ? f.qty === "" : !(f.tumpak || f.pipa || f.qty !== "")} onClick={(e) => { const d = e.currentTarget.closest("details"); onSave(x.bin, f.sesuai ? { tumpak: "Sesuai", pipa: "Sesuai", qty: f.qty, sesuai: true } : { tumpak: f.tumpak, pipa: f.pipa, qty: f.qty }); if (d) d.open = false; }}>Simpan cek</button>
           {a && <button className="btn sec inl" onClick={() => { onClear(x.bin); setF({ tumpak: "", pipa: "", qty: "", sesuai: false }); }}>Hapus</button>}
         </div>
       </div>
