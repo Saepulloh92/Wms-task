@@ -89,15 +89,44 @@
       const tkMine = () => DATA.filter((x) => tasks[x.bin] && (!curU || tasks[x.bin].u === curU));
       /* Hash password (field user.pin) dan kunci percobaan masuk */
       let supUntil = 0, pinFails = 0, pinLock = 0;
-      async function pinHash(p) {
+      /* Format baru "p1$iterasi$salt$hash" (PBKDF2-SHA256, salt acak per user). Hash ini ikut sinkron antar perangkat,
+         jadi harus lambat dan bergaram. Hash lama (SHA-256 polos "sc-wms|", atau "w…") masih bisa dicek lalu
+         otomatis ditingkatkan saat user berhasil masuk. Butuh HTTPS (crypto.subtle). */
+      const PW_ITER = 100000;
+      const pwHex = (u8) => [...u8].map((x) => x.toString(16).padStart(2, "0")).join("");
+      async function pwDerive(p, salt, iter) {
+        const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(p), "PBKDF2", false, ["deriveBits"]);
+        return pwHex(new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: iter }, k, 256)));
+      }
+      async function pinMake(p) {
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        return "p1$" + PW_ITER + "$" + pwHex(salt) + "$" + (await pwDerive(p, salt, PW_ITER));
+      }
+      async function pinLegacy(p) {
         const s0 = "sc-wms|" + p;
         try {
           const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s0));
-          return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+          return pwHex(new Uint8Array(b));
         } catch (e) {
           let h = 5381;
           for (let i = 0; i < s0.length; i++) h = ((h << 5) + h + s0.charCodeAt(i)) | 0;
           return "w" + h;
+        }
+      }
+      const pinIsLegacy = (s) => typeof s === "string" && !s.startsWith("p1$");
+      async function pinCheck(p, stored) {
+        if (typeof stored !== "string" || !stored) return false;
+        if (pinIsLegacy(stored)) return (await pinLegacy(p)) === stored;
+        const [, it, sh, hh] = stored.split("$");
+        const iter = Number(it);
+        if (!(iter >= 1000 && iter <= 1000000) || !/^[0-9a-f]{32}$/.test(sh || "") || !/^[0-9a-f]{64}$/.test(hh || "")) return false;
+        try {
+          const got = await pwDerive(p, new Uint8Array(sh.match(/../g).map((h) => parseInt(h, 16))), iter);
+          let d = 0;
+          for (let i = 0; i < 64; i++) d |= got.charCodeAt(i) ^ hh.charCodeAt(i);
+          return d === 0;
+        } catch (e) {
+          return false;
         }
       }
       async function supAuth() {

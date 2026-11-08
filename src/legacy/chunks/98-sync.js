@@ -77,7 +77,8 @@
         });
         const has = (n) => first || SY.rep.includes(n);
         if (has("master")) data[K_M] = DATA;
-        if (has("users")) data[K_U] = users.map((u) => { const c = { ...u }; delete c.pin; return c; }); // tanpa PIN
+        // hash password ikut dikirim (PBKDF2 + salt) supaya login berlaku di semua perangkat; hash lama tanpa garam tidak pernah dikirim
+        if (has("users")) data[K_U] = users.map((u) => { const c = { ...u }; if (pinIsLegacy(c.pin)) delete c.pin; return c; });
         if (has("mon")) data[K_MON] = mon;
         if (has("codefix")) data[K_F] = codeFix;
         if (has("dcPick")) data[K_DP] = dcPick;
@@ -146,10 +147,11 @@
             return eq;
           };
           if (rd[K_U] && !SY.rep.includes("users") && !same("users", rd[K_U])) {
-            // server tidak menyimpan PIN: pertahankan PIN yang sudah ada di perangkat ini (cocokkan lewat id)
+            // pertahankan password lokal (cocokkan lewat id) bila server tidak menyimpannya: server lama (tanpa resp.pins)
+            // atau hash lama yang memang tidak pernah dikirim. Server baru yang tidak punya password berarti sudah dihapus.
             const lpin = {};
             users.forEach((u) => { if (u.pin) lpin[u.id] = u.pin; });
-            users = rd[K_U].map((u) => (lpin[u.id] && !u.pin ? { ...u, pin: lpin[u.id] } : u));
+            users = rd[K_U].map((u) => (lpin[u.id] && !u.pin && (!resp.pins || pinIsLegacy(lpin[u.id])) ? { ...u, pin: lpin[u.id] } : u));
             migrateUsers();
             put(K_U, users);
             applySession();

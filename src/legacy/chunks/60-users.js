@@ -140,7 +140,8 @@
           markInvalid($("lgPin"), "lgErr");
           return ($("lgErr").textContent = "Terlalu banyak salah. Tunggu beberapa detik.");
         }
-        if ((await pinHash($("lgPin").value.trim())) !== u.pin) {
+        const pw = $("lgPin").value.trim();
+        if (!(await pinCheck(pw, u.pin))) {
           if (++pinFails >= 5) {
             pinLock = Date.now() + 30000;
             pinFails = 0;
@@ -151,6 +152,10 @@
           return;
         }
         pinFails = 0;
+        if (pinIsLegacy(u.pin)) {
+          // hash lama (belum bergaram): tingkatkan diam-diam ke format baru
+          try { u.pin = await pinMake(pw); sv(K_U, users); } catch (e) {}
+        }
         meId = u.id;
         try { sessionStorage.setItem(K_ME, meId); } catch (e) {}
         applySession();
@@ -419,8 +424,12 @@
         if (!pin && !(old && old.pin)) return toast("Password wajib diisi (minimal 6 karakter).");
         if (pin && (pin.length < 6 || pin.length > 64)) return toast("Password minimal 6 dan maksimal 64 karakter.");
 
+        let newHash = "";
+        if (pin) {
+          try { newHash = await pinMake(pin); } catch (e) { return toast("Perangkat ini tidak bisa menyimpan password dengan aman. Buka aplikasi lewat alamat HTTPS."); }
+        }
         const wasAuth = authOn();
-        // jangan sampai tidak ada admin aktif ber-PIN setelah perubahan ini
+        // jangan sampai tidak ada admin aktif ber-password setelah perubahan ini
         const rest = users.filter((u) => u.id !== uEdit && u.role === "admin" && u.pin && u.active !== false).length;
         const stays = role === "admin" && active;
         if (wasAuth && !rest && !stays) return toast("Harus tersisa minimal satu admin aktif.");
@@ -433,7 +442,7 @@
         rec.areas = ROLES[role].staff ? [...uSel].sort() : [];
         if (role === "admin") delete rec.menus;
         else rec.menus = [...uMenus];
-        if (pin) rec.pin = await pinHash(pin);
+        if (newHash) rec.pin = newHash;
         if (!old) users.push(rec);
         sv(K_U, users);
         if (!wasAuth && authOn()) {

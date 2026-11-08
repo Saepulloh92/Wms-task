@@ -1,7 +1,7 @@
 // Konfigurasi: kunci state, nama sheet, konstanta
 // asal: Code-fix.gs baris 1-105
 /**
- * STOCK CONTROL WMS v26 — Backend Google Apps Script (cocok dengan Oke.html / index.html, PIN dimatikan)
+ * STOCK CONTROL WMS v26 — Backend Google Apps Script (cocok dengan Oke.html / index.html)
  * ---------------------------------------------------------------
  * Fungsi:
  *  1. Sinkronisasi data antar perangkat (hasil periksa bin, DC harian,
@@ -25,8 +25,10 @@
  *     Salin URL web app (…/exec).
  *  4. (Opsional) Jalankan setupTriggers() untuk cadangan harian ke Drive.
  *
- * TANPA PIN: server tidak menyimpan/mengirim PIN petugas. Tanpa admin ber-PIN,
- * aplikasi berjalan mode terbuka (semua menu bisa diakses).
+ * PASSWORD: login memakai nama + password. Server menyimpan HANYA hash PBKDF2 bergaram ("p1$...") di data user supaya
+ * login berlaku di semua perangkat; password teks biasa dan hash lama tanpa garam dibuang. Hash tidak ditulis ke sheet
+ * Pengguna yang terbaca manusia. Setelah mengubah script ini: Deploy > Kelola deployment > Edit > Versi baru.
+ * Tanpa admin ber-password, aplikasi berjalan mode terbuka (semua menu bisa diakses).
  *
  * API (semua pakai token):
  *  GET  ?action=ping&token=XXX
