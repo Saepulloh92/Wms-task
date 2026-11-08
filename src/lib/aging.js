@@ -42,11 +42,28 @@ export function buildAging(rows, cls = {}) {
 }
 
 /** Daftar rak untuk ceklis: mode "watch" (Kuning/Merah), "all" (semua rak isi). Urut: sinyal terparah dulu, lalu aging, lalu rak. */
-export function checklist(rows, mode = "watch") {
+export const classRank = (c) => { const i = CLASSES.indexOf(c); return i < 0 ? CLASSES.length : i; }; // A, B, C, PTM, lalu belum diatur
+/** order "prioritas" = kelas A dulu, lalu B, C (cls = {kode: kelas}); di dalam kelas Merah dulu, lalu aging terlama. order lain = sinyal terparah dulu. */
+export function checklist(rows, mode = "watch", order = "parah", cls = {}) {
   const rank = (s) => SIGNALS.indexOf(s);
-  return rows
-    .filter((x) => isFilled(x) && (mode === "all" || needsWatch(normSignal(x.sinyal))))
+  const list = rows.filter((x) => isFilled(x) && (mode === "all" || needsWatch(normSignal(x.sinyal))));
+  if (order === "prioritas")
+    return list.sort((a, b) => classRank(cls[a.kode]) - classRank(cls[b.kode]) || rank(normSignal(b.sinyal)) - rank(normSignal(a.sinyal)) || Number(b.aging) - Number(a.aging) || String(a.bin).localeCompare(String(b.bin), "id", { numeric: true }));
+  return list
     .sort((a, b) => rank(normSignal(b.sinyal)) - rank(normSignal(a.sinyal)) || Number(b.aging) - Number(a.aging) || String(a.bin).localeCompare(String(b.bin), "id", { numeric: true }));
+}
+
+/** Kelompokkan daftar (sudah terurut prioritas) per kelas: [{ c, items, merah }], urutan A, B, C, PTM, belum diatur. */
+export function groupByClass(list, cls = {}) {
+  const g = new Map();
+  list.forEach((x) => {
+    const c = CLASSES.includes(cls[x.kode]) ? cls[x.kode] : NO_CLASS;
+    if (!g.has(c)) g.set(c, { c, items: [], merah: 0 });
+    const r = g.get(c);
+    r.items.push(x);
+    if (normSignal(x.sinyal) === "Merah") r.merah++;
+  });
+  return [...g.values()].sort((a, b) => classRank(a.c) - classRank(b.c));
 }
 
 /** Teks ringkas untuk WhatsApp/Telegram. */

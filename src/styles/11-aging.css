@@ -61,3 +61,32 @@
 .agi-same input { flex: none; width: 24px; height: 24px; margin: 1px 0 0; accent-color: var(--green, #16a34a); }
 .agi-same small { display: block; margin-top: 2px; font-weight: 400; color: var(--muted, #6b7a89); }
 .agi-same:has(input:checked) { border-color: var(--green, #16a34a); background: rgba(22, 163, 74, .08); }
+
+/* Prioritas kelas A > B > C, rak Merah menonjol, form cek ringkas */
+.agi-alert { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; width: 100%; min-height: 52px; margin: 10px 0 4px; padding: 10px 14px; border: 2px solid #d32f2f; border-radius: 14px; background: #fdecec; color: #8a1c1c; font: inherit; font-size: 15px; text-align: left; cursor: pointer; }
+.agi-alert span { font-size: 13px; font-weight: 700; text-decoration: underline; }
+.agi-alert.on { background: #d32f2f; color: #fff; }
+.agi-grp { margin-top: 12px; }
+.agi-gh { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; padding: 8px 12px; border-radius: 10px; border-left: 6px solid #9aa5b8; background: #eef2f6; font-size: 15px; }
+.agi-gh span { font-size: 13px; color: var(--muted, #6b7a89); }
+.agi-gh.agi-kA { border-left-color: #0a5bd3; background: #e6efff; }
+.agi-gh.agi-kB { border-left-color: #1b9aaa; background: #e3f6f8; }
+.agi-gh.agi-kC { border-left-color: #8a94a6; }
+.agi-kb { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 6px; font-style: normal; font-size: 12px; font-weight: 800; background: #9aa5b8; color: #fff; vertical-align: 1px; }
+.agi-kb.agi-kA { background: #0a5bd3; } .agi-kb.agi-kB { background: #1b9aaa; } .agi-kb.agi-kC { background: #6b7a89; }
+.agi-rak.red { border-left: 6px solid #d32f2f; background: #fff7f7; }
+.agi-rak.done { opacity: .72; }
+.agi-bn small strong { color: var(--ink, #1c2a36); }
+.agi-sys { padding: 8px 10px; border-radius: 10px; background: #eef2f6; font-size: 14px; }
+.agi-all { width: 100%; min-height: 52px; font-size: 16px; }
+.agi-or { margin: 2px 0 0; font-size: 13px; color: var(--muted, #6b7a89); }
+.agi-form input, .agi-form select { min-height: 46px; font-size: 16px; }
+.agi-kls > summary { cursor: pointer; font-size: 13px; color: var(--muted, #6b7a89); padding: 6px 0; min-height: 36px; }
+.agi-sumd { margin-top: 16px; }
+.agi-sumd > summary { cursor: pointer; font-weight: 700; padding: 10px 2px; min-height: 44px; }
+.agi-stats { grid-template-columns: repeat(3, 1fr); }
+.agi-stats .stat { padding: 8px 10px; }
+.agi-stats .stat strong { font-size: 20px; }
+.agi-filter { margin: 4px 0 8px; }
+.agi-filter > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-size: 14px; font-weight: 700; color: var(--muted, #6b7a89); }
+.agi-alert { margin-top: 6px; }

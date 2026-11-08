@@ -1,0 +1,42 @@
+// Uji alur Aging: impor Excel (No Item/No Tumpak/Kelas Pipa/QTY), urutan prioritas kelas A>B>C, banner merah, tombol "Semua sama".
+//   npm run build && npx vite preview --port 4173 &   lalu   node tests/aging-prioritas.mjs
+import { createRequire } from "node:module";
+import fs from "node:fs";
+const { chromium } = createRequire(import.meta.url)("playwright");
+const url = process.env.APP_URL || "http://localhost:4173/";
+const FX = (n) => JSON.parse(fs.readFileSync(new URL("./fixtures/" + n, import.meta.url), "utf8"));
+let fail=0;const ok=(c,m)=>{console.log((c?"OK   ":"GAGAL ")+m);if(!c)fail++;};
+const b=await chromium.launch();const p=await b.newPage({viewport:{width:390,height:844},deviceScaleFactor:2});
+const errs=[];p.on("pageerror",e=>errs.push(e.message));await p.route(/^https?:\/\/(?!localhost)/,r=>r.abort());
+await p.addInitScript(({fx})=>{localStorage.setItem("warehouse_so_master_v2",JSON.stringify(fx.master));localStorage.setItem("warehouse_so_users_v1",JSON.stringify(fx.users));localStorage.setItem("warehouse_so_lgsetup_v1","1");},{fx:{master:FX("master.json"),users:FX("users.json")}});
+await p.goto(url);await p.waitForFunction(()=>document.getElementById("pgT")?.textContent.trim());
+await p.evaluate(()=>window.go("data"));await p.waitForTimeout(300);
+await p.setInputFiles("#file",new URL("./fixtures/aging-excel.csv", import.meta.url).pathname);await p.click("#btnImp");await p.waitForTimeout(400);
+const dlg=p.getByRole("button",{name:/Ganti data/});if(await dlg.count())await dlg.first().click();
+await p.waitForTimeout(800);
+const st=await p.evaluate(()=>({n:JSON.parse(localStorage.getItem("warehouse_so_master_v2")).length,first:JSON.parse(localStorage.getItem("warehouse_so_master_v2"))[0],cls:JSON.parse(localStorage.getItem("warehouse_so_agcls_v1")||"{}")}));
+ok(st.n===10,"impor 10 baris dari Excel (kolom No Item / No Tumpak / Kelas Pipa / QTY terbaca)");
+ok(st.first.tumpak==="AJ896"&&st.first.kelas==="C","tumpak sistem dan kelas ikut tersimpan di data");
+ok(st.cls["10172010076058"]?.c==="A"&&st.cls["10172005060004"]?.c==="B","kelas pipa dari Excel masuk ke pengaturan kelas");
+await p.evaluate(()=>window.go("agi"));await p.waitForTimeout(600);
+const order=await p.evaluate(()=>[...document.querySelectorAll("#v-agi .agi-rak .agi-bn b")].map(e=>e.childNodes[0].textContent));
+console.log("urutan:",order.join(" "));
+ok(order.join()==="P-77,F-08,P-07,F-13,L-44,F-41,F-43,E-32,F-04,G-17","urut kelas A (merah dulu), B, lalu C (merah dulu)");
+const heads=await p.evaluate(()=>[...document.querySelectorAll("#v-agi .agi-gh")].map(e=>e.innerText.replace(/\s+/g," ")));
+console.log(heads.join(" | "));
+ok(/merah/.test(heads[0])&&/Kelas A/.test(heads[0]),"judul grup kelas A menandai jumlah merah");
+ok(await p.locator(".agi-alert").innerText().then(t=>/2 rak MERAH/.test(t)),"banner menghitung rak merah belum dicek");
+await p.locator(".agi-alert").click();
+ok(await p.locator("#v-agi .agi-rak").count()===2,"filter merah menampilkan 2 rak");
+await p.locator(".agi-alert").click();
+// satu ketukan 'Semua sama' pada rak pertama -> tersimpan + rak berikutnya terbuka
+await p.locator("#v-agi .agi-rak > summary").first().click();
+await p.getByText("Semua sama dengan sistem").first().click();await p.waitForTimeout(500);
+const rec=await p.evaluate(()=>JSON.parse(localStorage.getItem("warehouse_so_aging_v1")||"{}"));
+ok(rec["P-77"]?.sesuai===true&&rec["P-77"].qty==="800","Semua sama: qty sistem tersimpan, sesuai=true");
+const openBin=await p.evaluate(()=>{const d=document.querySelector("#v-agi .agi-rak[open]");return d&&d.querySelector(".agi-bn b").childNodes[0].textContent});
+ok(openBin==="F-08","rak berikutnya yang belum dicek otomatis terbuka ("+openBin+")");
+const last=await p.evaluate(()=>[...document.querySelectorAll("#v-agi .agi-grp")][0].querySelector(".agi-rak:last-child .agi-bn b").childNodes[0].textContent);
+ok(last==="P-77","rak yang sudah dicek turun ke bawah dalam kelasnya");
+ok(errs.length===0,"tanpa error JavaScript "+errs.join(";"));
+await b.close();process.exit(fail?1:0);

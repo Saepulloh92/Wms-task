@@ -11,7 +11,8 @@
     "test:rak": "node tests/rakfilter.mjs",
     "test:login": "node tests/login.mjs",
     "test:login-sync": "node tests/login-sync.mjs",
-    "test:weekly": "node tests/weekly.mjs && node tests/weekly-ui.mjs"
+    "test:weekly": "node tests/weekly.mjs && node tests/weekly-ui.mjs",
+    "test:aging-prio": "node tests/aging-prioritas.mjs"
   },
   "dependencies": {
     "react": "18.3.1",

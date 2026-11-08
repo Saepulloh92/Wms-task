@@ -37,7 +37,7 @@
       async function ingest(rows) {
         const hi = rows.findIndex((r) => {
           const h = r.map(nrm);
-          return (h.includes("bin") || h.includes("rak")) && (h.includes("kode") || h.includes("kodeitem"));
+          return (h.includes("bin") || h.includes("rak")) && (h.includes("kode") || h.includes("kodeitem") || h.includes("noitem"));
         });
         if (hi < 0) throw new Error("Header tidak ditemukan. Perlu kolom Rak/Bin dan Kode Item.");
         const H = rows[hi].map(nrm),
@@ -48,7 +48,7 @@
           };
         const need = {
           bin: ix("bin", "rak"),
-          kode: ix("kode", "kodeitem", "itemcode"),
+          kode: ix("kode", "kodeitem", "itemcode", "noitem", "nomoritem"),
           item: ix("item", "namaitem", "namabarang"),
           onhand: ix("onhand", "qtywms", "stokwms", "qty"),
         };
@@ -70,6 +70,8 @@
               bookingMuat: toNum(g(r, "bookingmuat")),
               aging: toNum(g(r, "aging")),
               sinyal: g(r, "sinyal") || "",
+              tumpak: String(g(r, "notumpak", "tumpak", "nomortumpak") || "").trim(),
+              kelas: String(g(r, "kelaspipa", "kelas") || "").trim().toUpperCase(),
               status: g(r, "status") || "Active",
             };
           })
@@ -85,6 +87,22 @@
         )
           return;
         DATA = p;
+        // Kelas Pipa dari Excel -> kelas per kode item (dipakai urutan prioritas A, B, C di menu Aging Stock)
+        (() => {
+          const nc = { ...agingCls },
+            at = new Date().toISOString();
+          let n = 0;
+          p.forEach((x) => {
+            if (x.kode && ["A", "B", "C", "PTM"].includes(x.kelas) && !(nc[x.kode] && nc[x.kode].c === x.kelas)) {
+              nc[x.kode] = { c: x.kelas, at };
+              n++;
+            }
+          });
+          if (n) {
+            agingCls = nc;
+            sv(K_AGK, agingCls);
+          }
+        })();
         counts = {};
         closed = {};
         sv(K_X, closed);

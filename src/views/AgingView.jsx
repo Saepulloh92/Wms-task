@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useWms } from "../legacy/bridge.js";
 import { fmt } from "../lib/format.js";
-import { SIGNALS, CLASSES, NO_CLASS, SIGNAL_COLOR, DEFAULT_PIC, normSignal, buildAging, checklist, agingText } from "../lib/aging.js";
+import { SIGNALS, CLASSES, NO_CLASS, SIGNAL_COLOR, DEFAULT_PIC, normSignal, buildAging, checklist, groupByClass, agingText } from "../lib/aging.js";
 
 const K_AREA = "warehouse_so_aging_area_v1"; // pilihan area: preferensi per perangkat, tidak disinkron
 const EMPTY = {};
@@ -15,6 +15,7 @@ export default function AgingView() {
   const [area, setArea] = useState(() => load(K_AREA, ""));
   const [mode, setMode] = useState("watch");
   const [flt, setFlt] = useState("all");
+  const [red, setRed] = useState(false); // hanya rak Merah
   // data cek fisik, kelas pipa, dan nama petugas dimiliki legacy (ikut sinkron Sheets + cadangan)
   const act = wms.aging || EMPTY, clsRec = wms.agingCls || EMPTY, cfg = wms.agingCfg || EMPTY;
   const cls = useMemo(() => Object.fromEntries(Object.entries(clsRec).map(([k, v]) => [k, v && v.c])), [clsRec]);
@@ -24,11 +25,15 @@ export default function AgingView() {
   const cur = A.includes(area) ? area : "";
   const rows = useMemo(() => (active ? wms.DATA.filter((x) => !cur || x.area === cur) : []), [active, wms.DATA, cur]); // eslint-disable-line react-hooks/exhaustive-deps
   const agg = useMemo(() => buildAging(rows, cls), [rows, cls]);
-  const list = useMemo(() => checklist(rows, mode), [rows, mode]);
+  const list = useMemo(() => checklist(rows, mode, "prioritas", cls), [rows, mode, cls]); // kelas A dulu, lalu B, C
   if (!active) return <section id="v-agi" hidden />;
 
   const done = list.filter((x) => act[x.bin]).length;
-  const shown = list.filter((x) => (flt === "todo" ? !act[x.bin] : flt === "done" ? !!act[x.bin] : true));
+  const isRed = (x) => normSignal(x.sinyal) === "Merah";
+  const merahTodo = list.filter((x) => isRed(x) && !act[x.bin]).length;
+  const shown = list.filter((x) => (flt === "todo" ? !act[x.bin] : flt === "done" ? !!act[x.bin] : true) && (!red || isRed(x)));
+  // dalam tiap kelas: yang belum dicek di atas, yang sudah dicek turun ke bawah (urutan prioritas tetap)
+  const groups = groupByClass(shown.slice(0, 200), cls).map((g) => ({ ...g, items: [...g.items.filter((x) => !act[x.bin]), ...g.items.filter((x) => act[x.bin])] }));
   const pickArea = (v) => { setArea(v); save(K_AREA, v); };
   const iso = () => new Date().toISOString();
   const setClass = (kode, c) => wms.setAgingCls({ ...clsRec, [kode]: { c, at: iso() } });
@@ -56,7 +61,7 @@ export default function AgingView() {
   return (
     <section id="v-agi" hidden>
       <h2>Monitoring Aging Stock</h2>
-      <p className="hint">Sinyal aging per rak dari data WMS. Isi hasil cek fisik langsung di sini, tanpa kertas.</p>
+      <p className="hint">Cek rak Merah dan Kuning, mulai dari kelas A. Cukup tap "Semua sama" atau perbarui no. tumpak, item, dan qty.</p>
 
       <div className="agi-bar">
         <label htmlFor="agiArea">Area</label>
@@ -70,13 +75,51 @@ export default function AgingView() {
         <div className="empty">Belum ada rak berisi di {cur ? "area " + cur : "data WMS"}. Impor data di menu Data WMS.</div>
       ) : (
         <>
-          <div className="stats" aria-live="polite">
-            <div className="stat"><small>Total rak isi</small><strong>{fmt(agg.filled)}</strong></div>
-            <div className="stat"><small>Total Kuning</small><strong style={{ color: "var(--amber)" }}>{fmt(agg.kuningTotal)}</strong></div>
+          <div className="stats agi-stats" aria-live="polite">
+            <div className="stat"><small>Kuning</small><strong style={{ color: "var(--amber)" }}>{fmt(agg.kuningTotal)}</strong></div>
             <div className="stat"><small>Merah</small><strong style={{ color: agg.bySignal.Merah ? "#d32f2f" : undefined }}>{fmt(agg.bySignal.Merah)}</strong></div>
-            <div className="stat"><small>Sudah dicek</small><strong>{done}/{list.length}</strong></div>
+            <div className="stat"><small>Dicek</small><strong>{done}/{list.length}</strong></div>
           </div>
 
+          {merahTodo > 0 && (
+            <button type="button" className={"agi-alert" + (red ? " on" : "")} aria-pressed={red} onClick={() => setRed(!red)}>
+              <b>{merahTodo} rak MERAH</b> belum dicek <span>{red ? "Tampilkan semua" : "Lihat saja yang merah"}</span>
+            </button>
+          )}
+          <h3 className="agi-h agi-list-h">Prioritas cek <span className="agi-cnt">{done}/{list.length} dicek</span></h3>
+          <div className="agi-prog" role="progressbar" aria-label="Kemajuan cek rak" aria-valuemin={0} aria-valuemax={list.length} aria-valuenow={done}><i style={{ width: (list.length ? (done / list.length) * 100 : 0) + "%" }} /></div>
+          <details className="agi-filter">
+            <summary>Filter: {mode === "watch" ? "Kuning & Merah" : "Semua rak isi"} · {flt === "todo" ? "Belum dicek" : flt === "done" ? "Sudah dicek" : "Semua status"}</summary>
+          <p className="agi-fl">Tampilkan rak</p>
+          <div className="chips agi-chips" role="group" aria-label="Rak yang ditampilkan">
+            {[["watch", "Kuning & Merah"], ["all", "Semua rak isi"]].map(([v, l]) => <button key={v} className={"chip" + (mode === v ? " on" : "")} aria-pressed={mode === v} onClick={() => setMode(v)}>{l}</button>)}
+          </div>
+          <p className="agi-fl">Status cek</p>
+          <div className="chips agi-chips agi-chips3" role="group" aria-label="Status cek rak">
+            {[["all", "Semua", list.length], ["todo", "Belum", list.length - done], ["done", "Sudah", done]].map(([v, l, n]) => <button key={v} className={"chip" + (flt === v ? " on" : "")} aria-pressed={flt === v} onClick={() => setFlt(v)}>{l} <b>{n}</b></button>)}
+          </div>
+          </details>
+          {shown.length === 0 && <div className="empty">Tidak ada rak pada filter ini.</div>}
+          {groups.map((g) => (
+            <div key={g.c} className="agi-grp">
+              <div className={"agi-gh agi-k" + (g.c === NO_CLASS ? "x" : g.c)}>
+                <b>{g.c === NO_CLASS ? "Kelas belum diatur" : "Kelas " + g.c}{g.c !== NO_CLASS && pic[g.c] ? " · " + pic[g.c] : ""}</b>
+                <span>{g.items.length} rak{g.merah ? " · " + g.merah + " merah" : ""}</span>
+              </div>
+              {g.items.map((x) => (
+                <RakCard key={x.bin} x={x} a={act[x.bin]} kelas={cls[x.kode] || ""} onClass={setClass} onSave={saveAct} onClear={clearAct} />
+              ))}
+            </div>
+          ))}
+          {shown.length > 200 && <p className="hint">Menampilkan 200 rak teratas dari {shown.length}. Pilih area untuk mempersempit.</p>}
+
+          <div className="row-act">
+            <button className="btn pri" onClick={copy}>Salin ringkasan</button>
+            <button className="btn sec inl" onClick={csv}>CSV</button>
+          </div>
+
+          <details className="agi-sumd">
+            <summary>Ringkasan, grafik &amp; petugas per kelas</summary>
           <div className="card">
             <h3 className="agi-h">Total sinyal aging</h3>
             {SIGNALS.map((s) => (
@@ -120,65 +163,54 @@ export default function AgingView() {
             <div className="agi-pic tot"><span className="agi-cl" /><span className="agi-pn">Total</span><b>{fmt(agg.kuningTotal)}</b></div>
           </div>
 
-          <div className="row-act">
-            <button className="btn pri" onClick={copy}>Salin ringkasan</button>
-            <button className="btn sec inl" onClick={csv}>CSV</button>
-          </div>
-
-          <h3 className="agi-h agi-list-h">Daftar cek rak <span className="agi-cnt">{done}/{list.length} dicek</span></h3>
-          <div className="agi-prog" role="progressbar" aria-label="Kemajuan cek rak" aria-valuemin={0} aria-valuemax={list.length} aria-valuenow={done}><i style={{ width: (list.length ? (done / list.length) * 100 : 0) + "%" }} /></div>
-          <p className="agi-fl">Tampilkan rak</p>
-          <div className="chips agi-chips" role="group" aria-label="Rak yang ditampilkan">
-            {[["watch", "Kuning & Merah"], ["all", "Semua rak isi"]].map(([v, l]) => <button key={v} className={"chip" + (mode === v ? " on" : "")} aria-pressed={mode === v} onClick={() => setMode(v)}>{l}</button>)}
-          </div>
-          <p className="agi-fl">Status cek</p>
-          <div className="chips agi-chips agi-chips3" role="group" aria-label="Status cek rak">
-            {[["all", "Semua", list.length], ["todo", "Belum", list.length - done], ["done", "Sudah", done]].map(([v, l, n]) => <button key={v} className={"chip" + (flt === v ? " on" : "")} aria-pressed={flt === v} onClick={() => setFlt(v)}>{l} <b>{n}</b></button>)}
-          </div>
-          {shown.length === 0 && <div className="empty">Tidak ada rak pada filter ini.</div>}
-          {shown.slice(0, 200).map((x) => (
-            <RakCard key={x.bin} x={x} a={act[x.bin]} kelas={cls[x.kode] || ""} onClass={setClass} onSave={saveAct} onClear={clearAct} />
-          ))}
-          {shown.length > 200 && <p className="hint">Menampilkan 200 rak teratas dari {shown.length}. Pilih area untuk mempersempit.</p>}
+          </details>
         </>
       )}
     </section>
   );
 }
 
+const lvl = (c) => (c ? "agi-kb agi-k" + c : "agi-kb agi-kx");
+/** Setelah simpan: tutup kartu ini dan buka rak berikutnya yang belum dicek (tanpa mencari lagi). */
+function advance(d) {
+  const all = [...document.querySelectorAll("#v-agi .agi-rak")];
+  const nx = all.slice(all.indexOf(d) + 1).find((el) => !el.classList.contains("done"));
+  if (d) d.open = false;
+  if (nx) { nx.open = true; setTimeout(() => nx.scrollIntoView({ block: "start", behavior: "smooth" }), 60); }
+}
+
 function RakCard({ x, a, kelas, onClass, onSave, onClear }) {
-  const [f, setF] = useState({ tumpak: a?.sesuai ? "" : a?.tumpak || "", pipa: a?.sesuai ? "" : a?.pipa || "", qty: a?.qty ?? "", sesuai: !!a?.sesuai });
+  const [f, setF] = useState({ tumpak: a?.sesuai ? "" : a?.tumpak || "", pipa: a?.sesuai ? "" : a?.pipa || "", qty: a?.qty ?? "" });
   const sig = normSignal(x.sinyal);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+  const save = (e, v) => { const d = e.currentTarget.closest("details"); onSave(x.bin, v); advance(d); };
   return (
-    <details className={"card agi-rak" + (a ? " done" : "")}>
+    <details className={"card agi-rak" + (a ? " done" : "") + (sig === "Merah" ? " red" : "")}>
       <summary>
         <span className="agi-sg" style={{ background: SIGNAL_COLOR[sig] || "#ccc", color: sig === "Kuning 3" || sig === "Hijau 2" || sig === "Merah" ? "#fff" : "#222" }}>{sig || "?"}</span>
-        <span className="agi-bn"><b>{x.bin}</b><span className="agi-it">{x.item}</span><small>{x.aging} hari · stok {fmt(x.onhand)}{a ? " · cek " + fmt(a.qty ?? 0) + (a.sesuai ? " (sesuai)" : "") : ""}</small></span>
+        <span className="agi-bn"><b>{x.bin}<i className={lvl(kelas)}>{kelas || "?"}</i></b><span className="agi-it">{x.item}</span><small>Tumpak <strong>{x.tumpak || "–"}</strong> · {x.aging} hari · stok {fmt(x.onhand)}{a ? " · cek " + fmt(a.qty ?? 0) + (a.sesuai ? " (sesuai)" : "") : ""}</small></span>
         <span className={"agi-ck" + (a ? " on" : "")} aria-label={a ? "Sudah dicek" : "Belum dicek"}>{a ? "✓" : ""}</span>
       </summary>
       <div className="agi-form">
-        <label>Kelas pipa (berlaku untuk item ini)
-          <select value={kelas} onChange={(e) => onClass(x.kode, e.target.value)}>
+        <div className="agi-sys">Data sistem: tumpak <b>{x.tumpak || "–"}</b> · item <b>{x.item}</b> · qty <b>{fmt(x.onhand)}</b></div>
+        <button type="button" className="btn pri agi-all" onClick={(e) => save(e, { tumpak: "Sesuai", pipa: "Sesuai", qty: String(x.onhand), sesuai: true })}>✓ Semua sama dengan sistem</button>
+        <p className="agi-or">Kalau ada yang beda, isi di sini:</p>
+        <div className="row2">
+          <label>No. tumpak aktual<input value={f.tumpak} onChange={set("tumpak")} placeholder={x.tumpak || "AK140"} autoCapitalize="characters" autoComplete="off" autoCorrect="off" spellCheck={false} enterKeyHint="next" /></label>
+          <label>Item aktual<input value={f.pipa} onChange={set("pipa")} placeholder="AW 3" autoComplete="off" autoCorrect="off" spellCheck={false} enterKeyHint="next" /></label>
+        </div>
+        <label>Qty aktual<input inputMode="numeric" enterKeyHint="done" autoComplete="off" value={f.qty} onChange={(e) => setF({ ...f, qty: e.target.value.replace(/[^\d]/g, "") })} placeholder={String(x.onhand)} /></label>
+        <div className="row-act">
+          <button className="btn pri" disabled={!(f.tumpak || f.pipa || f.qty !== "")} onClick={(e) => save(e, { tumpak: f.tumpak, pipa: f.pipa, qty: f.qty })}>Simpan cek</button>
+          {a && <button className="btn sec inl" onClick={() => { onClear(x.bin); setF({ tumpak: "", pipa: "", qty: "" }); }}>Hapus</button>}
+        </div>
+        <details className="agi-kls">
+          <summary>Kelas pipa: {kelas || "belum diatur"} (ubah)</summary>
+          <select value={kelas} onChange={(e) => onClass(x.kode, e.target.value)} aria-label="Kelas pipa untuk item ini">
             <option value="">Belum diatur</option>
             {CLASSES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
-        </label>
-        <label className="agi-same">
-          <input type="checkbox" checked={f.sesuai} onChange={(e) => setF({ ...f, sesuai: e.target.checked })} />
-          <span>No. tumpak & item sama dengan sistem<small>Centang jika sesuai, cukup isi qty.</small></span>
-        </label>
-        {!f.sesuai && (
-          <div className="row2">
-            <label>Actual tumpak<input value={f.tumpak} onChange={set("tumpak")} placeholder="AK140" autoCapitalize="characters" autoComplete="off" autoCorrect="off" spellCheck={false} enterKeyHint="next" /></label>
-            <label>Actual pipa<input value={f.pipa} onChange={set("pipa")} placeholder="AW 3" autoComplete="off" autoCorrect="off" spellCheck={false} enterKeyHint="next" /></label>
-          </div>
-        )}
-        <label>Actual qty<input inputMode="numeric" enterKeyHint="done" autoComplete="off" autoFocus={f.sesuai && !a} value={f.qty} onChange={(e) => setF({ ...f, qty: e.target.value.replace(/[^\d]/g, "") })} placeholder="0" /></label>
-        <div className="row-act">
-          <button className="btn pri" disabled={f.sesuai ? f.qty === "" : !(f.tumpak || f.pipa || f.qty !== "")} onClick={(e) => { const d = e.currentTarget.closest("details"); onSave(x.bin, f.sesuai ? { tumpak: "Sesuai", pipa: "Sesuai", qty: f.qty, sesuai: true } : { tumpak: f.tumpak, pipa: f.pipa, qty: f.qty }); if (d) d.open = false; }}>Simpan cek</button>
-          {a && <button className="btn sec inl" onClick={() => { onClear(x.bin); setF({ tumpak: "", pipa: "", qty: "", sesuai: false }); }}>Hapus</button>}
-        </div>
+        </details>
       </div>
     </details>
   );
