@@ -59,3 +59,7 @@ button, .btn, .chip, .tabs button, summary { touch-action: manipulation; -webkit
 #v-mon:has(#monMsg .note.info) #monTg { display: none; }
 /* Tombol ajakan di kartu info selebar kartu agar mudah diketuk */
 .note.info .btn { width: 100%; min-height: 48px; }
+/* Pindah menu terasa halus (dimatikan jika perangkat meminta gerakan dikurangi) */
+@keyframes viewIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+main > section:not([hidden]) { animation: viewIn .18s ease-out; }
+@media (prefers-reduced-motion: reduce) { main > section:not([hidden]) { animation: none; } }

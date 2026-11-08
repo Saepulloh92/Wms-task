@@ -25,3 +25,10 @@ try {
 
 // Tanpa StrictMode: kode legacy hanya boleh di-boot satu kali.
 createRoot(document.getElementById("root")).render(<App />);
+
+// Aplikasi bisa dibuka tanpa sinyal setelah dimuat sekali (hanya di build produksi).
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register(import.meta.env.BASE_URL + "sw.js").catch(() => {});
+  });
+}
