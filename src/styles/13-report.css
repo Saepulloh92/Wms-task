@@ -1,4 +1,4 @@
-/* Laporan Mingguan SPV: padat, satu layar HP */
+/* Laporan SPV (mingguan / bulanan / tahunan): padat, mudah dibaca di HP */
 .rpt-nav { display: grid; grid-template-columns: 48px 1fr 48px; gap: 8px; align-items: center; margin: 2px 0 10px; }
 .rpt-nav .btn { min-height: 48px; font-size: 24px; line-height: 1; padding: 0; }
 .rpt-wk { text-align: center; line-height: 1.25; }
@@ -6,18 +6,18 @@
 .rpt-wk small { color: var(--muted, #6b7a89); font-weight: 600; }
 .rpt-now { width: 100%; margin: 0 0 10px; }
 .rpt-sum { padding: 6px 12px 10px; }
-.rpt-hd { display: grid; grid-template-columns: minmax(0, 1fr) 134px 58px; gap: 8px; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted, #6b7a89); padding: 6px 0 4px; }
+.rpt-hd { display: grid; grid-template-columns: minmax(0, 1fr) 134px 62px; gap: 8px; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted, #6b7a89); padding: 6px 0 4px; }
 .rpt-hd > :last-child { text-align: right; }
 .rpt-hd > :nth-child(2) { display: flex; justify-content: flex-end; }
-.rpt-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; width: 84px; }
+.rpt-days { display: grid; gap: 2px; text-align: center; width: 84px; }
 .rpt-days .now { color: var(--blue, #1d4ed8); font-style: normal; text-decoration: underline; }
 .rpt-days i { font-style: normal; }
-.rpt-row { display: grid; grid-template-columns: minmax(0, 1fr) 134px 58px; gap: 8px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line, #e2e8f0); }
+.rpt-row { display: grid; grid-template-columns: minmax(0, 1fr) 134px 62px; gap: 8px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line, #e2e8f0); }
 .rpt-nm b { display: block; font-size: 15px; line-height: 1.2; border-left: 4px solid var(--mc); padding-left: 8px; }
 .rpt-nm small { display: block; font-size: 12px; line-height: 1.25; color: var(--muted, #6b7a89); padding-left: 12px; }
 .rpt-mid { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
 .rpt-big { font-size: 24px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; min-width: 34px; text-align: right; white-space: nowrap; }
-.rpt-spark { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; width: 84px; height: 36px; align-items: end; }
+.rpt-spark { display: grid; gap: 2px; width: 84px; height: 36px; align-items: end; }
 .rpt-spark i { display: flex; align-items: flex-end; height: 100%; border-bottom: 1px solid var(--line, #cbd5e1); }
 .rpt-spark i.now { border-bottom: 2px solid var(--blue, #1d4ed8); }
 .rpt-spark i.fut { opacity: .35; }
@@ -62,3 +62,50 @@
   .card { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; }
   .rpt-spark b, .rpt-tag, .rpt-f i, .rpt-pb i { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+.rpt-spark.dense { gap: 1px; }
+.rpt-days i { overflow: visible; white-space: nowrap; }
+.rpt-days.dense i { font-size: 9px; }
+.chips.rpt-per { grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0 0 10px; }
+.chips.rpt-per .chip:last-child:nth-child(odd) { grid-column: auto; }
+.chips.rpt-per .chip { padding-left: 4px; padding-right: 4px; }
+.chips.rpt-bf { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.chips.rpt-bf .chip:last-child:nth-child(odd) { grid-column: auto; }
+.chips.rpt-bf .chip { padding-left: 4px; padding-right: 4px; }
+.rpt-days.dense { letter-spacing: 0; text-transform: none; }
+.rpt-flt { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 10px; }
+.rpt-flt label { display: grid; gap: 4px; font-size: 12px; font-weight: 700; color: var(--muted, #6b7a89); text-transform: uppercase; letter-spacing: .04em; }
+.rpt-flt select { min-height: 48px; text-transform: none; letter-spacing: 0; font-weight: 600; color: inherit; }
+.rpt-fn { margin: -4px 0 10px; font-size: 12px; color: var(--muted, #6b7a89); }
+.rpt-tag { min-width: 44px; text-align: center; }
+.rpt-dt { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.rpt-dt .card { padding: 10px 12px; margin: 0; }
+.rpt-dt .card > b { display: block; font-size: 14px; border-left: 4px solid var(--mc); padding-left: 8px; margin-bottom: 4px; }
+.rpt-dt dl { margin: 0; }
+.rpt-dt dl > div { display: flex; justify-content: space-between; gap: 6px; padding: 4px 0; border-top: 1px solid var(--line, #e2e8f0); font-size: 13px; line-height: 1.25; }
+.rpt-dt dt { color: var(--muted, #6b7a89); min-width: 0; }
+.rpt-dt dd { margin: 0; font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; flex: none; }
+.rpt-dt .card:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.rpt-ar { padding: 4px 12px; }
+.rpt-art { display: grid; grid-template-columns: 1fr 1.2fr .8fr 64px; gap: 6px; align-items: center; padding: 9px 0; border-top: 1px solid var(--line, #e2e8f0); font-size: 14px; font-variant-numeric: tabular-nums; }
+.rpt-art:first-child { border-top: 0; }
+.rpt-arh { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted, #6b7a89); padding: 6px 0 4px; }
+.rpt-art small { color: var(--muted, #6b7a89); }
+.rpt-art .bad { color: #b91c1c; font-weight: 800; }
+.rpt-art .rpt-tag { justify-self: start; }
+.rpt-tb { padding: 4px 12px 10px; }
+.rpt-tb .btn { width: 100%; margin-top: 8px; min-height: 48px; }
+.rpt-b { padding: 10px 0; border-top: 1px solid var(--line, #e2e8f0); }
+.rpt-b:first-child { border-top: 0; }
+.rpt-bt { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.rpt-bt b { font-size: 16px; }
+.rpt-b small { display: block; color: var(--muted, #6b7a89); font-size: 12.5px; line-height: 1.35; overflow-wrap: anywhere; }
+.rpt-df { font-weight: 800; font-size: 14px; padding: 1px 8px; border-radius: 999px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rpt-df.pos { background: #fef3c7; color: #92400e; }
+.rpt-df.neg { background: #fee2e2; color: #991b1b; }
+.rpt-df.ok { background: #dcfce7; color: #166534; }
+.rpt-bf { grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0 0 8px; }
+.rpt-bf b { margin-left: 4px; }
+.rpt-act { grid-template-columns: 1fr; }
+@media (min-width: 700px) { .rpt-act { grid-template-columns: 1fr 1fr 1fr; } .rpt-dt { grid-template-columns: repeat(3, 1fr); } .rpt-dt .card:last-child:nth-child(odd) { grid-column: auto; } }
+@media (max-width: 359px) { .rpt-dt { grid-template-columns: 1fr; } .rpt-art { grid-template-columns: .9fr 1.2fr .8fr 56px; font-size: 13px; } }

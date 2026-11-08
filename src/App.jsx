@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import Raw from "./components/Raw.jsx";
 import KpiView from "./views/KpiView.jsx";
 import AgingView from "./views/AgingView.jsx";
-import WeeklyView from "./views/WeeklyView.jsx";
+import ReportView from "./views/ReportView.jsx";
 import { bootLegacy } from "./legacy/loader.js";
 
 import header from "./markup/header.html?raw";
@@ -48,7 +48,7 @@ export default function App() {
             {LEGACY_VIEWS.map(legacy)}
             <KpiView />
             <AgingView />
-            <WeeklyView />
+            <ReportView />
             {LEGACY_VIEWS_AFTER_REACT.map(legacy)}
           </main>
         </div>

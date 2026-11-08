@@ -99,7 +99,7 @@ var SH = {
 };
 var MENU_LABEL = {
   so: 'Periksa Bin', dc: 'DC Harian', task: 'Tugas Bin', check: 'Review Supervisor', kes: 'Cek Kesesuaian',
-  adj: 'File Adjust', clr: 'Clearing', mon: 'Beranda', muat: 'Laporan Muat', kpi: 'KPI Area', agi: 'Aging Stock', rpt: 'Laporan Mingguan', tg: 'Telegram', data: 'Data WMS', usr: 'User & Area'
+  adj: 'File Adjust', clr: 'Clearing', mon: 'Beranda', muat: 'Laporan Muat', kpi: 'KPI Area', agi: 'Aging Stock', rpt: 'Laporan', tg: 'Telegram', data: 'Data WMS', usr: 'User & Area'
 };
 var MENU_OPERATOR = ['mon', 'so', 'dc', 'task'];   // menu standar Petugas di aplikasi
 var MENU_SPV = ['so', 'dc', 'task', 'check', 'kes', 'adj', 'clr', 'mon', 'muat', 'kpi', 'agi'];
