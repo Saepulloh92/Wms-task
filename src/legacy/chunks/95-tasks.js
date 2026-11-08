@@ -28,7 +28,7 @@
       };
       const tkOwned = (t) => users.some((u) => u.id === t.u);
       function tkPick(area, rr) {
-        const o = users.filter((u) => u.active !== false && u.role !== "admin" && u.areas.includes(area));
+        const o = users.filter((u) => u.active !== false && isStaff(u) && u.areas.includes(area));
         if (!o.length) return "";
         const i = (rr[area] = rr[area] || 0);
         rr[area]++;
@@ -47,7 +47,7 @@
         ]
           .map(([l, v, c]) => `<div class="stat"><small>${l}</small><strong style="${c ? "color:" + c : ""}">${v}</strong></div>`)
           .join("");
-        $("tkWho").textContent = me ? "Upload daftar bin saya (" + me.name + ")" : "Upload tugas (admin)";
+        $("tkWho").textContent = me ? "Upload daftar bin saya (" + me.name + ")" : "Upload tugas (admin atau SPV)";
         $("tkLbl").textContent = me ? "Pilih file daftar bin saya" : "Pilih file tugas untuk petugas";
         $("tkHelp").textContent = me
           ? "Kolom wajib: Bin (atau Rak). Semua bin di file menjadi tugas Anda, hanya untuk area yang Anda pegang."
@@ -142,7 +142,7 @@
       $("tkFile").onchange = async () => {
         const f = $("tkFile").files[0];
         if (!f) return;
-        if (!curU && !(await supAuth())) {
+        if (!curU && !(await leadAuth())) {
           $("tkFile").value = "";
           return;
         }
@@ -175,7 +175,7 @@
       };
       $("tkUn").onclick = async (e) => {
         if (!e.target.closest("[data-tk=auto]")) return;
-        if (!(await supAuth())) return;
+        if (!(await leadAuth())) return;
         const rr = {};
         let n = 0;
         DATA.forEach((x) => {
@@ -196,7 +196,7 @@
       };
       $("tkClear").onclick = async () => {
         const me = curUser();
-        if (!me && !(await supAuth())) return;
+        if (!me && !(await leadAuth())) return;
         const mine = tkMine();
         if (!mine.length) return;
         if (!(await ask(me ? "Hapus tugas saya?" : "Hapus semua tugas?", mine.length + " tugas dihapus. Hasil pemeriksaan tidak ikut terhapus.", "Hapus", true))) return;

@@ -9,6 +9,8 @@
     "preview": "vite preview",
     "test:parity": "node tests/parity.mjs",
     "test:rak": "node tests/rakfilter.mjs",
+    "test:login": "node tests/login.mjs",
+    "test:login-sync": "node tests/login-sync.mjs",
     "test:weekly": "node tests/weekly.mjs && node tests/weekly-ui.mjs"
   },
   "dependencies": {

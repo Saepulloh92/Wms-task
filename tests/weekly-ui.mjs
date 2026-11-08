@@ -26,6 +26,7 @@ await p.addInitScript((s) => {
   window.Date = D;
   localStorage.setItem("warehouse_so_master_v2", JSON.stringify(s.master));
   localStorage.setItem("warehouse_so_users_v1", JSON.stringify(s.users));
+  localStorage.setItem("warehouse_so_lgsetup_v1", "1"); // dialog "Aktifkan login" sudah dilihat
   localStorage.setItem("warehouse_so_counts_v2", JSON.stringify(s.counts));
   localStorage.setItem("warehouse_dc_v1", JSON.stringify(s.dc));
   localStorage.setItem("warehouse_so_aging_v1", JSON.stringify(s.aging));

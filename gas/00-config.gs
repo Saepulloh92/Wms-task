@@ -1,7 +1,7 @@
 // Konfigurasi: kunci state, nama sheet, konstanta
 // asal: Code-fix.gs baris 1-105
 /**
- * STOCK CONTROL WMS v26 — Backend Google Apps Script (cocok dengan Oke.html / index.html, PIN dimatikan)
+ * STOCK CONTROL WMS v26 — Backend Google Apps Script (cocok dengan Oke.html / index.html)
  * ---------------------------------------------------------------
  * Fungsi:
  *  1. Sinkronisasi data antar perangkat (hasil periksa bin, DC harian,
@@ -25,8 +25,10 @@
  *     Salin URL web app (…/exec).
  *  4. (Opsional) Jalankan setupTriggers() untuk cadangan harian ke Drive.
  *
- * TANPA PIN: server tidak menyimpan/mengirim PIN petugas. Tanpa admin ber-PIN,
- * aplikasi berjalan mode terbuka (semua menu bisa diakses).
+ * PASSWORD: login memakai nama + password. Server menyimpan HANYA hash PBKDF2 bergaram ("p1$...") di data user supaya
+ * login berlaku di semua perangkat; password teks biasa dan hash lama tanpa garam dibuang. Hash tidak ditulis ke sheet
+ * Pengguna yang terbaca manusia. Setelah mengubah script ini: Deploy > Kelola deployment > Edit > Versi baru.
+ * Tanpa admin ber-password, aplikasi berjalan mode terbuka (semua menu bisa diakses).
  *
  * API (semua pakai token):
  *  GET  ?action=ping&token=XXX
@@ -99,7 +101,10 @@ var MENU_LABEL = {
   so: 'Periksa Bin', dc: 'DC Harian', task: 'Tugas Bin', check: 'Review Supervisor', kes: 'Cek Kesesuaian',
   adj: 'File Adjust', clr: 'Clearing', mon: 'Beranda', muat: 'Laporan Muat', kpi: 'KPI Area', agi: 'Aging Stock', rpt: 'Laporan Mingguan', tg: 'Telegram', data: 'Data WMS', usr: 'User & Area'
 };
-var MENU_OPERATOR = ['mon', 'so', 'dc', 'task'];   // preset Operator di aplikasi
+var MENU_OPERATOR = ['mon', 'so', 'dc', 'task'];   // menu standar Petugas di aplikasi
+var MENU_SPV = ['so', 'dc', 'task', 'check', 'kes', 'adj', 'clr', 'mon', 'muat', 'kpi', 'agi'];
+var MENU_PENERIMAAN = ['mon', 'so', 'clr'];
+var ROLE_LABEL = { admin: 'Admin', spv: 'SPV', petugas: 'Petugas', penerimaan: 'Penerimaan' };
 var CHUNK = 45000;          // batas aman per sel (maks 50.000 karakter)
 var BACKUP_FOLDER = 'Stock Control Backup';
 var BACKUP_KEEP = 30;

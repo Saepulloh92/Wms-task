@@ -14,6 +14,7 @@ master.push(extra("G-02", "B1"), extra("B1-20B", "B1"));
 const seed = ({ master, users }) => {
   localStorage.setItem("warehouse_so_master_v2", JSON.stringify(master));
   localStorage.setItem("warehouse_so_users_v1", JSON.stringify(users));
+  localStorage.setItem("warehouse_so_lgsetup_v1", "1"); // dialog "Aktifkan login" sudah dilihat
   localStorage.setItem("warehouse_so_counts_v2", JSON.stringify({}));
   localStorage.setItem("warehouse_so_closed_v1", JSON.stringify({}));
 };

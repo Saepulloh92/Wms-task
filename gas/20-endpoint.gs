@@ -32,7 +32,7 @@ function handle_(req) {
     try {
       if (action === 'pull') {
         var m0 = readMeta_();
-        return json_({ ok: true, rev: m0.rev, mrev: m0.mrev || 0, at: m0.at, data: pubFor_(readState_(), m0, req) });
+        return json_({ ok: true, pins: 1, rev: m0.rev, mrev: m0.mrev || 0, at: m0.at, data: pubFor_(readState_(), m0, req) });
       }
       if (action === 'sync') {
         var cur = readState_();
@@ -40,7 +40,7 @@ function handle_(req) {
         // tanpa perubahan: jangan tulis ulang dan jangan naikkan rev (mencegah sync bolak-balik antar perangkat)
         var m1 = readMeta_();
         var meta = m1.rev > 0 && canon_(merged) === canon_(whitelist_(cur)) ? m1 : commit_(merged);
-        return json_({ ok: true, rev: meta.rev, mrev: meta.mrev || 0, at: meta.at, data: pubFor_(merged, meta, req) });
+        return json_({ ok: true, pins: 1, rev: meta.rev, mrev: meta.mrev || 0, at: meta.at, data: pubFor_(merged, meta, req) });
       }
       if (action === 'push') {
         var bad = validate_(req.data);

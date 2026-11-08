@@ -385,7 +385,7 @@
         );
       };
       $("dcReset").onclick = async () => {
-        if (!(await supAuth())) return;
+        if (!(await leadAuth())) return;
         if (await ask("Mulai DC baru?", "Hasil DC dan daftar item yang dipilih dihapus. Unduh rekap dulu jika masih perlu.", "Hapus dan mulai baru", true)) {
           dc = {};
           dcPick = {};

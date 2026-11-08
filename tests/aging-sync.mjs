@@ -9,6 +9,7 @@ let fail = 0; const ok = (c, m) => { console.log((c ? "OK   " : "GAGAL ") + m); 
 const seed = ({ master, users }) => {
   localStorage.setItem("warehouse_so_master_v2", JSON.stringify(master));
   localStorage.setItem("warehouse_so_users_v1", JSON.stringify(users));
+  localStorage.setItem("warehouse_so_lgsetup_v1", "1"); // dialog "Aktifkan login" sudah dilihat
   localStorage.setItem("warehouse_so_counts_v2", "{}");
   localStorage.setItem("warehouse_so_closed_v1", "{}");
   localStorage.setItem("warehouse_so_sync_v1", JSON.stringify({ url: "https://mock.test/exec", token: "t", auto: true }));

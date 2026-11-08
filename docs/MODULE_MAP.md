@@ -14,7 +14,7 @@ Cari fitur di sini, buka **hanya satu file**. Semua chunk `NN-*.js` dijalankan b
 | `45-nav.js` | 180 | Navigasi go(), menu samping, initAll | go, shTryClose, initAll | warehouse_so_view_v1 |
 | `50-kesesuaian.js` | 226 | Cek Kesesuaian | kesIssues, kesAdj, kCard, renderKesHist, kesAreas, kesAuto, kesGroups, kTable, renderKes, kText | warehouse_so_dest_v1<br>warehouse_so_kes_hist_v1 |
 | `55-muat.js` | 356 | Laporan Muat | muPersist, muRestore, muAuto, renderMuHist, muSaveHist, mISO, muRows, mParse, mSet, mBuild | warehouse_so_muat_data_v1<br>warehouse_so_muat_hist_v1<br>warehouse_so_muat_sum_v1 |
-| `60-users.js` | 433 | Petugas, area, hak akses menu, navigasi bawah | navPicks, migrateUsers, applySession, applyRole, loginUi, lgSel, lgGo, logout, resetAllPins, areaStat … | warehouse_so_closed_v1<br>warehouse_so_curuser_v1<br>warehouse_so_me_v1<br>warehouse_so_nav_v1<br>warehouse_so_users_v1 |
+| `60-users.js` | 512 | User (Admin/SPV/Petugas/Penerimaan), login nama + password, area, hak akses menu, navigasi bawah | navPicks, migrateUsers, applySession, applyRole, loginUi, lgSel, lgGo, logout, resetAllPins, areaStat … | warehouse_so_closed_v1<br>warehouse_so_curuser_v1<br>warehouse_so_me_v1<br>warehouse_so_nav_v1<br>warehouse_so_users_v1 |
 | `65-kpi.js` | 11 | KPI Area | – | – |
 | `70-dc.js` | 466 | DC Harian + pilih item DC | dcItems, dcSt, renderDc, dcAddRow, dcUpd, dcOpen, dcHide, dcClose, dcSave, dcAdj … | warehouse_dc_pick_v1<br>warehouse_dc_v1 |
 | `75-nav-dialog.js` | 48 | Dialog atur navigasi bawah | navRender, navOpen | – |

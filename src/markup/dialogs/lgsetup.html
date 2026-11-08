@@ -1,0 +1,13 @@
+      <div role="dialog" aria-labelledby="lsT">
+        <h3 id="lsT">Aktifkan login</h3>
+        <p>Buat password admin supaya aplikasi meminta nama dan password setiap dibuka. Setelah disimpan, Anda langsung masuk sebagai admin dan tombol Keluar muncul di menu samping.</p>
+        <label for="lsName">Nama admin</label>
+        <input id="lsName" maxlength="40" autocomplete="username" />
+        <label for="lsPin">Password (minimal 6 karakter)</label>
+        <input id="lsPin" type="password" maxlength="64" autocomplete="new-password" />
+        <label for="lsPin2">Ulangi password</label>
+        <input id="lsPin2" type="password" maxlength="64" autocomplete="new-password" />
+        <div class="err" id="lsErr" role="alert"></div>
+        <button class="btn pri" id="lsOk">Aktifkan login</button>
+        <button class="btn sec mt" id="lsLater" type="button">Nanti saja</button>
+      </div>

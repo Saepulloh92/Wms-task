@@ -217,11 +217,11 @@
         const shs = [...new Set(all.map((x) => x.shift).filter(Boolean))].sort();
         $("clrShChips").innerHTML = shs.length ? chipsHtml(clrShF, [["all", "Semua shift", all.length], ...shs.map((h) => [h, h, all.filter((x) => x.shift === h).length])]).replace(/data-k=/g, "data-sh=") : "";
         const q = $("clrQ").value.toLowerCase().trim();
-        const vis = all.filter((x) => (clrShF === "all" || x.shift === clrShF) && (clrF === "all" || (clrF === "bad" ? x.st !== "ok" && !clrIsDone(x) : clrF === "done" ? clrIsDone(x) : x.st === clrF)) && (!q || (x.v + " " + x.sms + " " + x.n + " " + x.r + " " + x.lori + " " + x.shift).toLowerCase().includes(q)));
+        const vis = all.filter((x) => (clrShF === "all" || x.shift === clrShF) && (clrF === "all" || (clrF === "bad" ? x.st !== "ok" && !clrIsDone(x) : clrF === "done" ? clrIsDone(x) : x.st === clrF)) && (!q || (x.v + " " + x.n + " " + x.r + " " + x.lori + " " + x.shift).toLowerCase().includes(q)));
         $("clrList").innerHTML = (vis.length ? vis.slice(0, 300).map((x) => {
           const [lb, cl] = CLR_ST[x.st];
           const d = x.diff == null ? "" : x.diff === 0 ? "0" : (x.diff > 0 ? "+" : "") + fmt(x.diff);
-          return `<div class="card vc s-${x.st}"><div class="r"><b class="id">${esc(x.v)}</b><span class="pill ${cl}">${lb}</span>${clrIsDone(x) ? ' <span class="pill green">Selesai</span>' : ""}</div>${x.n ? `<div class="nm">${esc(x.n)}${x.r ? ", rak " + esc(x.r) : ""}</div>` : ""}<dl class="kv k3"><div><dt>Shift</dt><dd>${esc(x.shift || "-")}${x.tm ? "<small>" + esc((String(x.tm).match(/\d{1,2}:\d{2}/) || [""])[0]) + "</small>" : ""}</dd></div><div><dt>No Lori</dt><dd class="id">${esc(x.lori || "-")}</dd></div><div><dt>Selisih</dt><dd class="${x.diff ? "neg" : ""}">${d || "-"}</dd></div><div><dt>SMS</dt><dd class="id">${esc(x.sms || "-")}</dd></div><div><dt>Qty WMS</dt><dd>${x.qR == null ? "-" : fmt(x.qR)}</dd></div><div><dt>Qty count</dt><dd>${x.qC == null ? "-" : fmt(x.qC)}${x.ik ? ` <small>(${fmt(x.ik)}×${CLR_IKAT})</small>` : ""}</dd></div></dl>${x.st !== "ok" && x.ik ? `<div class="m">Counting ${fmt(x.ik)} ikat × ${CLR_IKAT} = ${fmt(x.qC)}.</div>` : ""}${x.st !== "ok" && x.rc > 1 ? `<div class="m">${x.rc} foto counting untuk voucher ini, dipakai yang terbaru.</div>` : ""}${clrAct(x)}</div>`;
+          return `<div class="card vc s-${x.st}"><div class="r"><b class="id">${esc(x.v)}</b><span class="pill ${cl}">${lb}</span>${clrIsDone(x) ? ' <span class="pill green">Selesai</span>' : ""}</div>${x.n ? `<div class="nm">${esc(x.n)}${x.r ? ", rak " + esc(x.r) : ""}</div>` : ""}<dl class="kv k3"><div><dt>Shift</dt><dd>${esc(x.shift || "-")}${x.tm ? "<small>" + esc((String(x.tm).match(/\d{1,2}:\d{2}/) || [""])[0]) + "</small>" : ""}</dd></div><div><dt>No Lori</dt><dd class="id">${esc(x.lori || "-")}</dd></div><div><dt>Selisih</dt><dd class="${x.diff ? "neg" : ""}">${d || "-"}</dd></div><div><dt>Qty WMS</dt><dd>${x.qR == null ? "-" : fmt(x.qR)}</dd></div><div><dt>Qty count</dt><dd>${x.qC == null ? "-" : fmt(x.qC)}${x.ik ? ` <small>(${fmt(x.ik)}×${CLR_IKAT})</small>` : ""}</dd></div></dl>${x.st !== "ok" && x.ik ? `<div class="m">Counting ${fmt(x.ik)} ikat × ${CLR_IKAT} = ${fmt(x.qC)}.</div>` : ""}${x.st !== "ok" && x.rc > 1 ? `<div class="m">${x.rc} foto counting untuk voucher ini, dipakai yang terbaru.</div>` : ""}${clrAct(x)}</div>`;
         }).join("") + (vis.length > 300 ? `<p class="fine">Menampilkan 300 dari ${fmt(vis.length)}. Pakai pencarian atau filter.</p>` : "") : `<div class="empty">${all.length ? "Tidak ada voucher di filter ini." : "Muat Laporan Voucher dan counting dulu."}</div>`);
       }
       async function clrFetch(manual) {
@@ -383,6 +383,7 @@
         });
         return "\n*Per shift*\n```\nSHIFT    TOTAL  COCOK  CEK\n" + r.join("\n") + "\n```\n";
       }
+      keepDom("clrStats", "clrRekap");
       let clrAT = 0, clrTimer = 0;
       function clrEnter() {
         clearInterval(clrTimer);
@@ -475,10 +476,10 @@
       $("clrCopy").onclick = async () => {
         const all = clrBuild().filter((x) => x.qC != null);
         if (!all.length) return toast("Belum ada hasil counting.");
-        const t = all.map((x) => [x.v, x.sms, x.qC].join("\t")).join("\n");
+        const t = all.map((x) => [x.v, x.qC].join("\t")).join("\n");
         try {
           await navigator.clipboard.writeText(t);
-          toast("Disalin: " + all.length + " voucher (No Voucher, SMS, Qty)");
+          toast("Disalin: " + all.length + " voucher (No Voucher, Qty)");
         } catch (e) {
           const a = document.createElement("textarea");
           a.value = t;

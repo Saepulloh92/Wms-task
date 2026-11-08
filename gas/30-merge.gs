@@ -89,11 +89,15 @@ function whitelist_(d) {
   ok[TOMB] = true;
   var out = {};
   Object.keys(d || {}).forEach(function (k) { if (ok[k]) out[k] = d[k]; });
-  // TANPA PIN: server tidak pernah menyimpan atau mengirim PIN petugas
+  // Password: hanya hash PBKDF2 bergaram ("p1$iterasi$salt$hash") yang disimpan agar login berlaku di semua perangkat.
+  // Nilai lain (teks biasa, hash lama tanpa garam, format asing) dibuang.
   if (Array.isArray(out[K.users])) {
     out[K.users] = out[K.users].map(function (u) {
       var c = {};
-      Object.keys(u || {}).forEach(function (f) { if (f !== 'pin') c[f] = u[f]; });
+      Object.keys(u || {}).forEach(function (f) {
+        if (f !== 'pin') c[f] = u[f];
+        else if (/^p1\$\d{4,7}\$[0-9a-f]{32}\$[0-9a-f]{64}$/.test(String(u[f]))) c[f] = u[f];
+      });
       return c;
     });
   }
