@@ -93,7 +93,7 @@
   "hidden": [
    "v-mon"
   ],
-  "text": "Monitoring Kiriman Pantau status kiriman Anda Dashboard Delivery Hubungkan spreadsheet dashboard delivery Dashboard delivery belum terhubung. Isi alamat spreadsheet di \"Sumber dashboard delivery\" di bawah. Atur sumber data Muat ulang dashboard Sumber dashboard delivery Periode Hari ini 7 Hari 30 Hari Unit / Area Semua Unit Muat ulang Selamat datang. Hubungkan spreadsheet kiriman agar status mobil tampil di sini. Atur sumber data Mobil keluar dan SPM dikerjakan Laporan Muat belum diimpor. Impor file laporan muat supaya jumlah mobil keluar bisa dibandingkan dengan SPM yang dikerjakan. Buka Laporan Muat Kirim ringkasan ke Telegram Pengaturan sumber & kolom"
+  "text": "Monitoring Kiriman Pantau status kiriman Anda Dashboard delivery belum terhubung. Isi alamat spreadsheet di \"Sumber dashboard delivery\" di bawah. Atur sumber data Muat ulang dashboard Sumber dashboard delivery Periode Hari ini 7 Hari 30 Hari Unit / Area Semua Unit Muat ulang Selamat datang. Hubungkan spreadsheet kiriman agar status mobil tampil di sini. Atur sumber data Mobil keluar dan SPM dikerjakan Laporan Muat belum diimpor. Impor file laporan muat supaya jumlah mobil keluar bisa dibandingkan dengan SPM yang dikerjakan. Buka Laporan Muat Kirim ringkasan ke Telegram Pengaturan sumber & kolom"
  },
  "data": {
   "title": "Data WMS",
