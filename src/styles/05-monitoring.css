@@ -114,3 +114,24 @@
       .dchips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; font-size: 13px; }
       .dchips small { color: var(--muted); font-size: 12px; width: 100%; }
       .dchips span { background: var(--bg); border-radius: 8px; padding: 3px 9px; }
+      /* kartu baris & ringkasan (Dashboard Delivery) */
+      .dlv .dcard { margin-bottom: 12px; }
+      .dlv .dh { margin-bottom: 10px; }
+      .lrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); min-height: 48px; }
+      .lrow:first-of-type { border-top: 0; }
+      .lrow .lt { min-width: 0; }
+      .lrow .lt b { display: block; font-size: 15px; overflow-wrap: anywhere; }
+      .lrow .lt small { display: block; color: var(--muted); font-size: 13px; }
+      .lrow .pill2 { max-width: 48%; white-space: normal; text-align: center; }
+      .lh { font-size: 13px; font-weight: 800; color: var(--muted); margin: 12px 0 2px; text-transform: uppercase; letter-spacing: 0.03em; }
+      .dlv .bn { font-weight: 800; font-size: 20px; }
+      .dlv .kc b { font-size: 24px; }
+      .dlv .kc .kl { font-size: 12px; }
+      .dlv .kc .dchip { font-size: 11px; }
+      @media (max-width: 360px) { .dlv .dnut { flex-direction: column; align-items: stretch; } .dlv .dnut > svg { width: 120px; margin: 0 auto; } }
+      /* .tot (grid total DC) bentrok dengan kartu KPI .kc.tot: kembalikan ke kartu biasa */
+      .kcs .kc.tot { display: block; }
+      .kcs .kc.tot > div { background: transparent; padding: 0; border-radius: 0; }
+      .kcs .kc.tot .kh { display: flex; }
+      .dlv .xk { font-size: 14px; color: var(--muted); margin-top: 10px; }
+      .dlv .xk b { color: var(--ink); }
