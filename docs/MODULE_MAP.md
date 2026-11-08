@@ -52,3 +52,4 @@ Cari fitur di sini, buka **hanya satu file**. Semua chunk `NN-*.js` dijalankan b
 | data — Data WMS | data.html | 40-import, 88-backup, 98-sync | legacy |
 
 Header/menu samping/navigasi bawah: `src/markup/{header,side,tabs}.html` + `45-nav.js`, `60-users.js`. Patch tampilan lapangan, bip, papan angka: `patch-*.js`.
+| agi — Aging Stock | (React) | `src/views/AgingView.jsx`, logika murni `src/lib/aging.js`, uji `tests/aging.mjs`, CSS `11-aging.css` | React. Dasbor sinyal aging per area + kelas pipa + ceklis rak (pengganti kertas). Kunci: warehouse_so_aging_v1 (cek fisik), _cls_v1 (kelas per kode item), _pic_v1 (nama petugas per kelas), _area_v1. Belum ikut sinkron/cadangan. |

@@ -15,7 +15,7 @@
       let meId = "";
       try { meId = sessionStorage.getItem(K_ME) || ""; } catch (e) {}
       /* ---- v13: hak akses menu per user ---- */
-      const MENU_DEF = { so: "Periksa Bin", dc: "DC Harian", task: "Tugas Bin", check: "Review Supervisor", kes: "Cek Kesesuaian", adj: "File Adjust", clr: "Clearing", mon: "Beranda", muat: "Laporan Muat", kpi: "KPI Area", tg: "Telegram", data: "Data WMS" };
+      const MENU_DEF = { so: "Periksa Bin", dc: "DC Harian", task: "Tugas Bin", check: "Review Supervisor", kes: "Cek Kesesuaian", adj: "File Adjust", clr: "Clearing", mon: "Beranda", muat: "Laporan Muat", kpi: "KPI Area", agi: "Aging Stock", tg: "Telegram", data: "Data WMS" };
       const ALL_VIEWS = [...Object.keys(MENU_DEF), "usr"];
       const PRESETS = { operator: ["mon", "so", "dc", "task"], supervisor: ["so", "dc", "task", "check", "kes", "adj", "clr", "mon", "muat", "kpi"] };
       const sameSet = (a, b) => a.length === b.length && a.every((x) => b.includes(x));
@@ -27,7 +27,7 @@
       let uMenus = [...PRESETS.operator];
       /* ---- v17: menu yang tampil di navigasi bawah (per perangkat) ---- */
       const K_NAV = "warehouse_so_nav_v1";
-      const NAV_ORDER = ["mon", "so", "dc", "check", "task", "kes", "adj", "clr", "muat", "kpi", "usr", "tg", "data"];
+      const NAV_ORDER = ["mon", "so", "dc", "check", "task", "kes", "adj", "clr", "muat", "kpi", "agi", "usr", "tg", "data"];
       const NAV_DEFAULT = ["mon", "so", "dc", "check", "adj"];
       const NAV_MAX = 5;
       const NAV_NAME = Object.assign({}, MENU_DEF, { usr: "User & Area" });
@@ -88,7 +88,7 @@
         });
         $("tMenu").classList.toggle("on", ![...document.querySelectorAll("#tabs [data-v]")].some((b) => !b.hidden && b.dataset.v === curViewId));
         // jika layar yang sedang terbuka tidak diizinkan, pindah ke menu pertama yang boleh
-        const curV = ["so", "dc", "check", "task", "kes", "adj", "clr", "muat", "usr", "kpi", "tg", "mon", "data"].find((k) => $("v-" + k) && !$("v-" + k).hidden);
+        const curV = ["so", "dc", "check", "task", "kes", "adj", "clr", "muat", "usr", "kpi", "agi", "tg", "mon", "data"].find((k) => $("v-" + k) && !$("v-" + k).hidden);
         if (curV && !allowedView(curV)) {
           const first = ["so", "dc", "task", "check", "kes", "adj", "mon", "muat", "kpi"].find(allowedView);
           if (first) go(first);

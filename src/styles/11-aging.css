@@ -1,0 +1,34 @@
+/* Menu Aging Stock */
+.agi-bar { display: grid; gap: 6px; margin: 8px 0 12px; }
+.agi-h { margin: 0 0 10px; font-size: 16px; }
+.agi-list-h { margin: 18px 0 4px; }
+.agi-row { display: grid; grid-template-columns: 72px 1fr 44px; gap: 10px; align-items: center; padding: 5px 0; font-size: 14px; }
+.agi-row b { text-align: right; }
+.agi-tr { display: block; height: 14px; border-radius: 7px; background: rgba(128, 128, 128, .16); overflow: hidden; }
+.agi-tr i { display: block; height: 100%; border-radius: 7px; }
+.agi-scroll { overflow-x: auto; margin: 0 -4px; padding: 0 4px; }
+.agi-tb { width: 100%; border-collapse: collapse; font-size: 14px; text-align: center; }
+.agi-tb th, .agi-tb td { padding: 8px 2px; border-bottom: 1px solid var(--line, #e2e8f0); min-width: 34px; }
+.agi-tb thead th { font-size: 12px; font-weight: 700; }
+.agi-tb thead th i { display: block; height: 5px; margin: 0 2px 4px; border-radius: 3px; }
+.agi-tb tbody th { text-align: left; font-size: 15px; padding-left: 4px; }
+.agi-tb td { font-weight: 700; }
+.agi-tb td.z { color: var(--muted, #6b7a89); font-weight: 400; }
+.agi-pic { display: grid; grid-template-columns: 32px 1fr 52px; gap: 10px; align-items: center; padding: 5px 0; }
+.agi-pic b { text-align: right; font-size: 18px; }
+.agi-pic input { min-width: 0; }
+.agi-pic.tot { border-top: 1px solid var(--line, #e2e8f0); margin-top: 4px; padding-top: 10px; }
+.agi-cl { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; background: var(--navy, #263038); color: #fff; font-weight: 800; font-size: 14px; }
+.agi-pic.tot .agi-cl { background: none; }
+.agi-pn { color: var(--muted, #6b7a89); }
+.agi-rak { padding: 0; margin-top: 8px; }
+.agi-rak.done { border-left: 4px solid var(--green, #16a34a); }
+.agi-rak > summary { list-style: none; display: grid; grid-template-columns: auto 1fr 24px; gap: 10px; align-items: center; padding: 12px; min-height: 56px; cursor: pointer; }
+.agi-rak > summary::-webkit-details-marker { display: none; }
+.agi-sg { min-width: 68px; padding: 6px 8px; border-radius: 8px; font-size: 12px; font-weight: 800; text-align: center; }
+.agi-bn { display: grid; min-width: 0; }
+.agi-bn small { color: var(--muted, #6b7a89); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.agi-ck { color: var(--green, #16a34a); font-weight: 800; font-size: 18px; }
+.agi-form { display: grid; gap: 10px; padding: 0 12px 14px; }
+.agi-form label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; }
+.agi-form .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }

@@ -5,4 +5,4 @@
         counts: { get: () => counts },
         view: { get: () => curViewId },
       });
-      Object.assign(WMS, { areas, isClosed, owners, staff, stat, toast, outText, esc });
+      Object.assign(WMS, { areas, isClosed, owners, staff, stat, toast, outText, esc, curName });

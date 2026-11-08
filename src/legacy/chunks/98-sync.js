@@ -204,7 +204,7 @@
         if (v === "dc") renderDc();
         else if (v === "check") renderCheck();
         else if (v === "task") renderTask();
-        else if (v === "kpi") WMS.emit(); // KpiView (React) menggambar ulang
+        else if (v === "kpi" || v === "agi") WMS.emit(); // KpiView (React) menggambar ulang
         else if (v === "usr") renderUsr();
         else if (v === "kes") renderKes();
         else if (v === "adj") renderAdj();
@@ -339,7 +339,7 @@
         else if (lv && allowedView(lv) && document.getElementById("v-" + lv)) go(lv);
         else if (allowedView("mon")) go("mon");
         else {
-          const first = ["so", "dc", "task", "check", "kes", "adj", "clr", "muat", "kpi", "tg", "data", "usr"].find(allowedView);
+          const first = ["so", "dc", "task", "check", "kes", "adj", "clr", "muat", "kpi", "agi", "tg", "data", "usr"].find(allowedView);
           if (first) go(first);
         }
       } catch (e) {}
