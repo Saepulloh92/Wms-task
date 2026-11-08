@@ -97,7 +97,7 @@ var SH = {
 };
 var MENU_LABEL = {
   so: 'Periksa Bin', dc: 'DC Harian', task: 'Tugas Bin', check: 'Review Supervisor', kes: 'Cek Kesesuaian',
-  adj: 'File Adjust', clr: 'Clearing', mon: 'Beranda', muat: 'Laporan Muat', kpi: 'KPI Area', agi: 'Aging Stock', tg: 'Telegram', data: 'Data WMS', usr: 'User & Area'
+  adj: 'File Adjust', clr: 'Clearing', mon: 'Beranda', muat: 'Laporan Muat', kpi: 'KPI Area', agi: 'Aging Stock', rpt: 'Laporan Mingguan', tg: 'Telegram', data: 'Data WMS', usr: 'User & Area'
 };
 var MENU_OPERATOR = ['mon', 'so', 'dc', 'task'];   // preset Operator di aplikasi
 var CHUNK = 45000;          // batas aman per sel (maks 50.000 karakter)

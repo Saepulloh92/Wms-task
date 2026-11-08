@@ -24,7 +24,7 @@ Repo → Settings → Pages → Source: **GitHub Actions**. Opsional: Settings �
 (ingat: nilai ini terbaca di bundel publik; untuk repo/hosting publik lebih baik dikosongkan dan diisi dari aplikasi).
 
 ## Tes
-`npm run test:rak` dan `npm run test:parity` (butuh `playwright` + `npx vite preview --port 4173`).
+`npm run test:rak`, `npm run test:parity`, dan `npm run test:weekly` (butuh `playwright` + `npx vite preview --port 4173`).
 
 ## Struktur & kontribusi
 Lihat `CLAUDE.md` (aturan kerja), `docs/MODULE_MAP.md` (peta fitur → file), `docs/MIGRATION.md` (migrasi ke React bertahap).

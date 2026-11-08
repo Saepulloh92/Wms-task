@@ -2,7 +2,7 @@
    asal: index-fixd.html baris 3393-3569 */
       /* ---------- navigasi ---------- */
       function go(v) {
-        ["so", "dc", "check", "task", "kes", "adj", "clr", "muat", "usr", "kpi", "tg", "mon", "data", "agi"].forEach((k) => ($("v-" + k).hidden = k !== v));
+        ["so", "dc", "check", "task", "kes", "adj", "clr", "muat", "usr", "kpi", "tg", "mon", "data", "agi", "rpt"].forEach((k) => ($("v-" + k).hidden = k !== v));
         document.querySelectorAll(".mi").forEach((b) => b.classList.toggle("on", b.dataset.v === v));
         document.querySelectorAll("#tabs [data-v]").forEach((b) => {
           b.classList.toggle("on", b.dataset.v === v);
@@ -33,6 +33,7 @@
           usr: "User & Area",
           kpi: "KPI Area",
           agi: "Aging Stock",
+          rpt: "Laporan Mingguan",
           dc: "DC Harian",
           tg: "Telegram",
           mon: "Beranda",
@@ -52,6 +53,7 @@
             usr: "Atur petugas dan area",
             kpi: "Capaian per area dan petugas",
             agi: "Sinyal aging per area",
+            rpt: "Aktivitas satu minggu untuk SPV",
             tg: "Kirim info ke Telegram",
             mon: "Posisi mobil per wilayah",
             data: "Impor data WMS",

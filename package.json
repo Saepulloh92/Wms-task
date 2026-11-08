@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test:parity": "node tests/parity.mjs",
-    "test:rak": "node tests/rakfilter.mjs"
+    "test:rak": "node tests/rakfilter.mjs",
+    "test:weekly": "node tests/weekly.mjs && node tests/weekly-ui.mjs"
   },
   "dependencies": {
     "react": "18.3.1",
