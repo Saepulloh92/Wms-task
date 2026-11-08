@@ -62,8 +62,7 @@
       .kv.k3 dd small { display: block; font-size: 12px; font-weight: 600; color: var(--muted); }
       #clrShChips { margin-top: 6px; }
 
-      /* ---- v24: PIN dimatikan + ringan di HP ---- */
-      #uPin, #uPinL, #uPinH, #uResetPin, #uBoot { display: none !important; }
+      /* ---- v24: ringan di HP (antarmuka password aktif kembali) ---- */
       html { overscroll-behavior-y: none; }
       .sh-body, .sd-m { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
       .bin, .card, .pk { content-visibility: auto; contain-intrinsic-size: auto 76px; }

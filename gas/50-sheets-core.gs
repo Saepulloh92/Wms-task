@@ -263,8 +263,8 @@ function renderSheetsBody_(st, withMaster) {
   writeTable_(SH.users, ['ID', 'Nama', 'Peran', 'Aktif', 'Area', 'Menu'],
     users.map(function (u) {
       var menus = u.role === 'admin' ? 'Semua menu'
-        : (Array.isArray(u.menus) ? u.menus : MENU_OPERATOR).map(function (m) { return MENU_LABEL[m] || m; }).join(', ');
-      return [u.id, u.name, u.role === 'admin' ? 'Admin' : 'Petugas', u.active === false ? 'Tidak' : 'Ya',
+        : (Array.isArray(u.menus) ? u.menus : (u.role === 'spv' ? MENU_SPV : u.role === 'penerimaan' ? MENU_PENERIMAAN : MENU_OPERATOR)).map(function (m) { return MENU_LABEL[m] || m; }).join(', ');
+      return [u.id, u.name, ROLE_LABEL[u.role] || 'Petugas', u.active === false ? 'Tidak' : 'Ya',
         (u.areas || []).join(', '), menus];
     }));
 

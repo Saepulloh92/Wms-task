@@ -1,19 +1,19 @@
           <h2>User &amp; Area</h2>
-          <p class="hint">Kelola admin dan petugas: peran, PIN, area, dan status aktif.</p>
+          <p class="hint">Kelola user: peran (Admin, SPV, Petugas, Penerimaan), password, area, dan status aktif.</p>
           <div id="uBoot"></div>
           <div id="usrList"></div>
           <div class="panel">
             <h3 id="uTitle"></h3>
             <label for="uName">Nama</label><input id="uName" placeholder="Contoh: Kelik" autocomplete="off" />
             <label for="uRole">Peran</label>
-            <select id="uRole"><option value="petugas">Petugas (menu diatur di bawah)</option><option value="admin">Admin (semua menu)</option></select>
-            <label for="uPin" id="uPinL">PIN (4 sampai 8 angka)</label>
-            <input id="uPin" type="password" inputmode="numeric" maxlength="8" autocomplete="new-password" />
+            <select id="uRole"><option value="petugas">Petugas (area sendiri)</option><option value="penerimaan">Penerimaan (area sendiri)</option><option value="spv">SPV (semua area, review dan laporan)</option><option value="admin">Admin (semua menu)</option></select>
+            <label for="uPin" id="uPinL">Password (minimal 6 karakter)</label>
+            <input id="uPin" type="password" maxlength="64" autocomplete="new-password" />
             <p class="fine" id="uPinH"></p>
             <div id="uAreasWrap"><label id="uAreasL">Area yang dikerjakan</label>
             <div class="chips wrap" id="uAreas" role="group" aria-labelledby="uAreasL"></div></div>
             <div id="uMenusWrap"><label id="uMenusL">Akses menu</label>
-            <div class="chips wrap" id="uPreset"><button type="button" class="chip" data-p="operator" aria-pressed="false">Operator</button><button type="button" class="chip" data-p="supervisor" aria-pressed="false">Supervisor</button></div>
+            <div class="chips wrap" id="uPreset"><button type="button" class="chip" data-p="petugas" aria-pressed="false">Menu Petugas</button><button type="button" class="chip" data-p="penerimaan" aria-pressed="false">Menu Penerimaan</button><button type="button" class="chip" data-p="spv" aria-pressed="false">Menu SPV</button></div>
             <div class="chips wrap" id="uMenus" role="group" aria-labelledby="uMenusL"></div>
             <p class="fine">Menu yang tidak dicentang disembunyikan dari user ini. Menu User &amp; Area selalu khusus admin.</p></div>
             <label class="sw"><input type="checkbox" id="uActive" checked /><span>Aktif<small>User nonaktif tidak bisa masuk dan tidak dapat tugas baru.</small></span></label>
@@ -32,8 +32,8 @@
           <div class="panel mt-lg">
             <h3>Keamanan &amp; mode periksa</h3>
             <label class="sw"><input type="checkbox" id="swBlind" /><span>Mode hitung buta (disarankan untuk Stock Opname)<small>Qty WMS disembunyikan saat menghitung dan tombol "YA" tidak mengisi qty otomatis. Hasil hitung jadi independen.</small></span></label>
-            <p class="fine">PIN dan peran adalah pencegah salah pakai di perangkat bersama, bukan keamanan tingkat tinggi: data tetap ada di browser perangkat ini.</p>
-            <h3 class="sec">Atur ulang PIN</h3>
-            <p class="fine">Untuk satu user, pilih Ubah di daftar user lalu isi PIN baru. Tombol di bawah menghapus PIN SEMUA user, termasuk PIN Anda, dan akses jadi terbuka sampai admin membuat PIN lagi.</p>
-            <button class="btn dng sm mt" id="uResetPin" type="button">Hapus semua PIN</button>
+            <p class="fine">Password dan peran adalah pencegah salah pakai di perangkat bersama, bukan keamanan tingkat tinggi: data tetap ada di browser perangkat ini.</p>
+            <h3 class="sec">Atur ulang password</h3>
+            <p class="fine">Untuk satu user, pilih Ubah di daftar user lalu isi password baru. Tombol di bawah menghapus password SEMUA user, termasuk password Anda, dan akses jadi terbuka sampai admin membuat password lagi.</p>
+            <button class="btn dng sm mt" id="uResetPin" type="button">Hapus semua password</button>
           </div>

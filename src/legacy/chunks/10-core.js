@@ -87,7 +87,7 @@
         return !curU || t.u === curU;
       };
       const tkMine = () => DATA.filter((x) => tasks[x.bin] && (!curU || tasks[x.bin].u === curU));
-      /* PIN supervisor */
+      /* Hash password (field user.pin) dan kunci percobaan masuk */
       let supUntil = 0, pinFails = 0, pinLock = 0;
       async function pinHash(p) {
         const s0 = "sc-wms|" + p;
@@ -103,6 +103,12 @@
       async function supAuth() {
         if (isAdmin()) return true;
         toast("Hanya admin yang bisa melakukan ini.");
+        return false;
+      }
+      // pekerjaan tingkat supervisor (tugas bin, mulai DC baru): admin atau SPV
+      async function leadAuth() {
+        if (isSup()) return true;
+        toast("Hanya admin atau SPV yang bisa melakukan ini.");
         return false;
       }
             async function nav(v) {

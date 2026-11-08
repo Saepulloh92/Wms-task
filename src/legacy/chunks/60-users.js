@@ -4,7 +4,9 @@
       const K_U = "warehouse_so_users_v1",
         K_X = "warehouse_so_closed_v1",
         K_CU = "warehouse_so_curuser_v1";
-      /* Bawaan: hanya satu akun Admin tanpa PIN (mode terbuka). Tambah petugas dan PIN dari menu User & Area. */
+      /* Bawaan: hanya satu akun Admin tanpa password (mode terbuka). Tambah user dan password dari menu User & Area.
+         Login = pilih nama + password. Password disimpan sebagai hash di field `pin` (nama lama dipertahankan supaya
+         sinkron, cadangan, dan backend tetap cocok; field ini tidak pernah ikut sinkron). */
       const DEFAULT_USERS = () => [{ id: "ua0admin", name: "Admin", role: "admin", active: true, areas: [] }];
       let users = ld(K_U, null) || DEFAULT_USERS(),
         closed = ld(K_X, {}),
@@ -17,14 +19,26 @@
       /* ---- v13: hak akses menu per user ---- */
       const MENU_DEF = { so: "Periksa Bin", dc: "DC Harian", task: "Tugas Bin", check: "Review Supervisor", kes: "Cek Kesesuaian", adj: "File Adjust", clr: "Clearing", mon: "Beranda", muat: "Laporan Muat", kpi: "KPI Area", agi: "Aging Stock", tg: "Telegram", data: "Data WMS" };
       const ALL_VIEWS = [...Object.keys(MENU_DEF), "usr"];
-      const PRESETS = { operator: ["mon", "so", "dc", "task"], supervisor: ["so", "dc", "task", "check", "kes", "adj", "clr", "mon", "muat", "kpi", "agi"] };
+      /* Peran: admin (semua menu), spv (review + laporan semua area), petugas dan penerimaan (menu standar, hanya area yang diberikan).
+         staff = true berarti terikat area: muncul di daftar petugas, dapat tugas, dan hanya melihat area miliknya. */
+      const ROLES = {
+        admin: { label: "Admin", staff: false, menus: null },
+        spv: { label: "SPV", staff: false, menus: ["so", "dc", "task", "check", "kes", "adj", "clr", "mon", "muat", "kpi", "agi"] },
+        petugas: { label: "Petugas", staff: true, menus: ["mon", "so", "dc", "task"] },
+        penerimaan: { label: "Penerimaan", staff: true, menus: ["mon", "so", "clr"] },
+      };
+      const PRESETS = { petugas: ROLES.petugas.menus, spv: ROLES.spv.menus, penerimaan: ROLES.penerimaan.menus };
+      const roleOf = (u) => (ROLES[u.role] ? u.role : "petugas");
+      const isStaff = (u) => ROLES[roleOf(u)].staff;
       const sameSet = (a, b) => a.length === b.length && a.every((x) => b.includes(x));
-      const menusOf = (u) => (u.role === "admin" ? ALL_VIEWS : Array.isArray(u.menus) ? u.menus : PRESETS.operator);
+      const menusOf = (u) => (u.role === "admin" ? ALL_VIEWS : Array.isArray(u.menus) ? u.menus : PRESETS[roleOf(u)]);
       const menuLabel = (u) => {
         const m = menusOf(u);
-        return sameSet(m, PRESETS.operator) ? "Operator" : sameSet(m, PRESETS.supervisor) ? "Supervisor" : "Kustom, " + m.length + " menu";
+        if (sameSet(m, PRESETS[roleOf(u)])) return "standar";
+        const k = Object.keys(PRESETS).find((p) => sameSet(m, PRESETS[p]));
+        return k ? "setara " + ROLES[k].label : "kustom, " + m.length + " menu";
       };
-      let uMenus = [...PRESETS.operator];
+      let uMenus = [...PRESETS.petugas];
       /* ---- v17: menu yang tampil di navigasi bawah (per perangkat) ---- */
       const K_NAV = "warehouse_so_nav_v1";
       const NAV_ORDER = ["mon", "so", "dc", "check", "task", "kes", "adj", "clr", "muat", "kpi", "agi", "usr", "tg", "data"];
@@ -42,7 +56,7 @@
       }
       function migrateUsers() {
         users.forEach((u) => {
-          u.role = u.role === "admin" ? "admin" : "petugas";
+          u.role = ROLES[u.role] ? u.role : "petugas";
           if (u.role === "admin") delete u.menus;
           else if (Array.isArray(u.menus)) u.menus = u.menus.filter((k) => MENU_DEF[k]);
           else delete u.menus;
@@ -51,17 +65,20 @@
         });
       }
       migrateUsers();
-      const staff = () => users.filter((u) => u.role !== "admin");
+      const staff = () => users.filter(isStaff);
       const meUser = () => users.find((u) => u.id === meId && u.active !== false) || null;
-      const authOn = () => false; // PIN dimatikan sementara: semua menu terbuka tanpa login
+      // login wajib begitu ada admin aktif yang punya password; sebelum itu semua menu terbuka (mode awal)
+      const authOn = () => users.some((u) => u.role === "admin" && u.pin && u.active !== false);
       const isAdmin = () => !authOn() || !!(meUser() && meUser().role === "admin");
+      // admin dan SPV boleh melihat semua area dan semua petugas; petugas/penerimaan hanya area miliknya
+      const isSup = () => isAdmin() || !!(meUser() && meUser().role === "spv");
       const allowedView = (v) => !authOn() || isAdmin() || (!!meUser() && menusOf(meUser()).includes(v));
-      const curUser = () => users.find((u) => u.id === curU && u.role !== "admin") || null;
+      const curUser = () => users.find((u) => u.id === curU && isStaff(u)) || null;
       const curName = () => (curUser() ? curUser().name : meUser() ? meUser().name : "");
       function applySession() {
         const m = meUser();
-        if (authOn() && m && m.role !== "admin") curU = m.id;
-        else if (!users.some((u) => u.id === curU && u.role !== "admin" && u.active !== false)) curU = "";
+        if (authOn() && m && isStaff(m)) curU = m.id;
+        else if (!users.some((u) => u.id === curU && isStaff(u) && u.active !== false)) curU = "";
         sv(K_CU, curU);
       }
       function applyRole() {
@@ -77,7 +94,7 @@
         });
         $("tabs").style.gridTemplateColumns = "repeat(" + (vis + 1) + ", 1fr)";
         const m = meUser();
-        $("whoAmI").textContent = authOn() && m ? m.name + " (" + (m.role === "admin" ? "Admin" : menuLabel(m)) + ")" : "";
+        $("whoAmI").textContent = authOn() && m ? m.name + " (" + ROLES[roleOf(m)].label + ")" : "";
         $("logoutBtn").hidden = !(authOn() && m);
         // sinkronkan penanda tab aktif setelah daftar tab berubah
         document.querySelectorAll("#tabs [data-v]").forEach((b) => {
@@ -101,29 +118,34 @@
         document.body.style.overflow = need ? "hidden" : "";
         if (!need) return;
         const act = users.filter((u) => u.active !== false).sort((a, b) => a.name.localeCompare(b.name, "id"));
-        $("lgUser").innerHTML = act.map((u) => `<option value="${esc(u.id)}">${esc(u.name)}${u.role === "admin" ? " (Admin)" : ""}</option>`).join("");
+        $("lgUser").innerHTML = act.map((u) => `<option value="${esc(u.id)}">${esc(u.name)}${u.name.trim().toLowerCase() === ROLES[roleOf(u)].label.toLowerCase() ? "" : " (" + ROLES[roleOf(u)].label + ")"}</option>`).join("");
         lgSel();
       }
       function lgSel() {
-        const u = users.find((x) => x.id === $("lgUser").value);
-        $("lgPinWrap").hidden = !(u && u.pin);
         $("lgPin").value = "";
+        $("lgPin").type = "password";
+        $("lgShow").textContent = "Tampilkan password";
+        $("lgShow").setAttribute("aria-pressed", "false");
         $("lgErr").textContent = "";
         clearInvalid($("login"));
       }
       async function lgGo() {
         const u = users.find((x) => x.id === $("lgUser").value);
         if (!u) return;
+        if (!u.pin) {
+          markInvalid($("lgPin"), "lgErr");
+          return ($("lgErr").textContent = "Akun ini belum punya password. Minta admin mengaturnya di menu User & Area.");
+        }
         if (Date.now() < pinLock) {
           markInvalid($("lgPin"), "lgErr");
           return ($("lgErr").textContent = "Terlalu banyak salah. Tunggu beberapa detik.");
         }
-        if (u.pin && (await pinHash($("lgPin").value)) !== u.pin) {
+        if ((await pinHash($("lgPin").value.trim())) !== u.pin) {
           if (++pinFails >= 5) {
             pinLock = Date.now() + 30000;
             pinFails = 0;
           }
-          $("lgErr").textContent = "PIN salah.";
+          $("lgErr").textContent = "Password salah.";
           markInvalid($("lgPin"), "lgErr");
           $("lgPin").select();
           return;
@@ -150,14 +172,21 @@
       $("lgOk").onclick = lgGo;
       $("lgPin").addEventListener("input", () => clearInvalid($("login")));
       $("lgPin").onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); lgGo(); } };
+      $("lgShow").onclick = () => {
+        const show = $("lgPin").type === "password";
+        $("lgPin").type = show ? "text" : "password";
+        $("lgShow").textContent = show ? "Sembunyikan password" : "Tampilkan password";
+        $("lgShow").setAttribute("aria-pressed", String(show));
+        $("lgPin").focus();
+      };
       $("logoutBtn").onclick = logout;
       // satu jalur untuk dua pintu: menu User & Area (utama) dan layar masuk (darurat)
       async function resetAllPins() {
         const ok = await askType(
-          "Hapus semua PIN?",
-          "Semua user bisa masuk tanpa PIN sampai admin mengatur PIN lagi. Data pemeriksaan tidak terhapus.",
+          "Hapus semua password?",
+          "Semua user bisa masuk tanpa password sampai admin mengatur password lagi. Data pemeriksaan tidak terhapus.",
           "RESET",
-          "Hapus semua PIN",
+          "Hapus semua password",
           3,
         );
         if (!ok) return false;
@@ -169,7 +198,7 @@
         loginUi();
         initAll();
         renderUsr();
-        toast("Semua PIN dihapus. Atur PIN admin di menu User & Area.");
+        toast("Semua password dihapus. Atur password admin di menu User & Area.");
         return true;
       }
       $("lgReset").onclick = async () => {
@@ -178,22 +207,22 @@
       };
       $("uResetPin").onclick = async () => {
         if (!(await supAuth())) return;
-        if (!users.some((u) => u.pin)) return toast("Belum ada PIN yang diatur.");
+        if (!users.some((u) => u.pin)) return toast("Belum ada password yang diatur.");
         await resetAllPins();
       };
       const inScope = (a) => !curUser() || curUser().areas.includes(a);
       const visAreas = () => areas().filter(inScope);
       const isClosed = (a) => !!closed[a];
-      const owners = (a) => users.filter((u) => u.active !== false && u.role !== "admin" && u.areas.includes(a)).map((u) => u.name);
+      const owners = (a) => users.filter((u) => u.active !== false && isStaff(u) && u.areas.includes(a)).map((u) => u.name);
       function areaStat(a) {
         const b = DATA.filter((x) => x.area === a);
         return { total: b.length, done: b.filter((x) => counts[x.bin]).length };
       }
       function renderUserSel() {
         if (curU && !curUser()) curU = "";
-        const lim = authOn() && !isAdmin();
+        const lim = authOn() && !isSup();
         $("user").innerHTML =
-          (lim ? "" : '<option value="">Semua petugas (admin)</option>') +
+          (lim ? "" : '<option value="">Semua petugas</option>') +
           staff()
             .filter((u) => u.active !== false && (!lim || u.id === curU))
             .map((u) => `<option value="${esc(u.id)}" ${u.id === curU ? "selected" : ""}>${esc(u.name)}</option>`)
@@ -212,11 +241,11 @@
         if (isClosed(area))
           el.innerHTML = `<div class="note ok">Area ${a} sudah ditutup oleh ${esc(closed[area].by)}. Bin tidak bisa diubah.</div>`;
         else if (s.total && s.done === s.total)
-          el.innerHTML = `<div class="note ok">Semua ${s.total} bin area ${a} sudah diperiksa.${isAdmin() ? `<button class="btn pri sm" data-close="${a}">Tutup area ${a}</button>` : " Menunggu admin menutup area."}</div>`;
+          el.innerHTML = `<div class="note ok">Semua ${s.total} bin area ${a} sudah diperiksa.${isSup() ? `<button class="btn pri sm" data-close="${a}">Tutup area ${a}</button>` : " Menunggu admin atau SPV menutup area."}</div>`;
         else el.innerHTML = `<div class="note info">Area ${a}: ${s.done} dari ${s.total} bin diperiksa.</div>`;
       }
       async function closeArea(a) {
-        if (!(await supAuth())) return;
+        if (!(await leadAuth())) return;
         const s = areaStat(a);
         if (!s.total || s.done < s.total) return toast("Area belum bisa ditutup: masih ada bin yang belum diperiksa.");
         if (!(await ask("Tutup area " + a + "?", "Bin di area ini tidak bisa diubah sampai dibuka kembali.", "Tutup area"))) return;
@@ -228,7 +257,7 @@
         renderUsr();
       }
       async function reopenArea(a) {
-        if (!(await supAuth())) return;
+        if (!(await leadAuth())) return;
         if (!(await ask("Buka kembali area " + a + "?", "Bin di area ini bisa diperiksa ulang.", "Buka kembali"))) return;
         delete closed[a];
         sv(K_X, closed);
@@ -277,11 +306,12 @@
         const A = allAreas();
         renderAreaCfg();
         const eu = uEdit && users.find((x) => x.id === uEdit),
-          adminRole = $("uRole").value === "admin";
+          adminRole = $("uRole").value === "admin",
+          scoped = !!(ROLES[$("uRole").value] && ROLES[$("uRole").value].staff);
         $("uTitle").textContent = uEdit ? "Ubah user" : "Tambah user";
         $("uAdd").textContent = uEdit ? "Simpan perubahan" : "Simpan user";
         $("uCancel").hidden = !uEdit;
-        $("uAreasWrap").hidden = adminRole;
+        $("uAreasWrap").hidden = !scoped; // admin dan SPV melihat semua area
         $("uMenusWrap").hidden = adminRole;
         $("uMenus").innerHTML = Object.keys(MENU_DEF).map((k) => `<button type="button" class="chip ${uMenus.includes(k) ? "on" : ""}" data-m="${k}" aria-pressed="${uMenus.includes(k)}">${MENU_DEF[k]}</button>`).join("");
         document.querySelectorAll("#uPreset [data-p]").forEach((b) => {
@@ -289,11 +319,11 @@
           b.classList.toggle("on", on);
           b.setAttribute("aria-pressed", String(on));
         });
-        $("uPinL").textContent = adminRole ? "PIN admin (wajib, 4 sampai 8 angka)" : "PIN (opsional, 4 sampai 8 angka)";
-        $("uPinH").textContent = eu && eu.pin ? "PIN sudah diatur. Kosongkan jika tidak ingin mengubah." : adminRole ? "Admin wajib punya PIN." : "Tanpa PIN, petugas masuk cukup dengan memilih nama.";
+        $("uPinL").textContent = "Password (minimal 6 karakter)";
+        $("uPinH").textContent = eu && eu.pin ? "Password sudah diatur. Kosongkan jika tidak ingin mengubah." : "Wajib diisi. Dipakai user untuk masuk bersama namanya.";
         $("uBoot").innerHTML = users.some((u) => u.role === "admin" && u.pin && u.active !== false)
           ? ""
-          : '<div class="note">Belum ada admin ber-PIN, jadi semua orang masih bisa membuka semua menu. Buat admin pertama di bawah (pilih peran Admin dan isi PIN). Setelah itu semua user harus masuk.</div>';
+          : '<div class="note">Belum ada admin dengan password, jadi semua orang masih bisa membuka semua menu. Ubah akun Admin di bawah dan isi password. Setelah itu semua user harus masuk dengan nama dan password.</div>';
         $("uAreas").innerHTML = A.length
           ? A.map((a) => `<button class="chip ${uSel.includes(a) ? "on" : ""}" data-a="${esc(a)}">${esc(a)}</button>`).join("")
           : '<div class="hint">Belum ada area. Impor data WMS dulu.</div>';
@@ -303,6 +333,8 @@
                 const pills =
                   u.role === "admin"
                     ? '<span class="m">Akses penuh ke semua menu</span>'
+                    : !isStaff(u)
+                    ? '<span class="m">Semua area</span>'
                     : u.areas
                         .map((a) => {
                           const s = areaStat(a);
@@ -310,7 +342,7 @@
                         })
                         .join(" ") || '<span class="m">Belum ada area</span>',
                   self = meUser() && meUser().id === u.id;
-                return `<div class="card"><div class="r"><b class="big">${esc(u.name)}${self ? " (Anda)" : ""}</b><div><span class="pill ${u.role === "admin" ? "red" : ""}">${u.role === "admin" ? "Admin" : "Petugas"}</span> <span class="pill ${u.pin ? "green" : ""}">${u.pin ? "PIN aktif" : "Tanpa PIN"}</span>${u.active === false ? ' <span class="pill amber">Nonaktif</span>' : ""}</div></div><div>${pills}${u.role === "admin" ? "" : ' <span class="pill">Menu: ' + menuLabel(u) + "</span>"}</div><div class="acts"><button class="btn sec sm inl" data-edit="${esc(u.id)}">Ubah</button><button class="btn sec sm inl" data-act="${esc(u.id)}">${u.active === false ? "Aktifkan" : "Nonaktifkan"}</button><button class="btn dng sm inl" data-del="${esc(u.id)}">Hapus</button></div></div>`;
+                return `<div class="card"><div class="r"><b class="big">${esc(u.name)}${self ? " (Anda)" : ""}</b><div><span class="pill ${u.role === "admin" ? "red" : ""}">${ROLES[roleOf(u)].label}</span> <span class="pill ${u.pin ? "green" : "amber"}">${u.pin ? "Password aktif" : "Belum ada password"}</span>${u.active === false ? ' <span class="pill amber">Nonaktif</span>' : ""}</div></div><div>${pills}${u.role === "admin" ? "" : ' <span class="pill">Menu: ' + menuLabel(u) + "</span>"}</div><div class="acts"><button class="btn sec sm inl" data-edit="${esc(u.id)}">Ubah</button><button class="btn sec sm inl" data-act="${esc(u.id)}">${u.active === false ? "Aktifkan" : "Nonaktifkan"}</button><button class="btn dng sm inl" data-del="${esc(u.id)}">Hapus</button></div></div>`;
               })
               .join("")
           : '<div class="empty">Belum ada user. Tambahkan di bawah.</div>';
@@ -320,23 +352,28 @@
             full = s.total && s.done === s.total,
             mand = !s.total,
             ow = owners(a);
-          return `<div class="card"><div class="r"><b class="big">Area ${esc(a)}</b><span class="pill ${c ? "green" : full ? "amber" : ""}">${c ? "Ditutup" : mand ? "Belum ada data" : full ? "Siap ditutup" : "Berjalan"}</span></div><div class="m">${mand ? "Belum ada bin di data WMS. Impor Informasi Rak WMS di menu Data WMS." : s.done + " dari " + s.total + " bin diperiksa."} Petugas: ${ow.length ? esc(ow.join(", ")) : "belum ada"}</div>${c ? `<div class="m">Ditutup oleh ${esc(closed[a].by)}</div>${isAdmin() ? `<button class="btn sec sm" data-reopen="${esc(a)}">Buka kembali</button>` : ""}` : full && isAdmin() ? `<button class="btn pri sm" data-close="${esc(a)}">Tutup area ${esc(a)}</button>` : ""}</div>`;
+          return `<div class="card"><div class="r"><b class="big">Area ${esc(a)}</b><span class="pill ${c ? "green" : full ? "amber" : ""}">${c ? "Ditutup" : mand ? "Belum ada data" : full ? "Siap ditutup" : "Berjalan"}</span></div><div class="m">${mand ? "Belum ada bin di data WMS. Impor Informasi Rak WMS di menu Data WMS." : s.done + " dari " + s.total + " bin diperiksa."} Petugas: ${ow.length ? esc(ow.join(", ")) : "belum ada"}</div>${c ? `<div class="m">Ditutup oleh ${esc(closed[a].by)}</div>${isSup() ? `<button class="btn sec sm" data-reopen="${esc(a)}">Buka kembali</button>` : ""}` : full && isSup() ? `<button class="btn pri sm" data-close="${esc(a)}">Tutup area ${esc(a)}</button>` : ""}</div>`;
         }).join("");
       }
       function resetUForm() {
         uEdit = null;
         uSel = [];
-        uMenus = [...PRESETS.operator];
+        uMenus = [...PRESETS.petugas];
         $("uName").value = "";
         $("uRole").value = "petugas";
         $("uPin").value = "";
         $("uActive").checked = true;
         renderUsr();
       }
-      $("uRole").onchange = renderUsr;
+      // ganti peran = menu ikut standar peran itu (bisa disesuaikan lagi lewat chip menu)
+      $("uRole").onchange = () => {
+        if (PRESETS[$("uRole").value]) uMenus = [...PRESETS[$("uRole").value]];
+        renderUsr();
+      };
       $("user").onchange = async () => {
         const nv = $("user").value;
-        if (nv === "" && curU !== "" && !(await supAuth())) {
+        if (nv === "" && curU !== "" && !isSup()) {
+          toast("Hanya admin atau SPV yang bisa melihat semua petugas.");
           $("user").value = curU;
           return;
         }
@@ -374,12 +411,14 @@
           old = uEdit ? users.find((x) => x.id === uEdit) : null;
         if (!(await supAuth())) return;
         if (!name) return toast("Nama wajib diisi.");
+        if (!ROLES[role]) return toast("Pilih peran user.");
         if (users.some((u) => u.id !== uEdit && u.name.toLowerCase() === name.toLowerCase()))
           return toast("Nama sudah dipakai. Gunakan nama lain.");
-        if (role === "petugas" && !uSel.length) return toast("Pilih minimal satu area untuk petugas ini.");
-        if (role === "petugas" && !uMenus.length) return toast("Pilih minimal satu menu untuk petugas ini.");
-        if (pin && !/^\d{4,8}$/.test(pin)) return toast("PIN harus 4 sampai 8 angka.");
-        
+        if (ROLES[role].staff && !uSel.length) return toast("Pilih minimal satu area untuk " + ROLES[role].label + " ini.");
+        if (role !== "admin" && !uMenus.length) return toast("Pilih minimal satu menu untuk user ini.");
+        if (!pin && !(old && old.pin)) return toast("Password wajib diisi (minimal 6 karakter).");
+        if (pin && (pin.length < 6 || pin.length > 64)) return toast("Password minimal 6 dan maksimal 64 karakter.");
+
         const wasAuth = authOn();
         // jangan sampai tidak ada admin aktif ber-PIN setelah perubahan ini
         const rest = users.filter((u) => u.id !== uEdit && u.role === "admin" && u.pin && u.active !== false).length;
@@ -391,7 +430,7 @@
         rec.name = name;
         rec.role = role;
         rec.active = active;
-        rec.areas = role === "admin" ? [] : [...uSel].sort();
+        rec.areas = ROLES[role].staff ? [...uSel].sort() : [];
         if (role === "admin") delete rec.menus;
         else rec.menus = [...uMenus];
         if (pin) rec.pin = await pinHash(pin);
@@ -400,7 +439,7 @@
         if (!wasAuth && authOn()) {
           meId = rec.id;
           try { sessionStorage.setItem(K_ME, meId); } catch (e) {}
-          toast("Admin dibuat. Anda masuk sebagai " + name + ". Mulai sekarang semua user harus masuk.");
+          toast("Password admin diatur. Anda masuk sebagai " + name + ". Mulai sekarang semua user harus masuk dengan nama dan password.");
         } else toast("User tersimpan: " + name);
         resetUForm();
         applySession();
@@ -421,7 +460,7 @@
         if (ed) {
           uEdit = u.id;
           uSel = [...u.areas];
-          uMenus = u.role === "admin" ? [...PRESETS.operator] : [...menusOf(u)];
+          uMenus = u.role === "admin" ? [...PRESETS.petugas] : [...menusOf(u)];
           $("uName").value = u.name;
           $("uRole").value = u.role;
           $("uPin").value = "";

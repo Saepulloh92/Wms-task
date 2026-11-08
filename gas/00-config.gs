@@ -99,7 +99,10 @@ var MENU_LABEL = {
   so: 'Periksa Bin', dc: 'DC Harian', task: 'Tugas Bin', check: 'Review Supervisor', kes: 'Cek Kesesuaian',
   adj: 'File Adjust', clr: 'Clearing', mon: 'Beranda', muat: 'Laporan Muat', kpi: 'KPI Area', agi: 'Aging Stock', tg: 'Telegram', data: 'Data WMS', usr: 'User & Area'
 };
-var MENU_OPERATOR = ['mon', 'so', 'dc', 'task'];   // preset Operator di aplikasi
+var MENU_OPERATOR = ['mon', 'so', 'dc', 'task'];   // menu standar Petugas di aplikasi
+var MENU_SPV = ['so', 'dc', 'task', 'check', 'kes', 'adj', 'clr', 'mon', 'muat', 'kpi', 'agi'];
+var MENU_PENERIMAAN = ['mon', 'so', 'clr'];
+var ROLE_LABEL = { admin: 'Admin', spv: 'SPV', petugas: 'Petugas', penerimaan: 'Penerimaan' };
 var CHUNK = 45000;          // batas aman per sel (maks 50.000 karakter)
 var BACKUP_FOLDER = 'Stock Control Backup';
 var BACKUP_KEEP = 30;

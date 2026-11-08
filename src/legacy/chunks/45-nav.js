@@ -49,7 +49,7 @@
             adj: "Selisih siap diunggah",
             clr: "Voucher vs counting",
             muat: "Laporan muat",
-            usr: "Atur petugas dan area",
+            usr: "Atur user, peran, dan area",
             kpi: "Capaian per area dan petugas",
             agi: "Sinyal aging per area",
             tg: "Kirim info ke Telegram",
