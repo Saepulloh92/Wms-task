@@ -383,6 +383,7 @@
         });
         return "\n*Per shift*\n```\nSHIFT    TOTAL  COCOK  CEK\n" + r.join("\n") + "\n```\n";
       }
+      keepDom("clrStats", "clrRekap");
       let clrAT = 0, clrTimer = 0;
       function clrEnter() {
         clearInterval(clrTimer);

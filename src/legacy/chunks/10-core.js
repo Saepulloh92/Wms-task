@@ -113,6 +113,25 @@
           return "w" + h;
         }
       }
+      /* Cegah kedip saat muat ulang otomatis: isi elemen hanya diganti kalau HTML-nya benar-benar berbeda
+         (posisi scroll dan bagian yang sedang dibuka ikut terjaga). */
+      function keepDom(...ids) {
+        if (typeof Element === "undefined") return;
+        const d = Object.getOwnPropertyDescriptor(Element.prototype, "innerHTML");
+        ids.forEach((id) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          Object.defineProperty(el, "innerHTML", {
+            configurable: true,
+            get() { return d.get.call(this); },
+            set(v) {
+              if (this.__h === v && d.get.call(this)) return;
+              d.set.call(this, v);
+              this.__h = v;
+            },
+          });
+        });
+      }
       const pinIsLegacy = (s) => typeof s === "string" && !s.startsWith("p1$");
       async function pinCheck(p, stored) {
         if (typeof stored !== "string" || !stored) return false;

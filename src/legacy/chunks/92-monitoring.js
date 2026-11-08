@@ -382,6 +382,7 @@
           if (i) { i.focus(); try { i.setSelectionRange(p, p); } catch (x) {} }
         }
       };
+      keepDom("monOver", "monTools", "monList");
       $("monOver").onclick = (e) => {
         const t = e.target.closest("[data-tr]");
         if (t) { monTr = Number(t.dataset.tr); monRender(); }
