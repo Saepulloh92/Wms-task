@@ -450,12 +450,14 @@
         monRender();
         if (mon.url && (!monCache || monCache.src !== "file") && (!monCache || Date.now() - monCache.at > 20000)) monLoad(false);
         monLeave();
+        if (typeof dlvEnter === "function") dlvEnter();
         if (mon.auto && mon.url)
           monTimer = setInterval(() => {
             if (!document.hidden) monLoad(false);
           }, mon.auto * 60000);
       }
       function monLeave() {
+        if (typeof dlvLeave === "function") dlvLeave();
         clearInterval(monTimer);
         monTimer = 0;
       }

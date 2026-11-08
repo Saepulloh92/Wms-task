@@ -23,6 +23,7 @@ Cari fitur di sini, buka **hanya satu file**. Semua chunk `NN-*.js` dijalankan b
 | `88-backup.js` | 175 | Cadangan & peringatan penyimpanan | stCheck, guardUi, doBackup, bkCheck, applyRestore | warehouse_so_dest_v1 |
 | `90-telegram.js` | 252 | Telegram | outText, tgRun, tgChunks, tgSend, tgApi, tgPost, tgNote, tgFlush, tgBin, tgArea … | warehouse_so_tg_v1<br>warehouse_so_tgq_v1 |
 | `92-monitoring.js` | 584 | Monitoring Kiriman / Beranda (dashboard KPI, tren, status, daftar wilayah) | monCSV, monBuild, monSumOf, monSnap, monDash, monTrendSvg, monDetail, monRender, monLoad … | warehouse_so_mon_v1<br>warehouse_so_monc_v1<br>warehouse_so_mong_v1<br>warehouse_so_monh_v1 |
+| `93-dash-delivery.js` | 190 | Dashboard Delivery di Beranda (panel realtime dari tab dashboard Google Sheet, sel posisi tetap; hook dlvEnter/dlvLeave dipanggil monEnter/monLeave) | dlvLoad, dlvRender, dlvHtml, dlvC, dlvEnter, dlvLeave | warehouse_so_dlv_v1<br>warehouse_so_dlvc_v1 |
 | `95-tasks.js` | 210 | Tugas Bin | taskBadges, renderTaskBar, tkPick, renderTask, tkIngest | – |
 | `97-bridge-links.js` | 9 | Jembatan: membuka state & helper legacy ke React lewat window.WMS (lihat src/legacy/bridge.js). | – | – |
 | `76-menu-groups.js` | 50 | Menu samping bertingkat (accordion) | menuSync | – |
@@ -48,7 +49,7 @@ Cari fitur di sini, buka **hanya satu file**. Semua chunk `NN-*.js` dijalankan b
 | clr — Clearing | clr.html | 80-clearing + patch-v22 | legacy |
 | **kpi — KPI Area** | (React) `src/views/KpiView.jsx` | `src/lib/kpi.js` | **React** |
 | tg — Telegram | tg.html | 90-telegram | legacy |
-| mon — Beranda | mon.html | 92-monitoring | legacy |
+| mon — Beranda | mon.html (+ panel `#dlvPanel`) | 92-monitoring, 93-dash-delivery | legacy |
 | data — Data WMS | data.html | 40-import, 88-backup, 98-sync | legacy |
 
 Header/menu samping/navigasi bawah: `src/markup/{header,side,tabs}.html` + `45-nav.js`, `60-users.js`. Patch tampilan lapangan, bip, papan angka: `patch-*.js`.

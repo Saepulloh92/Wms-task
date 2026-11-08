@@ -2,6 +2,25 @@
             <div><h2>Monitoring Kiriman</h2><p class="hint">Pantau status kiriman Anda</p></div>
             <span class="sync" id="monAt" role="status"></span>
           </div>
+          <div id="dlvPanel" class="dlv">
+            <div class="dh">
+              <div><h3>Dashboard Delivery</h3><p class="hint" id="dlvTitle"></p></div>
+              <span class="sync" id="dlvAt" role="status"></span>
+            </div>
+            <div id="dlvBody"></div>
+            <div class="mon-bar"><button class="btn sec sm inl" id="dlvRef" type="button">Muat ulang dashboard</button></div>
+            <details id="dlvSet">
+              <summary>Sumber dashboard delivery</summary>
+              <div class="set">
+                <label for="dlvUrl">Alamat spreadsheet dashboard (tab dengan gid=…)</label>
+                <input id="dlvUrl" placeholder="https://docs.google.com/spreadsheets/d/…" autocomplete="off" spellcheck="false" />
+                <p class="fine">Spreadsheet harus dibagikan "Siapa saja yang memiliki link (Pelihat)" atau di-publish ke web. Salin link saat tab dashboard terbuka agar ada gid=….</p>
+                <label for="dlvAuto">Muat ulang otomatis</label>
+                <select id="dlvAuto"><option value="0">Mati</option><option value="1">tiap 1 menit</option><option value="2">tiap 2 menit</option><option value="5">tiap 5 menit</option><option value="10">tiap 10 menit</option></select>
+                <button class="btn pri mt" id="dlvSave" type="button">Simpan &amp; muat</button>
+              </div>
+            </details>
+          </div>
           <div class="dflt">
             <label class="dsel"><small>Periode</small><select id="monPer"><option value="1">Hari ini</option><option value="7">7 Hari</option><option value="30">30 Hari</option></select></label>
             <label class="dsel"><small>Unit / Area</small><select id="monUnit"><option value="">Semua Unit</option></select></label>
