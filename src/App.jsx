@@ -26,6 +26,7 @@ import dcPickSheet from "./markup/dialogs/dcPickSheet.html?raw";
 import dcSheet from "./markup/dialogs/dcSheet.html?raw";
 import navSet from "./markup/dialogs/navSet.html?raw";
 import login from "./markup/dialogs/login.html?raw";
+import lgsetup from "./markup/dialogs/lgsetup.html?raw";
 import padSheet from "./markup/dialogs/padSheet.html?raw";
 
 // Urutan elemen = urutan di halaman asli (CSS bergantung padanya). Menu pertama (so) tampil, lainnya hidden.
@@ -59,6 +60,7 @@ export default function App() {
       <div id="dlg" className="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgT" hidden />
       <Raw className="dlg" id="navSet" style={{ zIndex: 95 }} hidden html={navSet} />
       <Raw className="dlg" id="login" style={{ zIndex: 100 }} hidden html={login} />
+      <Raw className="dlg" id="lgSetup" style={{ zIndex: 100 }} hidden html={lgsetup} />
       <Raw className="sheet" id="padSheet" role="dialog" aria-modal="true" aria-label="Cari bin" hidden html={padSheet} />
       <div id="toast" className="off" role="status" aria-live="polite" aria-atomic="true" />
     </>

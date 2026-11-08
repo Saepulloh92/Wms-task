@@ -13,7 +13,7 @@
         curU = ld(K_CU, ""),
         uEdit = null,
         uSel = [];
-      const K_ME = "warehouse_so_me_v1";
+      const K_ME = "warehouse_so_me_v1", K_LS = "warehouse_so_lgsetup_v1";
       let meId = "";
       try { meId = sessionStorage.getItem(K_ME) || ""; } catch (e) {}
       /* ---- v13: hak akses menu per user ---- */
@@ -94,8 +94,9 @@
         });
         $("tabs").style.gridTemplateColumns = "repeat(" + (vis + 1) + ", 1fr)";
         const m = meUser();
-        $("whoAmI").textContent = authOn() && m ? m.name + " (" + ROLES[roleOf(m)].label + ")" : "";
+        $("whoAmI").textContent = authOn() ? (m ? m.name + " (" + ROLES[roleOf(m)].label + ")" : "") : "Login belum aktif";
         $("logoutBtn").hidden = !(authOn() && m);
+        $("lgSetupBtn").hidden = authOn();
         // sinkronkan penanda tab aktif setelah daftar tab berubah
         document.querySelectorAll("#tabs [data-v]").forEach((b) => {
           const on = b.dataset.v === curViewId;
@@ -112,11 +113,33 @@
         }
         renderUserSel();
       }
+      /* Aktifkan login: buat password admin pertama. Muncul otomatis sekali per perangkat selama belum ada admin berpassword. */
+      let lsSeen = false;
+      try { lsSeen = localStorage.getItem(K_LS) === "1"; } catch (e) {}
+      function setupUi(force) {
+        const box = $("lgSetup");
+        if (authOn()) { box.hidden = true; return; }
+        if (!force && (lsSeen || !box.hidden)) return;
+        const a = users.find((u) => u.role === "admin");
+        $("lsName").value = a ? a.name : "Admin";
+        $("lsPin").value = $("lsPin2").value = "";
+        $("lsErr").textContent = "";
+        box.hidden = false;
+        document.body.style.overflow = "hidden";
+        setTimeout(() => $("lsPin").focus(), 50);
+      }
+      function setupClose() {
+        $("lgSetup").hidden = true;
+        document.body.style.overflow = "";
+        lsSeen = true;
+        try { localStorage.setItem(K_LS, "1"); } catch (e) {}
+      }
       function loginUi() {
+        if (authOn() && !$("lgSetup").hidden) { $("lgSetup").hidden = true; document.body.style.overflow = ""; }
         const need = authOn() && !meUser();
         $("login").hidden = !need;
-        document.body.style.overflow = need ? "hidden" : "";
-        if (!need) return;
+        document.body.style.overflow = need ? "hidden" : $("lgSetup").hidden ? "" : "hidden";
+        if (!need) { setupUi(false); return; }
         const act = users.filter((u) => u.active !== false).sort((a, b) => a.name.localeCompare(b.name, "id"));
         $("lgUser").innerHTML = act.map((u) => `<option value="${esc(u.id)}">${esc(u.name)}${u.name.trim().toLowerCase() === ROLES[roleOf(u)].label.toLowerCase() ? "" : " (" + ROLES[roleOf(u)].label + ")"}</option>`).join("");
         lgSel();
@@ -185,6 +208,31 @@
         $("lgPin").focus();
       };
       $("logoutBtn").onclick = logout;
+      $("lgSetupBtn").onclick = () => { side(false); setupUi(true); };
+      $("lsLater").onclick = setupClose;
+      $("lsOk").onclick = async () => {
+        const name = $("lsName").value.trim().replace(/\s+/g, " "), pw = $("lsPin").value.trim(), pw2 = $("lsPin2").value.trim();
+        const err = (m, el) => { $("lsErr").textContent = m; if (el) { markInvalid(el, "lsErr"); el.focus(); } };
+        clearInvalid($("lgSetup"));
+        if (!name) return err("Isi nama admin.", $("lsName"));
+        if (pw.length < 6 || pw.length > 64) return err("Password minimal 6 dan maksimal 64 karakter.", $("lsPin"));
+        if (pw !== pw2) return err("Ulangi password dengan sama persis.", $("lsPin2"));
+        const adm = users.find((u) => u.role === "admin");
+        if (users.some((u) => u !== adm && u.name.trim().toLowerCase() === name.toLowerCase())) return err("Nama itu sudah dipakai user lain.", $("lsName"));
+        let hash;
+        try { hash = await pinMake(pw); } catch (e) { return err("Perangkat ini tidak bisa menyimpan password dengan aman. Buka aplikasi lewat alamat HTTPS."); }
+        const rec = adm || { id: "u" + Date.now().toString(36), role: "admin", areas: [] };
+        rec.name = name; rec.pin = hash; rec.active = true;
+        if (!adm) users.push(rec);
+        sv(K_U, users);
+        meId = rec.id;
+        try { sessionStorage.setItem(K_ME, meId); } catch (e) {}
+        setupClose();
+        applySession(); applyRole(); loginUi(); initAll();
+        toast("Login aktif. Masuk sebagai " + name);
+      };
+      [$("lsName"), $("lsPin"), $("lsPin2")].forEach((el) => el.addEventListener("input", () => { $("lsErr").textContent = ""; clearInvalid($("lgSetup")); }));
+      $("lsPin2").onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); $("lsOk").onclick(); } };
       // satu jalur untuk dua pintu: menu User & Area (utama) dan layar masuk (darurat)
       async function resetAllPins() {
         const ok = await askType(
