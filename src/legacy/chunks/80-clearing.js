@@ -16,7 +16,7 @@
           return `<div class="m"><b>Ditandai selesai</b>${d.by ? " oleh " + esc(d.by) : ""}, ${esc(new Date(d.at).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }))}${d.note ? "<br>Catatan: " + esc(d.note) : ""}</div><button class="btn sec sm" data-cu="${esc(k)}">Buka lagi</button>`;
         return x.st === "ok" ? "" : `<button class="btn sec sm" data-cd="${esc(k)}">Tandai selesai</button>`;
       }
-      const CLR_ST = { dup: ["Dobel hitung", "red"], qty: ["Selisih qty", "red"], sms: ["SMS beda", "amber"], belum: ["Belum dihitung", "amber"], extra: ["Tidak ada di laporan", "amber"], ok: ["Cocok", "green"] };
+      const CLR_ST = { dup: ["Dobel hitung", "red"], qty: ["Selisih qty", "red"], belum: ["Belum dihitung", "amber"], extra: ["Tidak ada di laporan", "amber"], ok: ["Cocok", "green"] };
       const clrKey = (v) => {
         const s = String(v ?? "").trim(), d = s.replace(/\D/g, "");
         return d ? d.replace(/^0+/, "") : s.toUpperCase();
@@ -154,13 +154,13 @@
             const e = qC * CLR_IKAT, nd = e - r.q;
             if (nd === 0 || (Math.abs(diff) >= 100 && Math.abs(nd) < Math.abs(diff))) { ik = qC; qC = e; diff = nd; }
           }
-          const sms = sms8(kc), sr = sms8(r.k);
-          const st = diff === 0 ? "ok" : "qty"; // cocok = voucher + qty; SMS hanya informasi
+          const sms = sms8(kc);
+          const st = diff === 0 ? "ok" : "qty"; // cocok = voucher + qty
           const tm = lt.t || (g.rows.find((x) => x.t) || {}).t || "", lori = r.lr || lt.lr || (g.rows.find((x) => x.lr) || {}).lr || "";
           list.push({ v: r.v, sms, kc, qR: r.q, qC, diff, st, ik, n: r.n, r: r.r, rc: g.rows.length, lori, shift: r.sh || clrShiftOf(tm), tm, pic: r.pic || "", grp: r.grp || "" });
         });
         // hanya voucher yang ada di Laporan Voucher yang diimpor; baris counting lain diabaikan
-        const ord = { dup: 0, qty: 1, sms: 2, belum: 3, ok: 4 };
+        const ord = { dup: 0, qty: 1, belum: 3, ok: 4 };
         list.sort((a, b) => ord[a.st] - ord[b.st] || String(a.v).localeCompare(String(b.v), "id", { numeric: true }));
         return list;
       }
@@ -187,7 +187,7 @@
         const all = clrBuild(), n = (s) => all.filter((x) => x.st === s).length;
         $("clrStats").innerHTML = [
           ["Cocok", n("ok"), "var(--green)"],
-          ["Selisih / dobel", n("qty") + n("dup") + n("sms"), n("qty") + n("dup") + n("sms") ? "var(--red)" : ""],
+          ["Selisih / dobel", n("qty") + n("dup"), n("qty") + n("dup") ? "var(--red)" : ""],
           ["Belum dihitung", n("belum"), n("belum") ? "var(--amber)" : ""],
         ].map(([l, v, c]) => `<div class="stat"><small>${l}</small><strong style="${c ? "color:" + c : ""}">${v}</strong></div>`).join("");
         $("clrChips").innerHTML = chipsHtml(clrF, [["all", "Semua", all.length], ["bad", "Perlu dicek", all.filter((x) => x.st !== "ok" && !clrIsDone(x)).length], ["done", "Ditandai selesai", all.filter(clrIsDone).length], ["ok", "Cocok", n("ok")], ["belum", "Belum dihitung", n("belum")]]);
@@ -335,7 +335,7 @@
           ...R.sorted.map((x, i) => [i + 1, x.v, x.pic || "", x.grp || "", (x.shift || "").replace("Shift ", ""), x.lori || "", x.n || "", x.qR ?? "", x.qC ?? "", x.diff ?? "", clrKet(x), x.sms || "", clrIsDone(x) ? "Ya" : "", (clrDone[clrKey(x.v)] || {}).note || ""]),
         ], "rekap_penerimaan_" + new Date().toISOString().slice(0, 10) + ".csv");
       };
-      const clrKet = (x) => x.st === "belum" ? "TDK ADA FOTO" : x.st === "extra" ? "TIDAK ADA DI LAPORAN" : x.st === "dup" ? "FOTO DOBEL, QTY BEDA" : x.st === "sms" ? "SMS BEDA" : x.st === "qty" ? (x.diff > 0 ? "QTY COUNTHINGS LEBIH" : "QTY COUNTHINGS KURANG") : "";
+      const clrKet = (x) => x.st === "belum" ? "TDK ADA FOTO" : x.st === "extra" ? "TIDAK ADA DI LAPORAN" : x.st === "dup" ? "FOTO DOBEL, QTY BEDA" : x.st === "qty" ? (x.diff > 0 ? "QTY COUNTHINGS LEBIH" : "QTY COUNTHINGS KURANG") : "";
       const clrVNum = (v) => Number(String(v).replace(/\D/g, "")) || 0;
       const clrTglS = () => new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "short", year: "2-digit" });
       function clrRekap(rows) {
@@ -352,7 +352,7 @@
         const shL = clrShF === "all" ? [...new Set(rows.map((x) => x.shift).filter(Boolean))].map((h) => h.replace("Shift ", "")).sort().join(", ") || "-" : clrShF.replace("Shift ", "");
         const st = R.sel === 0 && !R.ket.length ? ["OK", "green"] : ["SELISIH", "red"];
         const tbl = R.sorted.slice(0, 200).map((x, i) => `<tr><td>${i + 1}</td><td class="id">${esc(x.v)}</td><td class="tx">${esc(x.pic || "-")}</td><td class="tx">${esc(x.grp || "-")}</td><td>${esc((x.shift || "-").replace("Shift ", ""))}</td><td class="tx">${esc(x.lori || "-")}</td><td class="tx">${szHtml(x.n || "")}</td><td>${x.qR == null ? "-" : fmt(x.qR)}</td><td>${x.qC == null ? "-" : fmt(x.qC)}</td><td class="${x.diff ? "neg" : ""}">${x.diff == null ? "-" : x.diff === 0 ? "0" : sg(x.diff)}</td></tr>`).join("");
-        const ketT = R.ket.slice(0, 200).map((x, i) => `<tr><td>${i + 1}</td><td class="id">${esc(x.v)}</td><td class="tx">${esc(x.lori || "-")}</td><td class="tx"><span class="pill ${x.st === "belum" || x.st === "extra" || x.st === "sms" ? "amber" : "red"}">${esc(clrKet(x))}</span></td><td class="${x.diff ? "neg" : ""}">${x.diff ? sg(x.diff) : "-"}</td></tr>`).join("");
+        const ketT = R.ket.slice(0, 200).map((x, i) => `<tr><td>${i + 1}</td><td class="id">${esc(x.v)}</td><td class="tx">${esc(x.lori || "-")}</td><td class="tx"><span class="pill ${x.st === "belum" || x.st === "extra" ? "amber" : "red"}">${esc(clrKet(x))}</span></td><td class="${x.diff ? "neg" : ""}">${x.diff ? sg(x.diff) : "-"}</td></tr>`).join("");
         el.innerHTML = `<div class="panel"><h3>Rekap Penerimaan F-WLA-17</h3><dl class="kv k3"><div><dt>Tanggal</dt><dd>${esc(clrTglS())}</dd></div><div><dt>Shift</dt><dd>${esc(shL)}</dd></div><div><dt>Status</dt><dd><span class="pill ${st[1]}">${st[0]}</span></dd></div></dl><dl class="kv k3 mt"><div><dt>Qty WMS</dt><dd>${fmt(R.wms)}</dd></div><div><dt>Qty Counthings</dt><dd>${fmt(R.cnt)}</dd></div><div><dt>Selisih</dt><dd class="${R.sel ? "neg" : ""}">${R.sel ? sg(R.sel) : "OK"}</dd></div></dl><p class="fine">${fmt(R.n)} voucher · cocok ${fmt(R.ok)} · perlu dicek ${fmt(R.ket.length)}${R.done ? " · selesai ditandai " + fmt(R.done) : ""}</p>` +
           (R.ket.length ? `<h3 class="sec">Keterangan selisih (${fmt(R.ket.length)})</h3><div class="mtw"><table class="mtb"><thead><tr><th>No</th><th>No Voucher</th><th>No Lori</th><th>Keterangan</th><th>Qty Selisih</th></tr></thead><tbody>${ketT}</tbody></table></div>${R.ket.length > 200 ? `<p class="fine">Menampilkan 200 dari ${fmt(R.ket.length)}. Unduh CSV untuk semua.</p>` : ""}` : '<div class="note ok">Tidak ada selisih. Semua voucher cocok.</div>') +
           `<details class="mt"><summary>Tabel rekap lengkap (${fmt(R.n)} voucher)</summary><div class="mtw"><table class="mtb"><thead><tr><th>No</th><th>No Voucher</th><th>PIC Timbang</th><th>Group</th><th>Shift</th><th>No Lori</th><th>Nama Item</th><th>Qty WMS</th><th>Qty Counthings</th><th>Selisih</th></tr></thead><tbody>${tbl}</tbody></table></div>${R.n > 200 ? `<p class="fine">Menampilkan 200 dari ${fmt(R.n)}. Unduh CSV untuk semua.</p>` : ""}</details></div>`;

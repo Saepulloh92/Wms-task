@@ -7,7 +7,6 @@ function clrKet_(label, diff) {
     case 'Belum dihitung': return 'TDK ADA FOTO';
     case 'Tidak ada di laporan': return 'TIDAK ADA DI LAPORAN';
     case 'Dobel hitung': return 'FOTO DOBEL, QTY BEDA';
-    case 'SMS beda': return 'SMS BEDA';
     case 'Selisih qty': return Number(diff) > 0 ? 'QTY COUNTHINGS LEBIH' : 'QTY COUNTHINGS KURANG';
     default: return '';
   }

@@ -52,7 +52,7 @@
       .vc { border-left: 6px solid var(--line); gap: 6px; }
       .vc.s-ok { border-left-color: var(--green); }
       .vc.s-qty, .vc.s-dup { border-left-color: var(--red); }
-      .vc.s-sms, .vc.s-belum, .vc.s-extra { border-left-color: #d9a03a; }
+      .vc.s-belum, .vc.s-extra { border-left-color: #d9a03a; }
       .vc .id { font-size: 18px; }
       .vc .nm { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
       .kv { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin: 2px 0 0; background: var(--line); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
