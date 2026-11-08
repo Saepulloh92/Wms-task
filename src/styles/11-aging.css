@@ -32,3 +32,27 @@
 .agi-form { display: grid; gap: 10px; padding: 0 12px 14px; }
 .agi-form label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; }
 .agi-form .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* Penyempurnaan UX: filter berlabel, progres, ringkasan rak terbaca penuh */
+.agi-list-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.agi-cnt { font-size: 13px; font-weight: 600; color: var(--muted, #6b7a89); }
+.agi-prog { height: 8px; border-radius: 4px; background: rgba(128, 128, 128, .18); overflow: hidden; margin: 0 0 10px; }
+.agi-prog i { display: block; height: 100%; border-radius: 4px; background: var(--green, #16a34a); transition: width .25s; }
+.agi-fl { margin: 10px 0 2px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted, #6b7a89); }
+.agi-chips { margin-top: 4px; }
+.chips.agi-chips3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.chips.agi-chips3 .chip { padding-left: 4px; padding-right: 4px; }
+.chips.agi-chips3 .chip:last-child:nth-child(odd) { grid-column: auto; }
+.chip b { margin-left: 4px; font-variant-numeric: tabular-nums; }
+.agi-rak > summary { grid-template-columns: auto 1fr 28px; align-items: start; }
+.agi-rak > summary::after { content: ""; grid-column: 3; grid-row: 1; width: 10px; height: 10px; margin: 6px 4px 0 auto; border-right: 2px solid var(--muted, #6b7a89); border-bottom: 2px solid var(--muted, #6b7a89); transform: rotate(45deg); transition: transform .15s; }
+.agi-rak[open] > summary::after { transform: rotate(-135deg); margin-top: 10px; }
+.agi-ck { grid-column: 3; grid-row: 1; justify-self: end; }
+.agi-ck.on { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--green, #16a34a); color: #fff; font-size: 14px; }
+.agi-rak.done > summary::after { display: none; }
+.agi-sg { margin-top: 2px; }
+.agi-bn { gap: 1px; }
+.agi-bn .agi-it { font-size: 13px; line-height: 1.3; white-space: normal; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.agi-bn small { font-weight: 600; white-space: normal; }
+.agi-rak[open] { border-color: var(--blue, #1d4ed8); }
+.agi-row { grid-template-columns: 76px 1fr 40px; }
+.agi-tb th.sticky, .agi-tb tbody th { position: sticky; left: 0; background: var(--card, #fff); }

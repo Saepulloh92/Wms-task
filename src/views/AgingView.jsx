@@ -125,10 +125,15 @@ export default function AgingView() {
             <button className="btn sec inl" onClick={csv}>CSV</button>
           </div>
 
-          <h3 className="agi-h agi-list-h">Daftar cek rak</h3>
-          <div className="chips wrap" role="group" aria-label="Rak yang ditampilkan">
+          <h3 className="agi-h agi-list-h">Daftar cek rak <span className="agi-cnt">{done}/{list.length} dicek</span></h3>
+          <div className="agi-prog" role="progressbar" aria-label="Kemajuan cek rak" aria-valuemin={0} aria-valuemax={list.length} aria-valuenow={done}><i style={{ width: (list.length ? (done / list.length) * 100 : 0) + "%" }} /></div>
+          <p className="agi-fl">Tampilkan rak</p>
+          <div className="chips agi-chips" role="group" aria-label="Rak yang ditampilkan">
             {[["watch", "Kuning & Merah"], ["all", "Semua rak isi"]].map(([v, l]) => <button key={v} className={"chip" + (mode === v ? " on" : "")} aria-pressed={mode === v} onClick={() => setMode(v)}>{l}</button>)}
-            {[["all", "Semua"], ["todo", "Belum dicek"], ["done", "Sudah dicek"]].map(([v, l]) => <button key={v} className={"chip" + (flt === v ? " on" : "")} aria-pressed={flt === v} onClick={() => setFlt(v)}>{l}</button>)}
+          </div>
+          <p className="agi-fl">Status cek</p>
+          <div className="chips agi-chips agi-chips3" role="group" aria-label="Status cek rak">
+            {[["all", "Semua", list.length], ["todo", "Belum", list.length - done], ["done", "Sudah", done]].map(([v, l, n]) => <button key={v} className={"chip" + (flt === v ? " on" : "")} aria-pressed={flt === v} onClick={() => setFlt(v)}>{l} <b>{n}</b></button>)}
           </div>
           {shown.length === 0 && <div className="empty">Tidak ada rak pada filter ini.</div>}
           {shown.slice(0, 200).map((x) => (
@@ -149,8 +154,8 @@ function RakCard({ x, a, kelas, onClass, onSave, onClear }) {
     <details className={"card agi-rak" + (a ? " done" : "")}>
       <summary>
         <span className="agi-sg" style={{ background: SIGNAL_COLOR[sig] || "#ccc", color: sig === "Kuning 3" || sig === "Hijau 2" || sig === "Merah" ? "#fff" : "#222" }}>{sig || "?"}</span>
-        <span className="agi-bn"><b>{x.bin}</b><small>{x.item} · {x.aging} hari · stok {fmt(x.onhand)}</small></span>
-        <span className="agi-ck" aria-label={a ? "Sudah dicek" : "Belum dicek"}>{a ? "✓" : ""}</span>
+        <span className="agi-bn"><b>{x.bin}</b><span className="agi-it">{x.item}</span><small>{x.aging} hari · stok {fmt(x.onhand)}</small></span>
+        <span className={"agi-ck" + (a ? " on" : "")} aria-label={a ? "Sudah dicek" : "Belum dicek"}>{a ? "✓" : ""}</span>
       </summary>
       <div className="agi-form">
         <label>Kelas pipa (berlaku untuk item ini)
@@ -165,7 +170,7 @@ function RakCard({ x, a, kelas, onClass, onSave, onClear }) {
         </div>
         <label>Actual qty<input inputMode="numeric" value={f.qty} onChange={(e) => setF({ ...f, qty: e.target.value.replace(/[^\d]/g, "") })} placeholder="0" /></label>
         <div className="row-act">
-          <button className="btn pri" onClick={() => onSave(x.bin, f)}>Simpan cek</button>
+          <button className="btn pri" disabled={!(f.tumpak || f.pipa || f.qty !== "")} onClick={() => onSave(x.bin, f)}>Simpan cek</button>
           {a && <button className="btn sec inl" onClick={() => { onClear(x.bin); setF({ tumpak: "", pipa: "", qty: "" }); }}>Hapus</button>}
         </div>
       </div>
