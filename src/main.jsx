@@ -12,6 +12,7 @@ import "./styles/08-menu-groups.css";
 import "./styles/09-ux.css";
 import "./styles/10-ux-polish.css";
 import "./styles/11-aging.css";
+import "./styles/12-ux-final.css";
 import App from "./App.jsx";
 
 window.WMS_CONFIG = config;
