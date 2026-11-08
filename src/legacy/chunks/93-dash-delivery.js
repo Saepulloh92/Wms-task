@@ -42,6 +42,7 @@
       function dlvKpi(cls, v, lb, sub) {
         return `<div class="kc ${cls}"><div class="kh"><span class="ki">${monIco[cls]}</span><b>${v == null ? "–" : esc(fmt(v))}</b></div><div class="kl">${esc(lb)}</div><span class="dchip${sub ? "" : " eq"}">${sub ? esc(sub) : "–"}</span></div>`;
       }
+      const dlvAny = (...cells) => cells.some((c) => dlvC(c));
       function dlvHtml() {
         const V = dlvV,
           tot = dlvN("B28"),
@@ -50,7 +51,7 @@
           msk = dlvN("F43"),
           bel = dlvN("B43"),
           share = (n) => (n != null && tot ? Math.round((n / tot) * 100) + "% dari total" : "");
-        const kpi = `<div class="kcs">${dlvKpi("tot", tot, "Total Mobil", tot != null && kel != null ? (tot - kel > 0 ? tot - kel + " belum keluar" : "Semua keluar") : "")}${dlvKpi("ok", kel, "Mobil Keluar", share(kel))}${dlvKpi("wip", prs, "Mobil Proses", share(prs))}</div>`;
+        const kpi = `<div class="kcs">${dlvKpi("tot", tot, "Total Mobil", tot != null && kel != null ? (tot <= 0 ? "Belum ada mobil" : tot - kel > 0 ? tot - kel + " belum keluar" : "Semua keluar") : "")}${dlvKpi("ok", kel, "Mobil Keluar", share(kel))}${dlvKpi("wip", prs, "Mobil Proses", share(prs))}</div>`;
         const segs = [["Keluar", kel || 0, "#0a5bd3"], ["Proses", prs || 0, "#f5a623"], ["Masuk", Math.max(0, (msk || 0) - (kel || 0) - (prs || 0)), "#2e9e68"], ["Belum masuk", bel || 0, "#9aa5b8"]],
           sum = segs.reduce((a, q) => a + q[1], 0),
           C = 2 * Math.PI * 40;
@@ -82,7 +83,7 @@
             (jam ? `<div class="dchips"><small>Jam keluar mobil</small>${jam}</div>` : "") +
             `<div class="xk">Belum / tidak masuk: <b>${esc(V("S33"))}</b> mobil (BOX ${esc(V("S39"))} · FUSO ${esc(V("V39"))} · CONTAINER ${esc(V("S46"))} · TRONTON ${esc(V("V46"))})</div>`,
         );
-        const tonase = dlvCard(
+        const tonase = !dlvAny("S12", "W12", "S19", "W19", "S25", "W25", "B13", "E20", "J10") ? "" : dlvCard(
           "Tonase Delivery Hari Ini",
           dlvRow("Mobil masuk > 14:00", "Plan " + V("S12") + " · Aktual " + V("W12"), V("AA14") + " · " + V("AD14"), "wip") +
             dlvRow("Dalam kota", "Plan " + V("S19") + " · Aktual " + V("W19"), V("AA19"), "ok") +
@@ -100,17 +101,17 @@
             al = dlvFirst(r, "AB", "AF");
           if (n) under.push(dlvRow(n, "", al || "Under", "wip"));
         }
-        const abn = dlvCard(
+        const abn = !dlvAny("AL33", "AL35", "AL37") && !gagal.length && !under.length ? "" : dlvCard(
           "Abnormal",
           `<div class="mg5">${dlvKv("Gagal masuk", V("AL33"), "c-gagal")}${dlvKv("Under tonage", V("AL35"), "c-proses")}${dlvKv("Mobil > 14:00", V("AL37"), "c-masuk")}</div>` +
             (gagal.length ? `<div class="lh">Agen gagal masuk</div>${gagal.join("")}` : "") +
             (under.length ? `<div class="lh">Under tonage</div>${under.join("")}` : ""),
         );
-        const bulan = dlvCard(
+        const bulan = !dlvAny("AL13", "AL15", "AL17", "AL19", "AR13", "AR19", "AL23") ? "" : dlvCard(
           "Ringkasan Bulan Ini",
           `<div class="fine">Realisasi mobil · ${esc(V("AL15"))} dari ${esc(V("AL13"))}</div>${dlvBar(dlvPct("AR13"))}<div class="bn">${esc(V("AR13"))}</div>` +
             `<div class="fine mt">Realisasi tonase · ${esc(V("AL19"))} dari ${esc(V("AL17"))}</div>${dlvBar(dlvPct("AR19"))}<div class="bn">${esc(V("AR19"))}</div>` +
-            `<div class="mg5">${dlvKv("Rata² mobil/hari", V("AL23"))}${dlvKv("Ton plan", V("AR23"))}${dlvKv("Ton aktual", V("AR25"))}${dlvKv("Ton omzet", V("AR27"))}</div>` +
+            `<div class="mg5 m4">${dlvKv("Rata² mobil/hari", V("AL23"))}${dlvKv("Ton plan", V("AR23"))}${dlvKv("Ton aktual", V("AR25"))}${dlvKv("Ton omzet", V("AR27"))}</div>` +
             `<div class="mg5">${dlvKv("Finish kota", V("AL25"))}${dlvKv("Finish loading", V("AL27"))}${dlvKv("Finish delivery", V("AL29"))}</div>`,
         );
         const rank = [["Mobil terbanyak", "AL41", "AO41"], ["Tonase terberat", "AL43", "AO43"], ["Loading terlama", "AL45", "AO45"], ["Delivery terlama", "AL47", "AO47"]]

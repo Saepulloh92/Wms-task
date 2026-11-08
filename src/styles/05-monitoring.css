@@ -139,3 +139,13 @@
       .dlv .dh > div:first-child { display: none; }
       .dlv .dh { justify-content: flex-end; margin-bottom: 10px; }
       .dlv .dh:has(.sync:empty) { display: none; }
+      /* QA: tile 3 kolom di layar sempit, pil teks panjang tidak lonjong, ukuran teks minimal 12px */
+      .dlv .mg5 { grid-template-columns: repeat(auto-fit, minmax(78px, 1fr)); }
+      .dlv .mg5 div { padding: 6px 8px; min-width: 0; }
+      .dlv .mg5 small { overflow-wrap: anywhere; }
+      .dlv .mg5 strong { font-size: 18px; overflow-wrap: anywhere; }
+      .lrow .pill2 { border-radius: 14px; text-align: left; padding: 6px 12px; }
+      .dlv .kc .dchip { font-size: 12px; }
+      .dlv .dnut .ds { font-size: 10px; }
+      .dlv .mg5.m4 { grid-template-columns: repeat(2, 1fr); }
+      @media (min-width: 480px) { .dlv .mg5.m4 { grid-template-columns: repeat(4, 1fr); } }
