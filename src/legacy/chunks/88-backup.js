@@ -61,7 +61,7 @@
       };
       const BK_KEYS = () => ({
         [K_M]: DATA, [K_C]: counts, [K_F]: codeFix, [K_U]: users, [K_X]: closed,
-        [K_CU]: curU, [K_D]: dc, [K_DP]: dcPick, warehouse_so_dest_v1: dest, [K_MON]: mon, [K_T]: tasks, [K_CFG]: cfg, [K_CLRD]: clrDone, [K_CLRH]: clrHist, [K_MUATH]: muatHist, [K_KESH]: kesHist,
+        [K_CU]: curU, [K_D]: dc, [K_DP]: dcPick, warehouse_so_dest_v1: dest, [K_MON]: mon, [K_T]: tasks, [K_CFG]: cfg, [K_CLRD]: clrDone, [K_CLRH]: clrHist, [K_MUATH]: muatHist, [K_KESH]: kesHist, [K_AG]: aging, [K_AGK]: agingCls, [K_AGC]: agingCfg,
       });
       function doBackup() {
         const at = new Date().toISOString(),
@@ -106,6 +106,9 @@
         if (Array.isArray(d[K_MUATH])) next[K_MUATH] = d[K_MUATH];
         if (Array.isArray(d[K_CLRH])) next[K_CLRH] = d[K_CLRH];
         if (Array.isArray(d[K_KESH])) next[K_KESH] = d[K_KESH];
+        if (isObj(d[K_AG])) next[K_AG] = d[K_AG];
+        if (isObj(d[K_AGK])) next[K_AGK] = d[K_AGK];
+        if (isObj(d[K_AGC])) next[K_AGC] = d[K_AGC];
         if (isObj(d[K_CFG])) next[K_CFG] = d[K_CFG]; // cadangan lama tanpa pengaturan: pengaturan sekarang dipertahankan
         const old = Object.keys(next).map((k) => {
           try { return [k, localStorage.getItem(k)]; } catch (e) { return [k, null]; }
@@ -121,6 +124,9 @@
         }
         DATA = next[K_M]; counts = next[K_C]; codeFix = next[K_F]; users = next[K_U]; closed = next[K_X];
         tasks = next[K_T] || {}; curU = next[K_CU]; migrateUsers(); dc = next[K_D]; dcPick = next[K_DP]; dest = next.warehouse_so_dest_v1;
+        if (next[K_AG]) aging = next[K_AG];
+        if (next[K_AGK]) agingCls = next[K_AGK];
+        if (next[K_AGC]) agingCfg = next[K_AGC];
         if (next[K_CLRD]) clrDone = next[K_CLRD];
         if (next[K_MUATH]) { muatHist = next[K_MUATH]; renderMuHist(); }
         if (next[K_CLRH]) { clrHist = next[K_CLRH]; renderClrHist(); }

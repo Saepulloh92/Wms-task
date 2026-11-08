@@ -67,6 +67,9 @@ var K = {
   dest: 'warehouse_so_dest_v1',
   areacfg: 'warehouse_so_areacfg_v1',   // daftar area yang diatur admin: { list: ["A1", ...] }
   tasks: 'warehouse_so_tasks_v1',
+  aging: 'warehouse_so_aging_v1',          // cek fisik aging per rak: { bin: { tumpak, pipa, qty, by, at } }
+  agcls: 'warehouse_so_agcls_v1',          // kelas pipa per kode item: { kode: { c, at } }
+  agingcfg: 'warehouse_so_agingcfg_v1',    // { pic: { A: 'nama' } }
   mon: 'warehouse_so_mon_v1',
   // riwayat laporan per tanggal (dikirim aplikasi, hanya untuk membuat sheet laporan)
   kesH: 'warehouse_so_kes_hist_v1',
@@ -88,11 +91,13 @@ var SH = {
   dc: 'DC_Harian',
   users: 'Petugas',
   tasks: 'Tugas_Bin',
-  closed: 'Area_Ditutup'
+  closed: 'Area_Ditutup',
+  aging: 'Aging_Stock',
+  agrekap: 'Aging_Rekap'
 };
 var MENU_LABEL = {
   so: 'Periksa Bin', dc: 'DC Harian', task: 'Tugas Bin', check: 'Review Supervisor', kes: 'Cek Kesesuaian',
-  adj: 'File Adjust', clr: 'Clearing', mon: 'Beranda', muat: 'Laporan Muat', kpi: 'KPI Area', tg: 'Telegram', data: 'Data WMS', usr: 'User & Area'
+  adj: 'File Adjust', clr: 'Clearing', mon: 'Beranda', muat: 'Laporan Muat', kpi: 'KPI Area', agi: 'Aging Stock', tg: 'Telegram', data: 'Data WMS', usr: 'User & Area'
 };
 var MENU_OPERATOR = ['mon', 'so', 'dc', 'task'];   // preset Operator di aplikasi
 var CHUNK = 45000;          // batas aman per sel (maks 50.000 karakter)

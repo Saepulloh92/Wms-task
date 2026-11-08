@@ -2,7 +2,7 @@
 // asal: Code-fix.gs baris 255-378
 /* ===================== MERGE ===================== */
 
-var STAMP = { counts: 'savedAt', dc: 'at', tasks: 'at', closed: 'at', kesH: 'at', muatH: 'at', clrH: 'at' };
+var STAMP = { counts: 'savedAt', dc: 'at', tasks: 'at', closed: 'at', aging: 'at', agcls: 'at', kesH: 'at', muatH: 'at', clrH: 'at' };
 
 function ts_(v) {
   var t = v ? new Date(v).getTime() : 0;
@@ -64,7 +64,7 @@ function merge_(server, client, del, replace) {
   });
 
   // map sederhana: gabungkan, nilai klien menang
-  ['codefix', 'dcPick', 'dest', 'areacfg'].forEach(function (name) {
+  ['codefix', 'dcPick', 'dest', 'areacfg', 'agingcfg'].forEach(function (name) {
     var key = K[name];
     var sv = isObj_(server[key]) ? server[key] : {};
     var c = isObj_(client[key]) ? client[key] : {};

@@ -5,11 +5,11 @@
       // Isi dua baris ini jika ingin semua perangkat langsung tersambung tanpa mengetik.
       const SYNC_DEFAULT = { url: WMS_CONFIG.syncUrl, token: WMS_CONFIG.syncToken }; // dari .env (VITE_SYNC_URL / VITE_SYNC_TOKEN), BUKAN ditulis di kode // tempel URL Web app (…/exec) di url sekali saja, semua HP otomatis tersambung
       const K_SYNC = "warehouse_so_sync_v1";
-      const SY_STAMP = { counts: "savedAt", dc: "at", tasks: "at", closed: "at" };
-      const syKey = { counts: K_C, dc: K_D, tasks: K_T, closed: K_X };
-      const syGetV = { counts: () => counts, dc: () => dc, tasks: () => tasks, closed: () => closed };
-      const sySetV = { counts: (v) => (counts = v), dc: (v) => (dc = v), tasks: (v) => (tasks = v), closed: (v) => (closed = v) };
-      const syPlain = { master: K_M, users: K_U, mon: K_MON, codefix: K_F, dcPick: K_DP, dest: "warehouse_so_dest_v1", areacfg: "warehouse_so_areacfg_v1" };
+      const SY_STAMP = { counts: "savedAt", dc: "at", tasks: "at", closed: "at", aging: "at", agcls: "at" };
+      const syKey = { counts: K_C, dc: K_D, tasks: K_T, closed: K_X, aging: K_AG, agcls: K_AGK };
+      const syGetV = { counts: () => counts, dc: () => dc, tasks: () => tasks, closed: () => closed, aging: () => aging, agcls: () => agingCls };
+      const sySetV = { counts: (v) => (counts = v), dc: (v) => (dc = v), tasks: (v) => (tasks = v), closed: (v) => (closed = v), aging: (v) => (aging = v), agcls: (v) => (agingCls = v) };
+      const syPlain = { master: K_M, users: K_U, mon: K_MON, codefix: K_F, dcPick: K_DP, dest: "warehouse_so_dest_v1", areacfg: "warehouse_so_areacfg_v1", agingcfg: K_AGC };
       // riwayat laporan (Kesesuaian, Muat, Clearing): dikirim ke server per tanggal untuk dibuat sheet laporan
       const syRpt = { kesH: K_KESH, muatH: K_MUATH, clrH: K_CLRH };
       const syRptMap = {
@@ -83,6 +83,7 @@
         if (has("dcPick")) data[K_DP] = dcPick;
         if (has("dest")) data[syPlain.dest] = dest;
         if (has("areacfg") && areaCfg) data[syPlain.areacfg] = areaCfg;
+        if (has("agingcfg")) data[syPlain.agingcfg] = agingCfg;
         syRkPend = {};
         Object.keys(syRpt).forEach((n) => {
           if (!has(n)) return;
@@ -174,6 +175,11 @@
           if (rd[syPlain.areacfg] && Array.isArray(rd[syPlain.areacfg].list) && !SY.rep.includes("areacfg") && !same("areacfg", rd[syPlain.areacfg])) {
             areaCfg = rd[syPlain.areacfg];
             put(syPlain.areacfg, areaCfg);
+            changed = true;
+          }
+          if (rd[syPlain.agingcfg] && typeof rd[syPlain.agingcfg] === "object" && !SY.rep.includes("agingcfg") && !same("agingcfg", rd[syPlain.agingcfg])) {
+            agingCfg = rd[syPlain.agingcfg];
+            put(syPlain.agingcfg, agingCfg);
             changed = true;
           }
           if (rd[syPlain.dest] && !SY.rep.includes("dest") && !same("dest", rd[syPlain.dest])) {

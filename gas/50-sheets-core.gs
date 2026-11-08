@@ -283,6 +283,37 @@ function renderSheetsBody_(st, withMaster) {
     Object.keys(closed).sort().map(function (a) {
       return [a, (closed[a] || {}).by || '', fmtTime_((closed[a] || {}).at)];
     }));
+
+  // Aging Stock: hasil cek fisik per rak + rekap sinyal per area dan kelas pipa
+  var ag = st[K.aging] || {}, agk = st[K.agcls] || {}, byBin = {};
+  master.forEach(function (m) { byBin[m.bin] = m; });
+  var kelasOf = function (kode) { var r = agk[kode]; return (r && r.c) || ''; };
+  writeTable_(SH.aging,
+    ['Area', 'Rak', 'Sinyal', 'Aging (hari)', 'Nama Item', 'Kelas Pipa', 'Stok Sistem', 'Actual Tumpak', 'Actual Pipa', 'Actual Qty', 'Selisih', 'Dicek oleh', 'Waktu cek'],
+    Object.keys(ag).sort().map(function (bin) {
+      var a = ag[bin] || {}, m = byBin[bin] || {};
+      var sis = Number(m.onhand) || 0;
+      var q = (a.qty === '' || a.qty == null) ? '' : Number(a.qty);
+      return [m.area || '', bin, m.sinyal || '', m.aging == null ? '' : m.aging, m.item || '', kelasOf(m.kode), sis,
+        a.tumpak || '', a.pipa || '', q, q === '' ? '' : q - sis, a.by || '', fmtTime_(a.at)];
+    }), [1, 2, 3, 5, 6, 8, 9, 12]);
+
+  var SIG = ['Hijau 1', 'Hijau 2', 'Kuning 1', 'Kuning 2', 'Kuning 3', 'Kuning 4', 'Merah'];
+  var rk = {};
+  master.forEach(function (m) {
+    if (!(Number(m.onhand) > 0)) return;
+    var sg = String(m.sinyal || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    var s = SIG.filter(function (x) { return x.toLowerCase() === sg; })[0];
+    if (!s) return;
+    var key = (m.area || '') + '|' + (kelasOf(m.kode) || 'Belum');
+    rk[key] = rk[key] || SIG.map(function () { return 0; });
+    rk[key][SIG.indexOf(s)]++;
+  });
+  writeTable_(SH.agrekap, ['Area', 'Kelas Pipa'].concat(SIG).concat(['Total Kuning', 'Total']),
+    Object.keys(rk).sort().map(function (key) {
+      var p = key.split('|'), v = rk[key];
+      return [p[0], p[1]].concat(v).concat([v[2] + v[3] + v[4] + v[5], v.reduce(function (a, b) { return a + b; }, 0)]);
+    }), [1, 2]);
 }
 
 // bangun ulang sheet dari _STATE secara manual (menu Run)
@@ -293,7 +324,7 @@ function rebuildSheets() {
 
 // urutan tab: laporan dulu (01-05, Clearing), lalu data pendukung
 function orderSheets_() {
-  var order = [SH.kes, SH.counts, SH.weekly, SH.muat, SH.jis, SH.clr, SH.dc, SH.tasks, SH.closed, SH.users, SH.master];
+  var order = [SH.kes, SH.counts, SH.weekly, SH.muat, SH.jis, SH.clr, SH.dc, SH.tasks, SH.closed, SH.aging, SH.agrekap, SH.users, SH.master];
   var ss = ss_(), pos = 1;
   order.forEach(function (n) {
     var s = ss.getSheetByName(n);

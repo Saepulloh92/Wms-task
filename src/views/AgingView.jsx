@@ -3,7 +3,8 @@ import { useWms } from "../legacy/bridge.js";
 import { fmt } from "../lib/format.js";
 import { SIGNALS, CLASSES, NO_CLASS, SIGNAL_COLOR, DEFAULT_PIC, normSignal, buildAging, checklist, agingText } from "../lib/aging.js";
 
-const K_ACT = "warehouse_so_aging_v1", K_CLS = "warehouse_so_aging_cls_v1", K_PIC = "warehouse_so_aging_pic_v1", K_AREA = "warehouse_so_aging_area_v1";
+const K_AREA = "warehouse_so_aging_area_v1"; // pilihan area: preferensi per perangkat, tidak disinkron
+const EMPTY = {};
 const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
 const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } };
 const short = (s) => s.replace("Hijau ", "H").replace("Kuning ", "K").replace("Merah", "M");
@@ -14,9 +15,10 @@ export default function AgingView() {
   const [area, setArea] = useState(() => load(K_AREA, ""));
   const [mode, setMode] = useState("watch");
   const [flt, setFlt] = useState("all");
-  const [act, setAct] = useState(() => load(K_ACT, {}));
-  const [cls, setCls] = useState(() => load(K_CLS, {}));
-  const [pic, setPic] = useState(() => ({ ...DEFAULT_PIC, ...load(K_PIC, {}) }));
+  // data cek fisik, kelas pipa, dan nama petugas dimiliki legacy (ikut sinkron Sheets + cadangan)
+  const act = wms.aging || EMPTY, clsRec = wms.agingCls || EMPTY, cfg = wms.agingCfg || EMPTY;
+  const cls = useMemo(() => Object.fromEntries(Object.entries(clsRec).map(([k, v]) => [k, v && v.c])), [clsRec]);
+  const pic = { ...DEFAULT_PIC, ...(cfg.pic || {}) };
   const active = wms.view === "agi" && !!wms.DATA;
   const A = active ? wms.areas() : [];
   const cur = A.includes(area) ? area : "";
@@ -27,12 +29,12 @@ export default function AgingView() {
 
   const done = list.filter((x) => act[x.bin]).length;
   const shown = list.filter((x) => (flt === "todo" ? !act[x.bin] : flt === "done" ? !!act[x.bin] : true));
-  const persist = (k, v, set) => { if (!save(k, v)) wms.toast("Penyimpanan perangkat penuh. Cadangkan data lalu kosongkan ruang."); set(v); };
   const pickArea = (v) => { setArea(v); save(K_AREA, v); };
-  const setClass = (kode, c) => persist(K_CLS, { ...cls, [kode]: c }, setCls);
-  const setPicOf = (c, v) => persist(K_PIC, { ...pic, [c]: v }, setPic);
-  const saveAct = (bin, v) => persist(K_ACT, { ...act, [bin]: { ...v, by: wms.curName?.() || "", at: Date.now() } }, setAct);
-  const clearAct = (bin) => { const n = { ...act }; delete n[bin]; persist(K_ACT, n, setAct); };
+  const iso = () => new Date().toISOString();
+  const setClass = (kode, c) => wms.setAgingCls({ ...clsRec, [kode]: { c, at: iso() } });
+  const setPicOf = (c, v) => wms.setAgingCfg({ ...cfg, pic: { ...pic, [c]: v } });
+  const saveAct = (bin, v) => { wms.setAging({ ...act, [bin]: { ...v, by: wms.curName?.() || "", at: iso() } }); wms.toast("Cek rak " + bin + " tersimpan"); };
+  const clearAct = (bin) => { const n = { ...act }; delete n[bin]; wms.setAging(n); };
 
   const copy = () =>
     wms.outText(agingText({ area: cur, agg, pic, done, total: list.length, date: new Date().toLocaleDateString("id-ID") })).then(
