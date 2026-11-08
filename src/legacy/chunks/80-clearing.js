@@ -127,8 +127,19 @@
           if (!cm.has(k)) cm.set(k, { v: c.v, rows: [] });
           cm.get(k).rows.push(c);
         });
-        const seen = new Set(), list = [];
+        // satu voucher bisa muncul di beberapa baris laporan (beberapa item): qty dijumlah; baris yang persis sama (dobel input) dihitung sekali
+        const ra = new Map();
         rep.forEach((r) => {
+          const k = clrKey(r.v);
+          if (!ra.has(k)) return ra.set(k, { ...r, _sig: new Set([[r.q, r.k, r.r, r.n].join("|")]) });
+          const a = ra.get(k), sg = [r.q, r.k, r.r, r.n].join("|");
+          if (a._sig.has(sg)) return;
+          a._sig.add(sg);
+          a.q = a.q == null && r.q == null ? null : (a.q || 0) + (r.q || 0);
+          if (r.n && !String(a.n).includes(r.n)) a.n = a.n ? a.n + ", " + r.n : r.n;
+        });
+        const seen = new Set(), list = [];
+        [...ra.values()].forEach((r) => {
           const k = clrKey(r.v);
           seen.add(k);
           const g = cm.get(k);
@@ -144,9 +155,7 @@
             if (nd === 0 || (Math.abs(diff) >= 100 && Math.abs(nd) < Math.abs(diff))) { ik = qC; qC = e; diff = nd; }
           }
           const sms = sms8(kc), sr = sms8(r.k);
-          let st = "ok";
-          if (diff !== 0) st = "qty";
-          else if (sms && sr && sms !== sr) st = "sms";
+          const st = diff === 0 ? "ok" : "qty"; // cocok = voucher + qty; SMS hanya informasi
           const tm = lt.t || (g.rows.find((x) => x.t) || {}).t || "", lori = r.lr || lt.lr || (g.rows.find((x) => x.lr) || {}).lr || "";
           list.push({ v: r.v, sms, kc, qR: r.q, qC, diff, st, ik, n: r.n, r: r.r, rc: g.rows.length, lori, shift: r.sh || clrShiftOf(tm), tm, pic: r.pic || "", grp: r.grp || "" });
         });
@@ -182,7 +191,12 @@
           ["Belum dihitung", n("belum"), n("belum") ? "var(--amber)" : ""],
         ].map(([l, v, c]) => `<div class="stat"><small>${l}</small><strong style="${c ? "color:" + c : ""}">${v}</strong></div>`).join("");
         $("clrChips").innerHTML = chipsHtml(clrF, [["all", "Semua", all.length], ["bad", "Perlu dicek", all.filter((x) => x.st !== "ok" && !clrIsDone(x)).length], ["done", "Ditandai selesai", all.filter(clrIsDone).length], ["ok", "Cocok", n("ok")], ["belum", "Belum dihitung", n("belum")]]);
-        $("clrRekap").innerHTML = ""; // rekap lengkap tidak ditampilkan; tugas clearing hanya mencocokkan
+        { // ringkasan singkat (bukan rekap lengkap): berapa voucher dari laporan yang cocok
+          const tot = all.length, ok = n("ok"), pct = tot ? Math.round((ok / tot) * 1000) / 10 : 0, bad = tot - ok;
+          $("clrRekap").innerHTML = tot
+            ? `<div class="panel clr-sum ${bad ? "bad" : "ok"}"><div class="ring" style="--p:${pct}"><b>${String(pct).replace(".", ",")}%</b></div><div><h3>${bad ? fmt(ok) + " dari " + fmt(tot) + " voucher cocok" : "✅ Semua voucher cocok"}</h3><p class="fine">${bad ? fmt(bad) + " voucher perlu dicek (selisih qty atau belum dihitung)." : "Voucher dan qty sesuai hasil counting."}</p></div></div>`
+            : "";
+        }
         const shs = [...new Set(all.map((x) => x.shift).filter(Boolean))].sort();
         $("clrShChips").innerHTML = shs.length ? chipsHtml(clrShF, [["all", "Semua shift", all.length], ...shs.map((h) => [h, h, all.filter((x) => x.shift === h).length])]).replace(/data-k=/g, "data-sh=") : "";
         const q = $("clrQ").value.toLowerCase().trim();
@@ -190,7 +204,7 @@
         $("clrList").innerHTML = (vis.length ? vis.slice(0, 300).map((x) => {
           const [lb, cl] = CLR_ST[x.st];
           const d = x.diff == null ? "" : x.diff === 0 ? "0" : (x.diff > 0 ? "+" : "") + fmt(x.diff);
-          return `<div class="card vc s-${x.st}"><div class="r"><b class="id">${esc(x.v)}</b><span class="pill ${cl}">${lb}</span>${clrIsDone(x) ? ' <span class="pill green">Selesai</span>' : ""}</div>${x.n ? `<div class="nm">${esc(x.n)}${x.r ? ", rak " + esc(x.r) : ""}</div>` : ""}<dl class="kv k3"><div><dt>Shift</dt><dd>${esc(x.shift || "-")}${x.tm ? "<small>" + esc((String(x.tm).match(/\d{1,2}:\d{2}/) || [""])[0]) + "</small>" : ""}</dd></div><div><dt>No Lori</dt><dd class="id">${esc(x.lori || "-")}</dd></div><div><dt>Selisih</dt><dd class="${x.diff ? "neg" : ""}">${d || "-"}</dd></div><div><dt>SMS</dt><dd class="id">${esc(x.sms || "-")}</dd></div><div><dt>Qty WMS</dt><dd>${x.qR == null ? "-" : fmt(x.qR)}</dd></div><div><dt>Qty count</dt><dd>${x.qC == null ? "-" : fmt(x.qC)}</dd></div></dl>${x.ik ? `<div class="m">Counting ${fmt(x.ik)} ikat × ${CLR_IKAT} = ${fmt(x.qC)}.</div>` : ""}${x.rc > 1 ? `<div class="m">${x.rc} foto counting untuk voucher ini, dipakai yang terbaru.</div>` : ""}${clrAct(x)}</div>`;
+          return `<div class="card vc s-${x.st}"><div class="r"><b class="id">${esc(x.v)}</b><span class="pill ${cl}">${lb}</span>${clrIsDone(x) ? ' <span class="pill green">Selesai</span>' : ""}</div>${x.n ? `<div class="nm">${esc(x.n)}${x.r ? ", rak " + esc(x.r) : ""}</div>` : ""}<dl class="kv k3"><div><dt>Shift</dt><dd>${esc(x.shift || "-")}${x.tm ? "<small>" + esc((String(x.tm).match(/\d{1,2}:\d{2}/) || [""])[0]) + "</small>" : ""}</dd></div><div><dt>No Lori</dt><dd class="id">${esc(x.lori || "-")}</dd></div><div><dt>Selisih</dt><dd class="${x.diff ? "neg" : ""}">${d || "-"}</dd></div><div><dt>SMS</dt><dd class="id">${esc(x.sms || "-")}</dd></div><div><dt>Qty WMS</dt><dd>${x.qR == null ? "-" : fmt(x.qR)}</dd></div><div><dt>Qty count</dt><dd>${x.qC == null ? "-" : fmt(x.qC)}${x.ik ? ` <small>(${fmt(x.ik)}×${CLR_IKAT})</small>` : ""}</dd></div></dl>${x.st !== "ok" && x.ik ? `<div class="m">Counting ${fmt(x.ik)} ikat × ${CLR_IKAT} = ${fmt(x.qC)}.</div>` : ""}${x.st !== "ok" && x.rc > 1 ? `<div class="m">${x.rc} foto counting untuk voucher ini, dipakai yang terbaru.</div>` : ""}${clrAct(x)}</div>`;
         }).join("") + (vis.length > 300 ? `<p class="fine">Menampilkan 300 dari ${fmt(vis.length)}. Pakai pencarian atau filter.</p>` : "") : `<div class="empty">${all.length ? "Tidak ada voucher di filter ini." : "Muat Laporan Voucher dan counting dulu."}</div>`);
       }
       async function clrFetch(manual) {

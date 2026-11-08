@@ -11,3 +11,9 @@ input[type="file"]::file-selector-button { margin-right: 12px; padding: 10px 16p
 .btn:focus-visible, .chip:focus-visible, summary:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--blue, #1d4ed8); outline-offset: 2px; }
 .row-act { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
 .row-act .btn { margin: 0; }
+.clr-sum { display: flex; align-items: center; gap: 16px; margin-top: 12px; }
+.clr-sum h3 { margin: 0 0 4px; font-size: 17px; }
+.clr-sum p { margin: 0; }
+.clr-sum .ring { flex: none; width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(closest-side, var(--card, #fff) 74%, transparent 76%), conic-gradient(var(--rc, #16a34a) calc(var(--p) * 1%), rgba(128, 128, 128, .22) 0); }
+.clr-sum.bad .ring { --rc: #d97706; }
+.clr-sum .ring b { font-size: 15px; }
