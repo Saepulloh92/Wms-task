@@ -33,8 +33,9 @@ pre:not(.rep) { white-space: pre-wrap; overflow-wrap: anywhere; word-break: brea
 /* === Ramah HP === */
 /* Font input minimal 16px agar iOS Safari tidak zoom otomatis saat mengetik */
 @media (max-width: 900px) {
-  html input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-  html select, html textarea { font-size: 16px !important; }
+  html :where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea) { font-size: max(16px, calc(15px * var(--ts, 1))); }
+  /* aturan kelas yang memaksa 15px */
+  .row2 select, .row2 input { font-size: max(16px, calc(15px * var(--ts, 1))); }
 }
 /* Baris ringkasan yang bisa dibuka (Cara kerja, Format file, dst.) setinggi target sentuh */
 details > summary { min-height: 44px; box-sizing: border-box; padding-top: 10px; padding-bottom: 10px; cursor: pointer; }
@@ -51,3 +52,10 @@ button, .btn, .chip, .tabs button, summary { touch-action: manipulation; -webkit
 @media (max-height: 480px) and (orientation: landscape) { .tabs button { min-height: 44px; } main, .app { padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); } }
 /* Tautan "Cara kerja" dsb. setinggi target sentuh, teks 14px agar terbaca */
 .hint-more > summary { min-height: 44px; font-size: 14px; padding-top: 0; padding-bottom: 0; }
+/* Beranda belum terhubung: sembunyikan kontrol yang belum berguna (filter, muat ulang, Telegram), sisakan satu ajakan jelas */
+#dlvBody:has(#dlvOpenSet) + .mon-bar { display: none; }
+#v-mon:has(#monMsg .note.info) .dflt,
+#v-mon:has(#monMsg .note.info) .mon-bar:has(#monRef),
+#v-mon:has(#monMsg .note.info) #monTg { display: none; }
+/* Tombol ajakan di kartu info selebar kartu agar mudah diketuk */
+.note.info .btn { width: 100%; min-height: 48px; }
