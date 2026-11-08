@@ -28,3 +28,5 @@ main { padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
 .card, .bin, .mi { overflow-wrap: anywhere; }
 /* Tabel lebar bisa digeser tanpa membuat halaman bergeser */
 .tblwrap, .tw { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+/* Blok teks biasa membungkus baris; pre.rep (laporan) tetap bisa digeser agar kolom sejajar */
+pre:not(.rep) { white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; max-width: 100%; }
