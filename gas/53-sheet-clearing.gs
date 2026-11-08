@@ -6,6 +6,7 @@ function clrKet_(label, diff) {
   switch (label) {
     case 'Belum dihitung': return 'TDK ADA FOTO';
     case 'Tidak ada di laporan': return 'TIDAK ADA DI LAPORAN';
+    case 'Qty kosong': return 'QTY KOSONG';
     case 'Dobel hitung': return 'FOTO DOBEL, QTY BEDA';
     case 'Selisih qty': return Number(diff) > 0 ? 'QTY COUNTHINGS LEBIH' : 'QTY COUNTHINGS KURANG';
     default: return '';
