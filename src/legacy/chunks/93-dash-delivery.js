@@ -42,6 +42,8 @@
       function dlvKpi(cls, v, lb, sub) {
         return `<div class="kc ${cls}"><div class="kh"><span class="ki">${monIco[cls]}</span><b>${v == null ? "–" : esc(fmt(v))}</b></div><div class="kl">${esc(lb)}</div><span class="dchip${sub ? "" : " eq"}">${sub ? esc(sub) : "–"}</span></div>`;
       }
+      const dlvOpen = {}; // key -> true/false (pilihan pengguna, bertahan antar muat ulang)
+      const dlvFold = (key, t, sum, def, body) => `<details class="dcard dfold" data-k="${key}"${(dlvOpen[key] == null ? def : dlvOpen[key]) ? " open" : ""}><summary><h3>${esc(t)}</h3>${sum ? `<span class="dsum">${esc(sum)}</span>` : ""}</summary>${body}</details>`;
       const dlvAny = (...cells) => cells.some((c) => dlvC(c));
       function dlvHtml() {
         const V = dlvV,
@@ -101,14 +103,21 @@
             al = dlvFirst(r, "AB", "AF");
           if (n) under.push(dlvRow(n, "", al || "Under", "wip"));
         }
-        const abn = !dlvAny("AL33", "AL35", "AL37") && !gagal.length && !under.length ? "" : dlvCard(
+        const nAb = (dlvN("AL33") || 0) + (dlvN("AL35") || 0);
+        const abn = !dlvAny("AL33", "AL35", "AL37") && !gagal.length && !under.length ? "" : dlvFold(
+          "abn",
           "Abnormal",
+          "Gagal " + V("AL33") + " · Under " + V("AL35") + " · >14:00 " + V("AL37"),
+          nAb > 0 || gagal.length > 0 || under.length > 0,
           `<div class="mg5">${dlvKv("Gagal masuk", V("AL33"), "c-gagal")}${dlvKv("Under tonage", V("AL35"), "c-proses")}${dlvKv("Mobil > 14:00", V("AL37"), "c-masuk")}</div>` +
             (gagal.length ? `<div class="lh">Agen gagal masuk</div>${gagal.join("")}` : "") +
             (under.length ? `<div class="lh">Under tonage</div>${under.join("")}` : ""),
         );
-        const bulan = !dlvAny("AL13", "AL15", "AL17", "AL19", "AR13", "AR19", "AL23") ? "" : dlvCard(
+        const bulan = !dlvAny("AL13", "AL15", "AL17", "AL19", "AR13", "AR19", "AL23") ? "" : dlvFold(
+          "bln",
           "Ringkasan Bulan Ini",
+          "Mobil " + V("AR13") + " · Tonase " + V("AR19"),
+          false,
           `<div class="fine">Realisasi mobil · ${esc(V("AL15"))} dari ${esc(V("AL13"))}</div>${dlvBar(dlvPct("AR13"))}<div class="bn">${esc(V("AR13"))}</div>` +
             `<div class="fine mt">Realisasi tonase · ${esc(V("AL19"))} dari ${esc(V("AL17"))}</div>${dlvBar(dlvPct("AR19"))}<div class="bn">${esc(V("AR19"))}</div>` +
             `<div class="mg5 m4">${dlvKv("Rata² mobil/hari", V("AL23"))}${dlvKv("Ton plan", V("AR23"))}${dlvKv("Ton aktual", V("AR25"))}${dlvKv("Ton omzet", V("AR27"))}</div>` +
@@ -119,7 +128,7 @@
           .map(([l, v, d]) => dlvRow(l, dlvC(d), dlvC(v), "ok"))
           .join("");
         const dest = dlvC("AG53") ? dlvRow("Tujuan terbanyak", V("AL55") + " mobil · " + V("AL57") + " ton", dlvC("AG53"), "pd") : "";
-        const rec = rank + dest ? dlvCard("Rekor Harian & Tujuan", rank + dest) : "";
+        const rec = rank + dest ? dlvFold("rek", "Rekor Harian & Tujuan", "", false, rank + dest) : "";
         return kpi + status + tonase + abn + bulan + rec;
       }
       function dlvRender() {
@@ -201,6 +210,11 @@
         if (!document.hidden && !$("v-mon").hidden && dlv.url && dlvCache && Date.now() - dlvCache.at > 30000) dlvLoad(false);
       });
       $("dlvRef").onclick = () => (dlv.url ? dlvLoad(true) : (toast("Isi alamat spreadsheet dulu."), ($("dlvSet").open = true)));
+      $("dlvBody").addEventListener("click", (e) => {
+        const sm = e.target.closest && e.target.closest("summary"),
+          d = sm && sm.parentElement;
+        if (d && d.dataset && d.dataset.k) dlvOpen[d.dataset.k] = !d.open; // klik terjadi sebelum browser membuka/menutup
+      });
       $("dlvPanel").onclick = (e) => {
         if (e.target.id === "dlvOpenSet") {
           $("dlvSet").open = true;

@@ -149,3 +149,14 @@
       .dlv .dnut .ds { font-size: 10px; }
       .dlv .mg5.m4 { grid-template-columns: repeat(2, 1fr); }
       @media (min-width: 480px) { .dlv .mg5.m4 { grid-template-columns: repeat(4, 1fr); } }
+      /* kartu bisa dilipat (Abnormal, Ringkasan Bulan, Rekor) */
+      .dlv .dfold { padding: 0; }
+      .dlv .dfold > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; min-height: 52px; padding: 10px 14px; flex-wrap: wrap; position: relative; padding-right: 40px; }
+      .dlv .dfold > summary::-webkit-details-marker { display: none; }
+      .dlv .dfold > summary h3 { margin: 0; flex: 1 1 auto; }
+      .dlv .dfold > summary .dsum { flex: 1 1 100%; order: 3; font-size: 13px; color: var(--muted); margin-top: -4px; }
+      .dlv .dfold > summary::after { content: ""; position: absolute; right: 16px; top: 22px; width: 9px; height: 9px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); transition: transform 0.15s; }
+      .dlv .dfold[open] > summary::after { transform: rotate(-135deg); top: 26px; }
+      .dlv .dfold[open] > summary .dsum { display: none; }
+      .dlv .dfold > :not(summary) { margin-left: 14px; margin-right: 14px; }
+      .dlv .dfold > :last-child { margin-bottom: 14px; }
