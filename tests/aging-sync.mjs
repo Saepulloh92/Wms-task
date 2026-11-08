@@ -44,7 +44,7 @@ ok(st.k["10172005089004"]?.c === "A" && st.old === null, "kelas versi awal dipin
 
 // isi cek rak pertama lewat UI
 await page.locator(".agi-rak > summary").first().click();
-const f = page.locator(".agi-form input");
+const f = page.locator(".agi-form input:not([type=checkbox])");
 await f.nth(0).fill("AK140"); await f.nth(1).fill("AW 3"); await f.nth(2).fill("400");
 await page.getByText("Simpan cek").first().click();
 await page.waitForTimeout(6500); // sinkron otomatis menunggu ±4 dtk
