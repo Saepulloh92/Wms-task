@@ -17,7 +17,7 @@
       /* ---- v13: hak akses menu per user ---- */
       const MENU_DEF = { so: "Periksa Bin", dc: "DC Harian", task: "Tugas Bin", check: "Review Supervisor", kes: "Cek Kesesuaian", adj: "File Adjust", clr: "Clearing", mon: "Beranda", muat: "Laporan Muat", kpi: "KPI Area", agi: "Aging Stock", tg: "Telegram", data: "Data WMS" };
       const ALL_VIEWS = [...Object.keys(MENU_DEF), "usr"];
-      const PRESETS = { operator: ["mon", "so", "dc", "task"], supervisor: ["so", "dc", "task", "check", "kes", "adj", "clr", "mon", "muat", "kpi"] };
+      const PRESETS = { operator: ["mon", "so", "dc", "task"], supervisor: ["so", "dc", "task", "check", "kes", "adj", "clr", "mon", "muat", "kpi", "agi"] };
       const sameSet = (a, b) => a.length === b.length && a.every((x) => b.includes(x));
       const menusOf = (u) => (u.role === "admin" ? ALL_VIEWS : Array.isArray(u.menus) ? u.menus : PRESETS.operator);
       const menuLabel = (u) => {

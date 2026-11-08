@@ -152,7 +152,7 @@
           try {
             let rows;
             if (x) {
-              if (!window.XLSX) throw new Error("Excel butuh internet. Simpan sebagai CSV lalu upload.");
+              if (!window.XLSX) throw new Error("Pustaka Excel gagal dimuat. Muat ulang aplikasi, atau simpan sebagai CSV lalu upload.");
               const wb = XLSX.read(rd.result, { type: "array" });
               rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: "" });
             } else rows = parseCSV(String(rd.result).replace(/^﻿/, ""));
