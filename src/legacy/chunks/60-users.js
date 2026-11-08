@@ -332,22 +332,28 @@
         $("uAreas").innerHTML = A.length
           ? A.map((a) => `<button class="chip ${uSel.includes(a) ? "on" : ""}" data-a="${esc(a)}">${esc(a)}</button>`).join("")
           : '<div class="hint">Belum ada area. Impor data WMS dulu.</div>';
+        { // ringkasan jumlah user
+          const act = users.filter((u) => u.active !== false), noPin = act.filter((u) => !u.pin).length;
+          const tile = (v, l, c) => `<div class="ut ${c || ""}"><b>${v}</b><span>${l}</span></div>`;
+          $("uSum").innerHTML = tile(users.length, "Total user") + tile(act.length, "Aktif", "ok") + tile(noPin, "Tanpa password", noPin ? "warn" : "");
+        }
+        const RANK = { admin: 0, spv: 1, petugas: 2, penerimaan: 3 };
         $("usrList").innerHTML = users.length
-          ? users
+          ? [...users]
+              .sort((x, y) => (RANK[roleOf(x)] ?? 9) - (RANK[roleOf(y)] ?? 9) || (x.active === false) - (y.active === false) || String(x.name).localeCompare(String(y.name), "id"))
               .map((u) => {
-                const pills =
-                  u.role === "admin"
-                    ? '<span class="m">Akses penuh ke semua menu</span>'
-                    : !isStaff(u)
-                    ? '<span class="m">Semua area</span>'
-                    : u.areas
-                        .map((a) => {
+                const self = meUser() && meUser().id === u.id,
+                  off = u.active === false,
+                  areaPills =
+                    u.role === "admin"
+                      ? '<span class="m">Semua area</span>'
+                      : !isStaff(u)
+                      ? '<span class="m">Semua area</span>'
+                      : u.areas.map((a) => {
                           const s = areaStat(a);
-                          return `<span class="pill ${isClosed(a) ? "green" : s.done ? "amber" : ""}">${esc(a)} ${isClosed(a) ? "ditutup" : s.done + "/" + s.total}</span>`;
-                        })
-                        .join(" ") || '<span class="m">Belum ada area</span>',
-                  self = meUser() && meUser().id === u.id;
-                return `<div class="card"><div class="r"><b class="big">${esc(u.name)}${self ? " (Anda)" : ""}</b><div><span class="pill ${u.role === "admin" ? "red" : ""}">${ROLES[roleOf(u)].label}</span> <span class="pill ${u.pin ? "green" : "amber"}">${u.pin ? "Password aktif" : "Belum ada password"}</span>${u.active === false ? ' <span class="pill amber">Nonaktif</span>' : ""}</div></div><div>${pills}${u.role === "admin" ? "" : ' <span class="pill">Menu: ' + menuLabel(u) + "</span>"}</div><div class="acts"><button class="btn sec sm inl" data-edit="${esc(u.id)}">Ubah</button><button class="btn sec sm inl" data-act="${esc(u.id)}">${u.active === false ? "Aktifkan" : "Nonaktifkan"}</button><button class="btn dng sm inl" data-del="${esc(u.id)}">Hapus</button></div></div>`;
+                          return `<span class="pill ${isClosed(a) ? "green" : s.done ? "amber" : ""}">${esc(a)} · ${isClosed(a) ? "ditutup" : s.done + "/" + s.total}</span>`;
+                        }).join("") || '<span class="m">Belum ada area</span>';
+                return `<div class="ucard${off ? " off" : ""}"><div class="uh"><span class="uav r-${roleOf(u)}" aria-hidden="true">${esc((String(u.name).trim()[0] || "?").toUpperCase())}</span><div class="uid"><b>${esc(u.name)}${self ? ' <em>Anda</em>' : ""}</b><small>${ROLES[roleOf(u)].label}</small></div><span class="pill ${off ? "amber" : "green"}">${off ? "Nonaktif" : "Aktif"}</span></div><div class="ub"><div class="ur"><span>Password</span><div><span class="pill ${u.pin ? "green" : "amber"}">${u.pin ? "Sudah diatur" : "Belum ada"}</span></div></div><div class="ur"><span>Area</span><div class="ucp">${areaPills}</div></div><div class="ur"><span>Menu</span><div>${u.role === "admin" ? "Semua menu" : menuLabel(u)}</div></div></div><div class="acts"><button class="btn sec sm inl" data-edit="${esc(u.id)}">Ubah</button><button class="btn sec sm inl" data-act="${esc(u.id)}">${off ? "Aktifkan" : "Nonaktifkan"}</button><button class="btn dng sm inl" data-del="${esc(u.id)}">Hapus</button></div></div>`;
               })
               .join("")
           : '<div class="empty">Belum ada user. Tambahkan di bawah.</div>';
@@ -357,7 +363,8 @@
             full = s.total && s.done === s.total,
             mand = !s.total,
             ow = owners(a);
-          return `<div class="card"><div class="r"><b class="big">Area ${esc(a)}</b><span class="pill ${c ? "green" : full ? "amber" : ""}">${c ? "Ditutup" : mand ? "Belum ada data" : full ? "Siap ditutup" : "Berjalan"}</span></div><div class="m">${mand ? "Belum ada bin di data WMS. Impor Informasi Rak WMS di menu Data WMS." : s.done + " dari " + s.total + " bin diperiksa."} Petugas: ${ow.length ? esc(ow.join(", ")) : "belum ada"}</div>${c ? `<div class="m">Ditutup oleh ${esc(closed[a].by)}</div>${isSup() ? `<button class="btn sec sm" data-reopen="${esc(a)}">Buka kembali</button>` : ""}` : full && isSup() ? `<button class="btn pri sm" data-close="${esc(a)}">Tutup area ${esc(a)}</button>` : ""}</div>`;
+          const pct = s.total ? Math.round((s.done / s.total) * 100) : 0;
+          return `<div class="acard"><div class="r"><b class="big">Area ${esc(a)}</b><span class="pill ${c ? "green" : full ? "amber" : ""}">${c ? "Ditutup" : mand ? "Belum ada data" : full ? "Siap ditutup" : "Berjalan"}</span></div>${mand ? '<div class="m">Belum ada bin di data WMS. Impor Informasi Rak WMS di menu Data WMS.</div>' : `<div class="pbar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div><div class="m">${s.done} dari ${s.total} bin diperiksa · ${pct}%</div>`}<div class="m">Petugas: ${ow.length ? esc(ow.join(", ")) : "belum ada"}</div>${c ? `<div class="m">Ditutup oleh ${esc(closed[a].by)}</div>${isSup() ? `<button class="btn sec sm" data-reopen="${esc(a)}">Buka kembali</button>` : ""}` : full && isSup() ? `<button class="btn pri sm" data-close="${esc(a)}">Tutup area ${esc(a)}</button>` : ""}</div>`;
         }).join("");
       }
       function resetUForm() {

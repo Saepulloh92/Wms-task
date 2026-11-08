@@ -1,15 +1,19 @@
           <h2>User &amp; Area</h2>
           <p class="hint">Kelola user: peran (Admin, SPV, Petugas, Penerimaan), password, area, dan status aktif.</p>
           <div id="uBoot"></div>
+          <div class="usum" id="uSum"></div>
+          <h3 class="sec">Daftar user</h3>
           <div id="usrList"></div>
-          <div class="panel">
+          <div class="panel upanel">
             <h3 id="uTitle"></h3>
-            <label for="uName">Nama</label><input id="uName" placeholder="Contoh: Kelik" autocomplete="off" />
-            <label for="uRole">Peran</label>
-            <select id="uRole"><option value="petugas">Petugas (area sendiri)</option><option value="penerimaan">Penerimaan (area sendiri)</option><option value="spv">SPV (semua area, review dan laporan)</option><option value="admin">Admin (semua menu)</option></select>
-            <label for="uPin" id="uPinL">Password (minimal 6 karakter)</label>
-            <input id="uPin" type="password" maxlength="64" autocomplete="new-password" />
-            <p class="fine" id="uPinH"></p>
+            <div class="fgrid">
+              <div><label for="uName">Nama</label><input id="uName" placeholder="Contoh: Kelik" autocomplete="off" /></div>
+              <div><label for="uRole">Peran</label>
+              <select id="uRole"><option value="petugas">Petugas (area sendiri)</option><option value="penerimaan">Penerimaan (area sendiri)</option><option value="spv">SPV (semua area, review dan laporan)</option><option value="admin">Admin (semua menu)</option></select></div>
+              <div class="full"><label for="uPin" id="uPinL">Password (minimal 6 karakter)</label>
+              <input id="uPin" type="password" maxlength="64" autocomplete="new-password" />
+              <p class="fine" id="uPinH"></p></div>
+            </div>
             <div id="uAreasWrap"><label id="uAreasL">Area yang dikerjakan</label>
             <div class="chips wrap" id="uAreas" role="group" aria-labelledby="uAreasL"></div></div>
             <div id="uMenusWrap"><label id="uMenusL">Akses menu</label>
@@ -17,8 +21,7 @@
             <div class="chips wrap" id="uMenus" role="group" aria-labelledby="uMenusL"></div>
             <p class="fine">Menu yang tidak dicentang disembunyikan dari user ini. Menu User &amp; Area selalu khusus admin.</p></div>
             <label class="sw"><input type="checkbox" id="uActive" checked /><span>Aktif<small>User nonaktif tidak bisa masuk dan tidak dapat tugas baru.</small></span></label>
-            <button class="btn pri mt-lg" id="uAdd">Simpan user</button>
-            <button class="btn sec mt" id="uCancel" hidden>Batal</button>
+            <div class="btnrow"><button class="btn pri" id="uAdd">Simpan user</button><button class="btn sec" id="uCancel" hidden>Batal</button></div>
           </div>
           <h3 class="sec">Daftar area</h3>
           <div class="panel">
