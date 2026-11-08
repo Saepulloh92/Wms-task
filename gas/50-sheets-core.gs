@@ -269,13 +269,15 @@ function renderSheetsBody_(st, withMaster) {
     }));
 
   var tasks = st[K.tasks] || {};
-  var done = counts;
-  writeTable_(SH.tasks, ['Bin', 'Petugas', 'Ditugaskan oleh', 'Waktu tugas', 'Status'],
-    Object.keys(tasks).map(function (bin) {
-      var t = tasks[bin] || {};
-      var c = done[bin];
-      var fin = !!(c && ts_(c.savedAt) >= ts_(t.at));
-      return [bin, nameOf[t.u] || t.u || '', t.by || '', fmtTime_(t.at), fin ? 'Selesai' : 'Menunggu'];
+  var done = counts, agS = st[K.aging] || {}, dcS = st[K.dc] || {};
+  // kunci tugas: "B1-01-A" (bin), "AG|B1-01-A" (aging per rak), "DC|NAMA ITEM" (DC per item)
+  writeTable_(SH.tasks, ['Bin / Item', 'Petugas', 'Ditugaskan oleh', 'Waktu tugas', 'Status', 'Jenis'],
+    Object.keys(tasks).map(function (key) {
+      var t = tasks[key] || {}, kind = 'Bin', id = key, fin;
+      if (key.indexOf('AG|') === 0) { kind = 'Aging'; id = key.slice(3); var a = agS[id]; fin = !!(a && ts_(a.at) >= ts_(t.at)); }
+      else if (key.indexOf('DC|') === 0) { kind = 'DC'; id = key.slice(3); var d = dcS[id]; fin = !!(d && d.done && ts_(d.at) >= ts_(t.at)); }
+      else { var c = done[key]; fin = !!(c && ts_(c.savedAt) >= ts_(t.at)); }
+      return [id, nameOf[t.u] || t.u || '', t.by || '', fmtTime_(t.at), fin ? 'Selesai' : 'Menunggu', kind];
     }));
 
   var closed = st[K.closed] || {};

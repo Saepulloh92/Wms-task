@@ -27,8 +27,9 @@
         if (!r.done) return "draft";
         return dcFis(r.rows) === dcSysOf(e) ? "ok" : "bad";
       }
-      const dcInF = (e, f) => f === "all" || (f === "todo" ? ["todo", "draft"].includes(dcSt(e)) : dcSt(e) === f);
+      const dcInF = (e, f) => f === "all" || (f === "task" ? tkDcOpen(e.item) : f === "todo" ? ["todo", "draft"].includes(dcSt(e)) : dcSt(e) === f);
       function renderDc() {
+        taskBadges();
         const all = dcScope(),
           q = $("dcQ").value.toLowerCase().trim().split(/\s+/).filter(Boolean),
           n = (f) => all.filter((e) => dcInF(e, f)).length,
@@ -43,6 +44,7 @@
           .map(([l, v, c]) => `<div class="stat"><small>${l}</small><strong style="${c ? "color:" + c : ""}">${v}</strong></div>`)
           .join("");
         $("dcChips").innerHTML = chipsHtml(dcF, [
+          ...(all.some((e) => tasks["DC|" + e.item]) ? [["task", "Tugas", n("task")]] : []),
           ["todo", "Belum", n("todo")],
           ["bad", "Selisih", n("bad")],
           ["ok", "Sesuai", n("ok")],

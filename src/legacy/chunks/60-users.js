@@ -365,6 +365,7 @@
         $("uAdd").textContent = uEdit ? "Simpan perubahan" : "Simpan user";
         $("uCancel").hidden = !uEdit;
         $("uAreasWrap").hidden = !scoped; // admin dan SPV melihat semua area
+        $("uViewWrap").hidden = !scoped;
         $("uMenusWrap").hidden = adminRole;
         $("uMenus").innerHTML = Object.keys(MENU_DEF).map((k) => `<button type="button" class="chip ${uMenus.includes(k) ? "on" : ""}" data-m="${k}" aria-pressed="${uMenus.includes(k)}">${MENU_DEF[k]}</button>`).join("");
         document.querySelectorAll("#uPreset [data-p]").forEach((b) => {
@@ -421,6 +422,7 @@
         uMenus = [...PRESETS.petugas];
         $("uName").value = "";
         $("uRole").value = "petugas";
+        $("uView").value = "";
         $("uPin").value = "";
         $("uActive").checked = true;
         renderUsr();
@@ -495,6 +497,8 @@
         rec.role = role;
         rec.active = active;
         rec.areas = ROLES[role].staff ? [...uSel].sort() : [];
+        if (ROLES[role].staff && $("uView").value) rec.view = $("uView").value;
+        else delete rec.view;
         if (role === "admin") delete rec.menus;
         else rec.menus = [...uMenus];
         if (newHash) rec.pin = newHash;
@@ -527,6 +531,7 @@
           uMenus = u.role === "admin" ? [...PRESETS.petugas] : [...menusOf(u)];
           $("uName").value = u.name;
           $("uRole").value = u.role;
+          $("uView").value = u.view || "";
           $("uPin").value = "";
           $("uActive").checked = u.active !== false;
           renderUsr();
