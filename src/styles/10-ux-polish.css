@@ -12,3 +12,12 @@ input[type="password"], input[type="text"], input[type="url"], input[type="searc
 @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 .row2 { grid-template-columns: 1.15fr 1fr; }
 .row2 select, .row2 input { padding-left: 10px; font-size: 15px; }
+/* Stabilitas layar sempit (320px) */
+.card .r { flex-wrap: wrap; gap: 6px 10px; }
+.card .r > * { min-width: 0; max-width: 100%; }
+.acts { flex-wrap: wrap; }
+.acts .btn { flex: 1 1 96px; }
+.pill { white-space: nowrap; }
+.card .big { overflow-wrap: anywhere; }
+#monPer, #monUnit { min-height: 44px; }
+img, svg, canvas, table { max-width: 100%; }
