@@ -50,8 +50,8 @@
           msk = dlvN("F43"),
           bel = dlvN("B43"),
           share = (n) => (n != null && tot ? Math.round((n / tot) * 100) + "% dari total" : "");
-        const kpi = `<div class="kcs">${dlvKpi("tot", tot, "Total Mobil", "")}${dlvKpi("ok", kel, "Mobil Keluar", share(kel))}${dlvKpi("wip", prs, "Mobil Proses", share(prs))}</div>`;
-        const segs = [["Keluar", kel || 0, "#0a5bd3"], ["Proses", prs || 0, "#f5a623"], ["Masuk", msk || 0, "#2e9e68"], ["Belum masuk", bel || 0, "#9aa5b8"]],
+        const kpi = `<div class="kcs">${dlvKpi("tot", tot, "Total Mobil", tot != null && kel != null ? (tot - kel > 0 ? tot - kel + " belum keluar" : "Semua keluar") : "")}${dlvKpi("ok", kel, "Mobil Keluar", share(kel))}${dlvKpi("wip", prs, "Mobil Proses", share(prs))}</div>`;
+        const segs = [["Keluar", kel || 0, "#0a5bd3"], ["Proses", prs || 0, "#f5a623"], ["Masuk", Math.max(0, (msk || 0) - (kel || 0) - (prs || 0)), "#2e9e68"], ["Belum masuk", bel || 0, "#9aa5b8"]],
           sum = segs.reduce((a, q) => a + q[1], 0),
           C = 2 * Math.PI * 40;
         let off = 0;
@@ -77,7 +77,7 @@
         const status = dlvCard(
           "Status Mobil",
           `<div class="dnut"><svg viewBox="0 0 100 100" role="img" aria-label="${pct}% keluar">${arcs}<text x="50" y="52" text-anchor="middle" class="dv">${pct}%</text><text x="50" y="64" text-anchor="middle" class="ds">Keluar</text></svg><div class="dnl">${segs.map(([lb, v, c]) => `<div><i style="background:${c}"></i><span>${lb}</span><b>${esc(fmt(v))}</b><span class="p">${sum ? Math.round((v / sum) * 100) : 0}%</span></div>`).join("")}</div></div>` +
-            (pm != null ? `<div class="fine mt">Progres keluar ${esc(V("P34"))}</div>${dlvBar(pm)}` : "") +
+            (pm != null ? `<div class="fine mt">Progres keluar dari mobil masuk ${esc(V("P34"))}</div>${dlvBar(pm)}` : "") +
             (jenis ? `<div class="dchips"><small>Jenis mobil</small>${jenis}</div>` : "") +
             (jam ? `<div class="dchips"><small>Jam keluar mobil</small>${jam}</div>` : "") +
             `<div class="xk">Belum / tidak masuk: <b>${esc(V("S33"))}</b> mobil (BOX ${esc(V("S39"))} · FUSO ${esc(V("V39"))} · CONTAINER ${esc(V("S46"))} · TRONTON ${esc(V("V46"))})</div>`,
@@ -136,8 +136,10 @@
         }
         const age = (Date.now() - dlvCache.at) / 60000,
           stale = dlv.auto && age > dlv.auto * 2 + 1;
+        // lencana hanya muncul jika data lama, atau lencana Monitoring di atasnya kosong (hindari "Tersinkron" ganda)
+        const showAt = stale || !$("monAt").textContent;
         $("dlvAt").className = "sync " + (stale ? "old" : "ok");
-        $("dlvAt").textContent = (stale ? "Data lama" : "Tersinkron") + " · " + new Date(dlvCache.at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+        $("dlvAt").textContent = showAt ? (stale ? "Data lama" : "Tersinkron") + " · " + new Date(dlvCache.at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : "";
         const ttl = dlvC("F2"),
           tgl = dlvC("AJ2"),
           jam = dlvC("F8");
