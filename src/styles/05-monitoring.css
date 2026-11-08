@@ -135,3 +135,7 @@
       .kcs .kc.tot .kh { display: flex; }
       .dlv .xk { font-size: 14px; color: var(--muted); margin-top: 10px; }
       .dlv .xk b { color: var(--ink); }
+      /* judul panel Dashboard Delivery disembunyikan; lencana hanya tampil bila ada (data lama) */
+      .dlv .dh > div:first-child { display: none; }
+      .dlv .dh { justify-content: flex-end; margin-bottom: 10px; }
+      .dlv .dh:has(.sync:empty) { display: none; }
