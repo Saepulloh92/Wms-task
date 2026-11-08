@@ -58,7 +58,8 @@
         if (v === "check") renderCheck();
         if (v === "kes") renderKes();
         if (v === "adj") renderAdj();
-        if (v === "clr") { renderClr(); if (clr.url && (!clrCnt || Date.now() - clrCnt.at > 120000)) clrFetch(false); }
+        if (v === "clr") { renderClr(); if (clr.url && (!clrCnt || Date.now() - clrCnt.at > 120000)) clrFetch(false); clrEnter(); }
+        else clrLeave();
         if (v === "usr") { renderUsr(); cfgUi(); }
         if (v === "task") renderTask();
         if (v === "tg") tgUi();

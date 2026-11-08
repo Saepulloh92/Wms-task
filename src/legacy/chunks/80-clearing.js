@@ -2,7 +2,7 @@
    asal: index-fixd.html baris 5164-5575 */
       /* ---- v14: Clearing (Laporan Voucher vs hasil counting) ---- */
       const K_CLR = "warehouse_so_clr_v1", K_CLRR = "warehouse_so_clr_rep_v1", K_CLRC = "warehouse_so_clr_cnt_v1";
-      let clr = Object.assign({ url: WMS_CONFIG.clearingUrl, start: 2, cv: "Nama Foto", cq: "Total Count", ck: "Kode Item", sh1: 7, sh2: 15, sh3: 23 }, ld(K_CLR, {}));
+      let clr = Object.assign({ url: WMS_CONFIG.clearingUrl, start: 2, cv: "Nama Foto", cq: "Total Count", ck: "Kode Item", auto: 5 }, ld(K_CLR, {}));
       let clrRep = ld(K_CLRR, null), clrCnt = ld(K_CLRC, null), clrF = "all", clrBusy = false, clrErr = "";
       const K_CLRD = "warehouse_so_clr_done_v1", K_CLRH = "warehouse_so_clr_hist_v1";
       let clrHist = ld(K_CLRH, []);
@@ -42,7 +42,7 @@
       function clrShiftOf(t) {
         const m = String(t || "").match(/(\d{1,2}):(\d{2})/);
         if (!m) return "";
-        const h = Number(m[1]), a = Number(clr.sh1), b = Number(clr.sh2), c = Number(clr.sh3);
+        const h = Number(m[1]), a = 7, b = 15, c = 23; // Shift 1 mulai 07.00, Shift 2 15.00, Shift 3 23.00
         return "Shift " + (h >= c || h < a ? 3 : h >= b ? 2 : 1);
       }
       const clrShiftNorm = (v) => {
@@ -174,9 +174,7 @@
         $("clrCV").value = clr.cv;
         $("clrCQ").value = clr.cq;
         $("clrCK").value = clr.ck;
-        $("clrSh1").value = clr.sh1;
-        $("clrSh2").value = clr.sh2;
-        $("clrSh3").value = clr.sh3;
+        $("clrAutoSel").value = String(clr.auto == null ? 5 : clr.auto);
         $("clrRepInfo").textContent = clrRep ? `${clrRep.name || "Laporan"}: ${fmt(clrRep.rows.length)} voucher, dimuat ${new Date(clrRep.at).toLocaleString("id-ID")}.` : "Belum ada laporan. Pilih file Laporan Voucher.";
         $("clrCntInfo").textContent = clrErr ? clrErr : clrCnt ? `Counting dari ${clrCnt.src === "url" ? "spreadsheet" : "file"}: ${fmt(clrCnt.rows.length)} baris, dimuat ${new Date(clrCnt.at).toLocaleString("id-ID")}.` : clr.url ? "Counting belum dimuat." : "Link spreadsheet counting belum diatur (Pengaturan di bawah), atau muat dari file.";
         $("clrCntInfo").style.color = clrErr ? "var(--red)" : "";
@@ -185,16 +183,31 @@
         $("clrRefresh").textContent = clrBusy ? "Memuat…" : "↻ Refresh";
         $("clrLoad").textContent = clrBusy ? "Memuat…" : "Muat counting dari spreadsheet";
         const all = clrBuild(), n = (s) => all.filter((x) => x.st === s).length;
-        $("clrStats").innerHTML = [
-          ["Cocok", n("ok"), "var(--green)"],
-          ["Selisih / dobel", n("qty") + n("dup"), n("qty") + n("dup") ? "var(--red)" : ""],
-          ["Belum dihitung", n("belum"), n("belum") ? "var(--amber)" : ""],
-        ].map(([l, v, c]) => `<div class="stat"><small>${l}</small><strong style="${c ? "color:" + c : ""}">${v}</strong></div>`).join("");
+        const nTot = all.length, nOk = n("ok"), nBad = n("qty") + n("dup"), nBel = n("belum");
+        const kc = (cls, ico, v, lb) => `<div class="kc ${cls}"><div class="kh"><span class="ki">${ico}</span><b>${fmt(v)}</b></div><div class="kl">${lb}</div><span class="dchip eq">${nTot ? Math.round((v / nTot) * 100) : 0}%</span></div>`;
+        $("clrStats").innerHTML = kc("ok", monIco.ok, nOk, "Cocok") + kc("bad", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg>', nBad, "Selisih / dobel") + kc("wip", monIco.wip, nBel, "Belum dihitung");
+        { // pil sinkron: waktu counting terakhir dimuat
+          const el = $("clrAt");
+          if (!clrCnt) { el.className = "sync"; el.textContent = ""; }
+          else {
+            const stale = clr.auto && clrCnt.src !== "file" && (Date.now() - clrCnt.at) / 60000 > clr.auto * 2 + 1;
+            el.className = "sync " + (stale ? "old" : clrCnt.src === "file" ? "file" : "ok");
+            el.textContent = (clrCnt.src === "file" ? "Dari file" : stale ? "Data lama" : "Tersinkron") + " · " + new Date(clrCnt.at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+          }
+        }
         $("clrChips").innerHTML = chipsHtml(clrF, [["all", "Semua", all.length], ["bad", "Perlu dicek", all.filter((x) => x.st !== "ok" && !clrIsDone(x)).length], ["done", "Ditandai selesai", all.filter(clrIsDone).length], ["ok", "Cocok", n("ok")], ["belum", "Belum dihitung", n("belum")]]);
-        { // ringkasan singkat (bukan rekap lengkap): berapa voucher dari laporan yang cocok
-          const tot = all.length, ok = n("ok"), pct = tot ? Math.round((ok / tot) * 1000) / 10 : 0, bad = tot - ok;
-          $("clrRekap").innerHTML = tot
-            ? `<div class="panel clr-sum ${bad ? "bad" : "ok"}"><div class="ring" style="--p:${pct}"><b>${String(pct).replace(".", ",")}%</b></div><div><h3>${bad ? fmt(ok) + " dari " + fmt(tot) + " voucher cocok" : "✅ Semua voucher cocok"}</h3><p class="fine">${bad ? fmt(bad) + " voucher perlu dicek (selisih qty atau belum dihitung)." : "Voucher dan qty sesuai hasil counting."}</p></div></div>`
+        { // ringkasan: donat status + progres per shift
+          const segs = [["Cocok", nOk, "#2e9e68"], ["Selisih / dobel", nBad, "#d64545"], ["Belum dihitung", nBel, "#f5a623"]], C = 2 * Math.PI * 40;
+          let off = 0;
+          const arcs = segs.map(([, v, c]) => {
+            if (!v || !nTot) return "";
+            const len = (v / nTot) * C, r = `<circle cx="50" cy="50" r="40" fill="none" stroke="${c}" stroke-width="14" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-off}" transform="rotate(-90 50 50)"/>`;
+            off += len;
+            return r;
+          }).join("");
+          const pct = nTot ? Math.round((nOk / nTot) * 100) : 0, shl = [...new Set(all.map((x) => x.shift).filter(Boolean))].sort();
+          $("clrRekap").innerHTML = nTot
+            ? `<section class="dcard"><div class="dtop"><h3>Status Clearing</h3><span class="fine">${fmt(nTot)} voucher</span></div><div class="dnut"><svg viewBox="0 0 100 100" role="img" aria-label="${pct}% cocok">${arcs || '<circle cx="50" cy="50" r="40" fill="none" stroke="#e6edf3" stroke-width="14"/>'}<text x="50" y="52" text-anchor="middle" class="dv">${pct}%</text><text x="50" y="64" text-anchor="middle" class="ds">Cocok</text></svg><div class="dnl">${segs.map(([lb, v, c]) => `<div><i style="background:${c}"></i><span>${lb}</span><b>${fmt(v)}</b><span class="p">${Math.round((v / nTot) * 100)}%</span></div>`).join("")}</div></div>${shl.length ? '<div class="shl">' + shl.map((h) => { const t = all.filter((x) => x.shift === h), k = t.filter((x) => x.st === "ok").length, pp = Math.round((k / t.length) * 100); return `<div class="shr"><span>${esc(h)}</span><div class="pbar"><i style="width:${pp}%"></i></div><b>${k}/${t.length}</b></div>`; }).join("") + "</div>" : ""}</section>`
             : "";
         }
         const shs = [...new Set(all.map((x) => x.shift).filter(Boolean))].sort();
@@ -290,7 +303,7 @@
         e.target.value = "";
       };
       $("clrSave").onclick = () => {
-        clr = { url: $("clrUrl").value.trim(), start: Math.max(1, Number($("clrStart").value) || 2), cv: $("clrCV").value.trim(), cq: $("clrCQ").value.trim(), ck: $("clrCK").value.trim(), sh1: Number($("clrSh1").value) || 0, sh2: Number($("clrSh2").value) || 15, sh3: Number($("clrSh3").value) || 23 };
+        clr = { url: $("clrUrl").value.trim(), start: Math.max(1, Number($("clrStart").value) || 2), cv: $("clrCV").value.trim(), cq: $("clrCQ").value.trim(), ck: $("clrCK").value.trim(), auto: Number($("clrAutoSel").value) || 0 };
         sv(K_CLR, clr);
         toast("Pengaturan clearing tersimpan");
         clrFetch(true);
@@ -366,7 +379,19 @@
         });
         return "\n*Per shift*\n```\nSHIFT    TOTAL  COCOK  CEK\n" + r.join("\n") + "\n```\n";
       }
-      let clrAT = 0;
+      let clrAT = 0, clrTimer = 0;
+      function clrEnter() {
+        clearInterval(clrTimer);
+        clrTimer = 0;
+        if (clr.auto && clr.url)
+          clrTimer = setInterval(() => {
+            if (!document.hidden && clrCnt && clrCnt.src !== "file") clrFetch(false);
+          }, clr.auto * 60000);
+      }
+      function clrLeave() {
+        clearInterval(clrTimer);
+        clrTimer = 0;
+      }
       function clrAuto() {
         if (!clrRep || !clrCnt) return;
         const all = clrBuild();

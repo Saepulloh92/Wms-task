@@ -60,8 +60,6 @@
 
       .kv.k3 { grid-template-columns: repeat(3, 1fr); }
       .kv.k3 dd small { display: block; font-size: 12px; font-weight: 600; color: var(--muted); }
-      .shsw { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-      .shsw input { width: 100%; min-width: 0; }
       #clrShChips { margin-top: 6px; }
 
       /* ---- v24: PIN dimatikan + ringan di HP ---- */

@@ -18,7 +18,7 @@ Cari fitur di sini, buka **hanya satu file**. Semua chunk `NN-*.js` dijalankan b
 | `65-kpi.js` | 11 | KPI Area | – | – |
 | `70-dc.js` | 466 | DC Harian + pilih item DC | dcItems, dcSt, renderDc, dcAddRow, dcUpd, dcOpen, dcHide, dcClose, dcSave, dcAdj … | warehouse_dc_pick_v1<br>warehouse_dc_v1 |
 | `75-nav-dialog.js` | 48 | Dialog atur navigasi bawah | navRender, navOpen | – |
-| `80-clearing.js` | 415 | Clearing (Voucher vs counting) | clrAct, clrIdx, clrShiftOf, clrParseRep, clrParseCnt, clrBuild, renderClr, clrFetch, clrReadFile, clrRekap … | warehouse_so_clr_cnt_v1<br>warehouse_so_clr_done_v1<br>warehouse_so_clr_hist_v1<br>warehouse_so_clr_rep_v1<br>warehouse_so_clr_v1 |
+| `80-clearing.js` | 488 | Clearing (Voucher vs counting) | clrAct, clrIdx, clrShiftOf, clrParseRep, clrParseCnt, clrBuild, renderClr, clrFetch, clrReadFile, clrRekap … | warehouse_so_clr_cnt_v1<br>warehouse_so_clr_done_v1<br>warehouse_so_clr_hist_v1<br>warehouse_so_clr_rep_v1<br>warehouse_so_clr_v1 |
 | `85-a11y-bin-nav.js` | 174 | Aksesibilitas + navigasi bin + input | navTo, holdStep | – |
 | `88-backup.js` | 175 | Cadangan & peringatan penyimpanan | stCheck, guardUi, doBackup, bkCheck, applyRestore | warehouse_so_dest_v1 |
 | `90-telegram.js` | 252 | Telegram | outText, tgRun, tgChunks, tgSend, tgApi, tgPost, tgNote, tgFlush, tgBin, tgArea … | warehouse_so_tg_v1<br>warehouse_so_tgq_v1 |

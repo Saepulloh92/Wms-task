@@ -17,3 +17,10 @@ input[type="file"]::file-selector-button { margin-right: 12px; padding: 10px 16p
 .clr-sum .ring { flex: none; width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(closest-side, var(--card, #fff) 74%, transparent 76%), conic-gradient(var(--rc, #16a34a) calc(var(--p) * 1%), rgba(128, 128, 128, .22) 0); }
 .clr-sum.bad .ring { --rc: #d97706; }
 .clr-sum .ring b { font-size: 15px; }
+
+/* Clearing: tampilan monitoring */
+.kc.bad .ki { background: #d64545; }
+.shl { display: grid; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line, #e2e8f0); }
+.shr { display: grid; grid-template-columns: 70px 1fr 64px; gap: 10px; align-items: center; font-size: 14px; }
+.shr .pbar { margin: 0; }
+.shr b { text-align: right; }

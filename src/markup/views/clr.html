@@ -1,5 +1,7 @@
-          <h2>Clearing</h2>
-          <p class="hint">Cocokkan voucher dan qty laporan dengan hasil counting.</p>
+          <div class="dh">
+            <div><h2>Clearing</h2><p class="hint">Cocokkan voucher dan qty laporan dengan hasil counting.</p></div>
+            <span class="sync" id="clrAt" role="status"></span>
+          </div>
           <details class="hint-more"><summary>Cara kerja</summary><p class="fine">Hanya voucher dari laporan yang Anda impor yang dicocokkan; baris counting lain diabaikan. Jika satu voucher punya beberapa foto, dipakai counting terbaru. Counting dalam ikatan dibaca otomatis (qty × 25 sama dengan qty laporan dianggap cocok). SMS diambil dari 8 angka depan kode item hasil counting.</p></details>
           <div class="panel">
             <label for="clrRepFile"><span class="stepno">1</span>Laporan Voucher (.xlsx / .csv)</label>
@@ -11,7 +13,7 @@
             <div class="ximp"><label for="clrCntFile">Atau muat counting dari file</label>
             <input id="clrCntFile" type="file" accept=".csv,.xls,.xlsx,text/csv" /></div>
           </div>
-          <div class="stats mt" id="clrStats"></div>
+          <div class="kcs mt" id="clrStats"></div>
           <div id="clrRekap"></div>
           <div class="panel mt">
             <div class="chips" id="clrChips"></div>
@@ -44,9 +46,9 @@
               <input id="clrCQ" placeholder="Contoh: Qty" autocomplete="off" />
               <label for="clrCK">Kolom Kode Item (sumber SMS, 8 angka depan)</label>
               <input id="clrCK" placeholder="Contoh: Kode Item" autocomplete="off" />
-              <label for="clrSh1">Jam mulai Shift 1 / 2 / 3 (jam 0-23)</label>
-              <div class="shsw"><input id="clrSh1" aria-label="Jam mulai Shift 1" type="number" min="0" max="23" inputmode="numeric" /><input id="clrSh2" aria-label="Jam mulai Shift 2" type="number" min="0" max="23" inputmode="numeric" /><input id="clrSh3" aria-label="Jam mulai Shift 3" type="number" min="0" max="23" inputmode="numeric" /></div>
-              <p class="fine">Shift dibaca dari kolom Shift di laporan voucher; kalau tidak ada, dihitung dari jam foto counting. Kolom No Lori dibaca dari kolom berjudul lori / nopol / plat.</p>
+              <p class="fine">Shift dibaca dari kolom Shift di laporan voucher; kalau tidak ada, dihitung dari jam foto counting (Shift 1 mulai 07.00, Shift 2 15.00, Shift 3 23.00). Kolom No Lori dibaca dari kolom berjudul lori / nopol / plat.</p>
+              <label for="clrAutoSel">Muat ulang counting otomatis</label>
+              <select id="clrAutoSel"><option value="0">Mati</option><option value="1">tiap 1 menit</option><option value="2">tiap 2 menit</option><option value="5">tiap 5 menit</option><option value="10">tiap 10 menit</option></select>
               <button class="btn pri mt-lg" id="clrSave" type="button">Simpan &amp; muat counting</button>
             </div>
           </details>
