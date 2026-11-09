@@ -67,7 +67,8 @@ var K = {
   dc: 'warehouse_dc_v1',
   dcPick: 'warehouse_dc_pick_v1',
   dest: 'warehouse_so_dest_v1',
-  areacfg: 'warehouse_so_areacfg_v1',   // daftar area yang diatur admin: { list: ["A1", ...] }
+  areacfg: 'warehouse_so_areacfg_v1',
+  linkcfg: 'warehouse_so_linkcfg_v1',   // tautan sumber data bersama: { data: { dlv, clr }, at }   // daftar area yang diatur admin: { list: ["A1", ...] }
   tasks: 'warehouse_so_tasks_v1',
   aging: 'warehouse_so_aging_v1',          // cek fisik aging per rak: { bin: { tumpak, pipa, qty, by, at } }
   agcls: 'warehouse_so_agcls_v1',          // kelas pipa per kode item: { kode: { c, at } }

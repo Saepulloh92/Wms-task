@@ -81,7 +81,7 @@
         $("errBk").hidden = true;
         updUndo();
         $("shItem").innerHTML =
-          `<div class="code">Area ${esc(sel.area)} · Kode WMS ${esc(sel.kode)}</div><div class="itemname">${szHtml(sel.item)}</div>${cfg.blind ? `<div class="kv"><div style="grid-column:1/-1"><small>Mode hitung buta</small><strong>Qty WMS disembunyikan</strong></div></div>` : `<div class="kv"><div><small>Qty WMS</small><strong>${fmt(sel.onhand)}</strong></div><div><small>Free stock</small><strong>${fmt(sel.freeStock)}</strong></div></div>`}`;
+          `<div class="code">Area ${esc(sel.area)} · Kode WMS ${esc(sel.kode)}</div><div class="itemname">${szHtml(sel.item)}</div>${isBlindFor(sel.bin) ? `<div class="kv"><div style="grid-column:1/-1"><small>Mode hitung buta</small><strong>Qty WMS disembunyikan</strong></div></div>` : `<div class="kv"><div><small>Qty WMS</small><strong>${fmt(sel.onhand)}</strong></div><div><small>Free stock</small><strong>${fmt(sel.freeStock)}</strong></div></div>`}`;
         $("qty").value = c ? c.actualQty : "";
         $("note").value = c?.note || "";
         $("lines").innerHTML = "";
@@ -98,7 +98,7 @@
           (Array.isArray(dr.lines) ? dr.lines : []).forEach((x) => addLine(x.item, x.qty));
           if (match === false && !document.querySelector("#lines .al")) addLine();
         }
-        if (!cfg.blind) {
+        if (!isBlindFor(sel.bin)) {
           $("qSame").textContent = "Sama dengan WMS (" + fmt(sel.onhand) + ")";
           $("qSame").hidden = false;
         } else {
@@ -134,7 +134,7 @@
       function prev() {
         const v = $("qty").value;
         const el = $("prev");
-        if (cfg.blind || match === null || v === "") {
+        if (isBlindFor(sel.bin) || match === null || v === "") {
           el.innerHTML = "";
           return;
         }
@@ -176,7 +176,7 @@
             saveBusy = true;
             const okk = await ask(
               "Selisih besar, sudah benar?",
-              cfg.blind
+              isBlindFor(sel.bin)
                 ? "Hasil hitung jauh berbeda dari data WMS. Hitung ulang dulu jika ragu."
                 : "WMS " + fmt(sel.onhand) + ", Anda isi " + fmt(Number(v)) + " (selisih " + (dd > 0 ? "+" : "") + fmt(dd) + "). Salah ketik satu digit sering terjadi.",
               "Ya, simpan",

@@ -4,6 +4,7 @@
 import { useSyncExternalStore } from "react";
 import * as format from "../lib/format.js";
 import { kpiOf } from "../lib/kpi.js";
+import { checklist, normSignal } from "../lib/aging.js";
 
 const listeners = new Set();
 let version = 0;
@@ -19,7 +20,7 @@ export const WMS = (window.WMS = {
   },
   getVersion: () => version,
 });
-window.WMSLib = { ...format, kpiOf };
+window.WMSLib = { ...format, kpiOf, agingChecklist: checklist, normSignal };
 
 /** Hook: komponen React re-render tiap legacy memanggil WMS.emit() (ganti view, sinkron selesai, dll). */
 export function useWms() {

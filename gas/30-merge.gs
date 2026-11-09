@@ -64,12 +64,18 @@ function merge_(server, client, del, replace) {
   });
 
   // map sederhana: gabungkan, nilai klien menang
-  ['codefix', 'dcPick', 'dest', 'areacfg', 'agingcfg'].forEach(function (name) {
+  ['codefix', 'dcPick', 'dest', 'areacfg', 'agingcfg', 'linkcfg'].forEach(function (name) {
     var key = K[name];
     var sv = isObj_(server[key]) ? server[key] : {};
     var c = isObj_(client[key]) ? client[key] : {};
     out[key] = rep[name] ? c : Object.assign({}, sv, c);
   });
+  // tautan bersama: versi dengan cap waktu (at) paling baru yang menang, bukan sekadar "klien menang"
+  (function () {
+    var k = K.linkcfg, s = isObj_(server[k]) ? server[k] : {}, c = isObj_(client[k]) ? client[k] : {};
+    var cNew = c.data && String(c.at || '') >= String(s.at || '');
+    out[k] = cNew ? c : (s.data ? s : c);
+  })();
 
   return out;
 }

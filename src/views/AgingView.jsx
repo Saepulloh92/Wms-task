@@ -21,6 +21,10 @@ export default function AgingView() {
   const cls = useMemo(() => Object.fromEntries(Object.entries(clsRec).map(([k, v]) => [k, v && v.c])), [clsRec]);
   const pic = { ...DEFAULT_PIC, ...(cfg.pic || {}) };
   const active = wms.view === "agi" && !!wms.DATA;
+  const tk = wms.tasks || EMPTY, me = wms.curU || "";
+  const taskBins = new Set(Object.keys(tk).filter((k) => k.startsWith("AG|") && (!me || tk[k].u === me)).map((k) => k.slice(3)));
+  // dari halaman Tugas: buka langsung daftar tugas aging (semua area)
+  if (active && wms.agiFocus) { wms.agiFocus = false; setTimeout(() => { setArea(""); setFlt("task"); }, 0); }
   const A = active ? wms.areas() : [];
   const cur = A.includes(area) ? area : "";
   const rows = useMemo(() => (active ? wms.DATA.filter((x) => !cur || x.area === cur) : []), [active, wms.DATA, cur]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -34,13 +38,15 @@ export default function AgingView() {
       item: buildPool([...D.map((x) => ({ v: x.item, area: x.area })), ...hist.map((h) => ({ v: h.r && h.r.pipa, area: h.area }))]),
     };
   }, [active, wms.DATA, act]); // eslint-disable-line react-hooks/exhaustive-deps
-  const list = useMemo(() => checklist(rows, mode, "prioritas", cls), [rows, mode, cls]); // kelas A dulu, lalu B, C
+  const list = useMemo(() => checklist(rows, flt === "task" ? "all" : mode, "prioritas", cls), [rows, mode, cls, flt]); // kelas A dulu, lalu B, C
   if (!active) return <section id="v-agi" hidden />;
 
   const done = list.filter((x) => act[x.bin]).length;
+  const doneAt = (bin) => !!act[bin] && String(act[bin].at || "") >= String(tk["AG|" + bin]?.at || "");
+  const taskOpen = checklist(rows, "all").filter((x) => taskBins.has(x.bin) && !doneAt(x.bin)).length;
   const isRed = (x) => normSignal(x.sinyal) === "Merah";
   const merahTodo = list.filter((x) => isRed(x) && !act[x.bin]).length;
-  const shown = list.filter((x) => (flt === "todo" ? !act[x.bin] : flt === "done" ? !!act[x.bin] : true) && (!red || isRed(x)));
+  const shown = list.filter((x) => (flt === "task" ? taskBins.has(x.bin) : flt === "todo" ? !act[x.bin] : flt === "done" ? !!act[x.bin] : true) && (!red || isRed(x)));
   // dalam tiap kelas: yang belum dicek di atas, yang sudah dicek turun ke bawah (urutan prioritas tetap)
   const groups = groupByClass(shown.slice(0, 200), cls).map((g) => ({ ...g, items: [...g.items.filter((x) => !act[x.bin]), ...g.items.filter((x) => act[x.bin])] }));
   const pickArea = (v) => { setArea(v); save(K_AREA, v); };
@@ -105,7 +111,7 @@ export default function AgingView() {
           </div>
           <p className="agi-fl">Status cek</p>
           <div className="chips agi-chips agi-chips3" role="group" aria-label="Status cek rak">
-            {[["all", "Semua", list.length], ["todo", "Belum", list.length - done], ["done", "Sudah", done]].map(([v, l, n]) => <button key={v} className={"chip" + (flt === v ? " on" : "")} aria-pressed={flt === v} onClick={() => setFlt(v)}>{l} <b>{n}</b></button>)}
+            {[...(taskBins.size ? [["task", me ? "Tugas saya" : "Tugas", taskOpen]] : []), ["all", "Semua", list.length], ["todo", "Belum", list.length - done], ["done", "Sudah", done]].map(([v, l, n]) => <button key={v} className={"chip" + (flt === v ? " on" : "")} aria-pressed={flt === v} onClick={() => setFlt(v)}>{l} <b>{n}</b></button>)}
           </div>
           </details>
           {shown.length === 0 && <div className="empty">Tidak ada rak pada filter ini.</div>}
@@ -116,7 +122,7 @@ export default function AgingView() {
                 <span>{g.items.length} rak{g.merah ? " · " + g.merah + " merah" : ""}</span>
               </div>
               {g.items.map((x) => (
-                <RakCard key={x.bin} x={x} a={act[x.bin]} pools={pools} kelas={cls[x.kode] || ""} onClass={setClass} onSave={saveAct} onClear={clearAct} />
+                <RakCard key={x.bin} x={x} a={act[x.bin]} tugas={taskBins.has(x.bin)} blind={!!me && !!wms.blindFor && wms.blindFor(x.bin)} pools={pools} kelas={cls[x.kode] || ""} onClass={setClass} onSave={saveAct} onClear={clearAct} />
               ))}
             </div>
           ))}
@@ -188,7 +194,7 @@ function advance(d) {
   if (nx) { nx.open = true; setTimeout(() => nx.scrollIntoView({ block: "start", behavior: "smooth" }), 60); }
 }
 
-function RakCard({ x, a, pools, kelas, onClass, onSave, onClear }) {
+function RakCard({ x, a, pools, kelas, onClass, onSave, onClear, tugas, blind }) {
   const [f, setF] = useState({ tumpak: a?.sesuai ? "" : a?.tumpak || "", pipa: a?.sesuai ? "" : a?.pipa || "", qty: a?.qty ?? "" });
   const sig = normSignal(x.sinyal);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
@@ -199,18 +205,18 @@ function RakCard({ x, a, pools, kelas, onClass, onSave, onClear }) {
     <details className={"card agi-rak" + (a ? " done" : "") + (sig === "Merah" ? " red" : "")}>
       <summary>
         <span className="agi-sg" style={{ background: SIGNAL_COLOR[sig] || "#ccc", color: sig === "Kuning 3" || sig === "Hijau 2" || sig === "Merah" ? "#fff" : "#222" }}>{sig || "?"}</span>
-        <span className="agi-bn"><b>{x.bin}<i className={lvl(kelas)}>{kelas || "?"}</i></b><span className="agi-it">{x.item}</span><small>Tumpak <strong>{x.tumpak || "–"}</strong> · {x.aging} hari · stok {fmt(x.onhand)}{a ? " · cek " + fmt(a.qty ?? 0) + (a.sesuai ? " (sesuai)" : "") : ""}</small></span>
+        <span className="agi-bn"><b>{x.bin}<i className={lvl(kelas)}>{kelas || "?"}</i></b><span className="agi-it">{x.item}</span><small>{tugas ? "TUGAS · " : ""}Tumpak <strong>{x.tumpak || "–"}</strong> · {x.aging} hari{blind ? "" : " · stok " + fmt(x.onhand)}{a ? " · cek " + fmt(a.qty ?? 0) + (a.sesuai ? " (sesuai)" : "") : ""}</small></span>
         <span className={"agi-ck" + (a ? " on" : "")} aria-label={a ? "Sudah dicek" : "Belum dicek"}>{a ? "✓" : ""}</span>
       </summary>
       <div className="agi-form">
-        <div className="agi-sys">Data sistem: tumpak <b>{x.tumpak || "–"}</b> · item <b>{x.item}</b> · qty <b>{fmt(x.onhand)}</b></div>
-        <button type="button" className="btn pri agi-all" onClick={(e) => save(e, { tumpak: "Sesuai", pipa: "Sesuai", qty: String(x.onhand), sesuai: true })}>✓ Semua sama dengan sistem</button>
+        <div className="agi-sys">Data sistem: tumpak <b>{x.tumpak || "–"}</b> · item <b>{x.item}</b>{blind ? null : <> · qty <b>{fmt(x.onhand)}</b></>}</div>
+        {!blind && <button type="button" className="btn pri agi-all" onClick={(e) => save(e, { tumpak: "Sesuai", pipa: "Sesuai", qty: String(x.onhand), sesuai: true })}>✓ Semua sama dengan sistem</button>}
         <p className="agi-or">Kalau ada yang beda, isi di sini:</p>
         <label>No. tumpak aktual<input value={f.tumpak} onChange={set("tumpak")} placeholder={x.tumpak || "AK140"} autoCapitalize="characters" autoComplete="off" autoCorrect="off" spellCheck={false} enterKeyHint="next" /></label>
         {opts("Pilihan tumpak", sT, "tumpak")}
         <label>Item aktual<input value={f.pipa} onChange={set("pipa")} placeholder="Ketik atau pilih item" autoComplete="off" autoCorrect="off" spellCheck={false} enterKeyHint="next" /></label>
         {opts("Pilihan item", sI, "pipa")}
-        <label>Qty aktual<input inputMode="numeric" enterKeyHint="done" autoComplete="off" value={f.qty} onChange={(e) => setF({ ...f, qty: e.target.value.replace(/[^\d]/g, "") })} placeholder={String(x.onhand)} /></label>
+        <label>Qty aktual<input inputMode="numeric" enterKeyHint="done" autoComplete="off" value={f.qty} onChange={(e) => setF({ ...f, qty: e.target.value.replace(/[^\d]/g, "") })} placeholder={blind ? "0" : String(x.onhand)} /></label>
         <div className="row-act">
           <button className="btn pri" disabled={!(f.tumpak || f.pipa || f.qty !== "")} onClick={(e) => save(e, { tumpak: f.tumpak, pipa: f.pipa, qty: f.qty })}>Simpan cek</button>
           {a && <button className="btn sec inl" onClick={() => { onClear(x.bin); setF({ tumpak: "", pipa: "", qty: "" }); }}>Hapus</button>}

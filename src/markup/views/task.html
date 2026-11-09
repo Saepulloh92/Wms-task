@@ -1,6 +1,18 @@
             <h2>Tugas Bin</h2>
             <p class="hint">Daftar bin tugas yang ditunjuk ke petugas. Selesai otomatis saat bin disimpan.</p>
             <div class="stats" id="tkStats"></div>
+            <div class="panel" id="tkDlg" hidden>
+              <h3>Delegasikan tugas</h3>
+              <label for="dgKind">Jenis tugas</label>
+              <select id="dgKind"><option value="bin">Periksa bin (stock opname)</option><option value="AG">Aging per rak</option><option value="DC">DC per item</option></select>
+              <div id="dgAreaW"><label for="dgArea">Area</label><select id="dgArea"></select></div>
+              <div id="dgSigW"><label for="dgSig">Rak yang ditugaskan</label><select id="dgSig"><option value="watch">Kuning &amp; Merah</option><option value="merah">Merah saja</option><option value="all">Semua rak isi</option></select></div>
+              <div id="dgScopeW"><label for="dgScope">Cakupan</label><select id="dgScope"><option value="todo">Hanya yang belum dicek</option><option value="all">Semua (cek ulang)</option></select></div>
+              <label for="dgUser">Petugas</label><select id="dgUser"></select>
+              <div id="dgShowW"><label for="dgShow">Qty sistem untuk petugas</label><select id="dgShow"><option value="">Ikut pengaturan petugas / umum</option><option value="buta">Sembunyikan (hitung buta)</option><option value="tampil">Tampilkan</option></select></div>
+              <p class="fine" id="dgInfo" role="status"></p>
+              <button class="btn pri" id="dgGo" type="button">Buat tugas</button>
+            </div>
             <div class="panel ximp">
               <h3 id="tkWho">Upload tugas</h3>
               <label class="btn pri fl" for="tkFile" id="tkLbl">Pilih file daftar bin</label
@@ -12,5 +24,7 @@
             <button class="btn pri" id="tkGo" hidden>Kerjakan tugas saya</button>
             <h3 class="sec">Per petugas</h3>
             <div id="tkUsers"></div>
+            <h3 class="sec">Tugas Aging &amp; DC</h3>
+            <div id="tkKinds"></div>
             <div id="tkUn"></div>
             <button class="btn dng sm mt-lg" id="tkClear">Hapus tugas</button>

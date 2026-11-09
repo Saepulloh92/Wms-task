@@ -87,6 +87,14 @@
         return !curU || t.u === curU;
       };
       const tkMine = () => DATA.filter((x) => tasks[x.bin] && (!curU || tasks[x.bin].u === curU));
+      /* Tampilan qty sistem untuk petugas: ditentukan admin, bersyarat. Urutan: aturan per tugas > aturan per user > pengaturan umum (cfg.blind) */
+      const isBlindFor = (bin) => {
+        const t = bin ? tasks[bin] : null;
+        if (t && typeof t.show === "boolean") return !t.show;
+        const u = typeof curUser === "function" ? curUser() : null;
+        if (u && (u.view === "buta" || u.view === "tampil")) return u.view === "buta";
+        return !!cfg.blind;
+      };
       /* Hash password (field user.pin) dan kunci percobaan masuk */
       let supUntil = 0, pinFails = 0, pinLock = 0;
       /* Format baru "p1$iterasi$salt$hash" (PBKDF2-SHA256, salt acak per user). Hash ini ikut sinkron antar perangkat,

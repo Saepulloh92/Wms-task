@@ -2,7 +2,7 @@
    asal: index-fixd.html baris 6605-6811 */
       /* ---------- tugas bin ---------- */
       function taskBadges() {
-        const n = DATA.filter(isTaskPend).length;
+        const n = DATA.filter(isTaskPend).length + (typeof tkPendOther === "function" ? tkPendOther() : 0);
         ["dTask", "tTask"].forEach((i) => {
           $(i).hidden = !n;
           $(i).textContent = n;
@@ -67,8 +67,11 @@
         $("tkUn").innerHTML = un.length
           ? `<div class="note">${un.length} tugas belum punya petugas (area belum ada pemiliknya).<button class="btn pri sm" data-tk="auto">Bagikan sesuai area</button></div>`
           : "";
+        if (!Object.keys(tasks).length) $("tkRes").innerHTML = '<div class="empty">Belum ada tugas. Pilih file daftar bin di atas (kolom Bin atau Rak). Belum punya file? Unduh contoh file dulu.</div>';
+        else if ($("tkRes").querySelector(".empty")) $("tkRes").innerHTML = "";
         $("tkClear").textContent = me ? "Hapus tugas saya" : "Hapus semua tugas";
-        $("tkClear").disabled = !mine.length;
+        $("tkClear").disabled = !mine.length && !(typeof tkPendOther === "function" && Object.keys(tasks).length);
+        if (typeof renderTkKinds === "function") renderTkKinds();
       }
       async function tkIngest(rows) {
         const hi = rows.findIndex((r) => r.some((c) => ["bin", "rak"].includes(nrm(c))));
@@ -197,10 +200,11 @@
       $("tkClear").onclick = async () => {
         const me = curUser();
         if (!me && !(await leadAuth())) return;
-        const mine = tkMine();
-        if (!mine.length) return;
-        if (!(await ask(me ? "Hapus tugas saya?" : "Hapus semua tugas?", mine.length + " tugas dihapus. Hasil pemeriksaan tidak ikut terhapus.", "Hapus", true))) return;
+        const mine = tkMine(), oth = Object.keys(tasks).filter((k) => /^(AG|DC)\|/.test(k) && (!me || tasks[k].u === me.id));
+        if (!mine.length && !oth.length) return;
+        if (!(await ask(me ? "Hapus tugas saya?" : "Hapus semua tugas?", mine.length + oth.length + " tugas dihapus (bin, aging, DC). Hasil pemeriksaan tidak ikut terhapus.", "Hapus", true))) return;
         mine.forEach((x) => delete tasks[x.bin]);
+        oth.forEach((k) => delete tasks[k]);
         sv(K_T, tasks);
         renderTask();
         renderBins();

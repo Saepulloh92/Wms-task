@@ -149,7 +149,7 @@
         return { I, A, B, C };
       }
       function kTable(rows) {
-        return `<div class="mtw"><table class="mtb"><thead><tr><th>Bin</th><th>Stok</th><th>Masalah</th><th>Item / keterangan</th></tr></thead><tbody>${rows
+        return `<div class="mtw"><table class="mtb kt"><thead><tr><th>Bin</th><th>Stok</th><th>Masalah</th><th>Item / keterangan</th></tr></thead><tbody>${rows
           .map((i) => `<tr><td class="id">${esc(i.s.bin)}</td><td>${fmt(i.s.onhand)}</td><td class="tx"><span class="pill ${i.lv === "bad" ? "red" : i.lv === "warn" ? "amber" : ""}">${esc(KN[i.t] || i.t)}</span></td><td class="tx">${i.s.item ? szHtml(i.s.item) + "<br>" : ""}<span class="fine">${esc(i.m)}</span></td></tr>`)
           .join("")}</tbody></table></div>`;
       }

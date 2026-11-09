@@ -309,6 +309,7 @@
       $("clrSave").onclick = () => {
         clr = { url: $("clrUrl").value.trim(), start: Math.max(1, Number($("clrStart").value) || 2), cv: $("clrCV").value.trim(), cq: $("clrCQ").value.trim(), ck: $("clrCK").value.trim(), auto: Number($("clrAutoSel").value) || 0 };
         sv(K_CLR, clr);
+        linkSnap(); // tautan baru dibagikan ke HP lain lewat sinkron
         toast("Pengaturan clearing tersimpan");
         clrFetch(true);
       };

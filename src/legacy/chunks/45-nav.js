@@ -158,7 +158,7 @@
       $("yes").onclick = () => {
         match = true;
         $("lines").innerHTML = "";
-        if (!cfg.blind && $("qty").value === "") $("qty").value = sel.onhand;
+        if (!isBlindFor(sel.bin) && $("qty").value === "") $("qty").value = sel.onhand;
         choice();
         prev();
       };
@@ -171,7 +171,7 @@
       $("addL").onclick = () => addLine();
       $("qty").oninput = prev;
       $("qSame").onclick = () => {
-        if (cfg.blind) return;
+        if (isBlindFor(sel.bin)) return;
         $("qty").value = sel.onhand;
         prev();
       };

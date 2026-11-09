@@ -1,7 +1,8 @@
 /* Penyempurnaan UI/UX lanjutan: chip rata, field tidak terpotong, target sentuh, keadaan kosong */
-.chips.wrap, #chips, #chipsR { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; overflow: visible; }
-@media (min-width: 560px) { .chips.wrap, #chips, #chipsR { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); } }
-.chips .chip { flex: initial; width: 100%; justify-content: center; text-align: center; white-space: normal; line-height: 1.2; }
+.chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; overflow: visible; }
+.chips:has(> :nth-child(3):last-child), .chips:has(> :nth-child(5)) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (min-width: 560px) { .chips, .chips:has(> :nth-child(3):last-child), .chips:has(> :nth-child(5)) { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); } }
+.chips .chip { flex: initial; width: 100%; min-width: 0; justify-content: center; text-align: center; white-space: normal; overflow-wrap: anywhere; line-height: 1.2; }
 select { padding-right: 26px; }
 input::placeholder, textarea::placeholder { text-overflow: ellipsis; }
 #search { min-width: 0; }
@@ -21,3 +22,24 @@ input[type="password"], input[type="text"], input[type="url"], input[type="searc
 .card .big { overflow-wrap: anywhere; }
 #monPer, #monUnit { min-height: 44px; }
 img, svg, canvas, table { max-width: 100%; }
+/* Tabel Cek Kesesuaian: di HP jadi kartu per rak (tanpa geser samping) */
+@media (max-width: 600px) {
+  table.kt thead { display: none; }
+  table.kt, table.kt tbody, table.kt tr, table.kt td { display: block; width: 100%; }
+  table.kt tr { padding: 10px 12px; border-bottom: 1px solid var(--line, #e2e8f0); }
+  table.kt td, table.kt td:first-child { position: static; border: 0; padding: 2px 0; text-align: left; white-space: normal; min-width: 0; background: none; }
+  table.kt td:first-child { font-size: 17px; display: inline-block; width: auto; margin-right: 10px; }
+  table.kt td:nth-child(2) { display: inline-block; width: auto; color: var(--muted, #6b7a89); }
+  table.kt td:nth-child(2)::before { content: "Stok "; }
+  table.kt td:nth-child(3) { margin-top: 4px; }
+}
+/* Kotak angka KPI: 2 kolom rata di HP */
+.kv { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; background: none; border: 0; }
+.kv > div { min-width: 0; border: 1px solid var(--line, #e2e8f0); border-radius: 10px; padding: 10px 12px; }
+.kv small { display: block; }
+/* Pratinjau laporan: teks panjang turun baris, tidak terpotong */
+pre.rep { white-space: pre-wrap; overflow-wrap: anywhere; overflow-x: hidden; }
+/* Tugas Bin: panel upload dan contoh file harus terlihat (satu-satunya cara membuat tugas) */
+#v-task .panel.ximp, #v-task #tkTpl { display: block !important; }
+#v-task #tkTpl { width: 100%; }
+#v-task .fine { margin: 8px 0 0; line-height: 1.5; }

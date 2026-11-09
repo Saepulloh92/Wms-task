@@ -18,6 +18,7 @@ page.on("pageerror", (e) => errors.push(e.message));
 // hanya master yang diisi di awal; user dibuat lewat form (seperti pemakaian nyata)
 await page.addInitScript((master) => {
   if (!localStorage.getItem("warehouse_so_master_v2")) localStorage.setItem("warehouse_so_master_v2", JSON.stringify(master));
+  localStorage.setItem("warehouse_so_lgsetup_v1", "1"); // dialog "Aktifkan login" sudah dilihat
 }, FX("master.json"));
 await page.goto(url);
 await page.waitForFunction(() => document.getElementById("pgT")?.textContent.trim());
@@ -70,7 +71,7 @@ await saveUser({ name: "Budi", role: "petugas", pin: "budi-rahasia", areas: ["B1
 await saveUser({ name: "Tari", role: "penerimaan", pin: "tari-rahasia", areas: ["B1"] });
 await saveUser({ name: "Dodi", role: "petugas", pin: "", areas: ["B1"] });
 ok(/Password wajib/i.test(await toast()), "petugas tanpa password ditolak");
-const roles = await page.$$eval("#usrList .pill", (p) => p.map((x) => x.textContent.trim()));
+const roles = await page.$$eval("#usrList .uid small", (p) => p.map((x) => x.textContent.trim()));
 ok(["Admin", "SPV", "Petugas", "Penerimaan"].every((r) => roles.includes(r)), "daftar user menampilkan 4 peran: " + [...new Set(roles)].join(", "));
 ok(!roles.includes("Tanpa PIN"), "tidak ada teks PIN yang tersisa");
 

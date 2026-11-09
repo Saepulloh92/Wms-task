@@ -72,6 +72,7 @@ async function device(server, { users, sync = true } = {}) {
   p.on("pageerror", (e) => errors.push(e.message));
   await p.addInitScript(({ master, users, sync, SYNC }) => {
     if (localStorage.getItem("warehouse_so_master_v2") == null) localStorage.setItem("warehouse_so_master_v2", JSON.stringify(master));
+    localStorage.setItem("warehouse_so_lgsetup_v1", "1"); // dialog "Aktifkan login" sudah dilihat
     if (users && localStorage.getItem("warehouse_so_users_v1") == null) localStorage.setItem("warehouse_so_users_v1", JSON.stringify(users));
     if (sync && localStorage.getItem("warehouse_so_sync_v1") == null) localStorage.setItem("warehouse_so_sync_v1", JSON.stringify(SYNC));
   }, { master: FX("master.json"), users, sync, SYNC });
