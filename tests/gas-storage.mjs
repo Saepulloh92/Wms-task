@@ -83,4 +83,14 @@ T("master valid dari admin menggantikan", G("readState_")()[K.master].length ===
 delete store.STATE_LAYOUT;
 r = call({ action: "sync", data: {}, del: {}, replace: [] });
 T("tanpa tata letak: dibuat ulang tanpa kehilangan data", !!store.STATE_LAYOUT && G("readState_")()[K.master].length === 10 && Object.keys(G("readState_")()[K.counts]).length === 3999);
+// 8) sheet _STATE dikosongkan manual: data dipulihkan dari kiriman klien, tidak hilang diam-diam
+const full = G("readState_")();
+grid = [];
+r = call({ action: "sync", data: { [K.master]: full[K.master], [K.counts]: full[K.counts], [K.users]: full[K.users] }, del: {}, replace: ["master", "users"] });
+st = G("readState_")();
+T("sheet dikosongkan: master dipulihkan", r.ok && st[K.master] && st[K.master].length === 10);
+T("sheet dikosongkan: counts & users dipulihkan", Object.keys(st[K.counts]).length === 3999 && st[K.users].length === 1);
+// 9) user lama tanpa id tidak memblokir sinkron
+r = call({ action: "sync", data: { [K.users]: [{ name: "Lama", role: "petugas" }] }, del: {}, replace: ["users"] });
+T("user tanpa id tetap diterima", G("readState_")()[K.users][0].name === "Lama");
 console.log(`${ok} OK, ${bad} gagal`); process.exit(bad ? 1 : 0);

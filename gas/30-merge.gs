@@ -89,7 +89,7 @@ function clientPlainOk_(name, c, sv) {
     return Array.isArray(c) && c.length > 0 && c.every(function (x) { return isObj_(x) && x.bin; });
   }
   if (name === 'users') {
-    if (!Array.isArray(c) || c.some(function (u) { return !isObj_(u) || !u.id; })) return false;
+    if (!Array.isArray(c) || c.some(function (u) { return !isObj_(u); })) return false;
     return c.length > 0 || !Array.isArray(sv) || !sv.length;   // daftar kosong tidak boleh menghapus semua pengguna
   }
   return isObj_(c);

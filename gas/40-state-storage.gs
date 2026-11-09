@@ -87,10 +87,25 @@ function keyHashes_(state) {
   return h;
 }
 
+// true bila sheet _STATE masih sesuai tata letak (awal tiap blok berisi kuncinya). Bila admin mengosongkan/mengubah sheet
+// secara manual, tata letak tidak boleh dipercaya: semua kunci ditulis ulang dari data yang ada.
+function layoutIntact_(lay) {
+  if (!lay) return false;
+  var s = stateSheet_();
+  if (s.getLastRow() > lay.rows) return false;
+  var keys = Object.keys(lay.keys);
+  if (!keys.length) return true;
+  var col = s.getRange(1, 1, lay.rows, 1).getValues();
+  return keys.every(function (k) {
+    var e = lay.keys[k];
+    return e && col[e.r - 1] && String(col[e.r - 1][0]) === k;
+  });
+}
+
 // true bila isi sama persis dengan yang terakhir disimpan (tidak perlu menulis / menaikkan rev)
 function sameAsStored_(hashes) {
   var lay = readLayout_();
-  if (!lay) return false;
+  if (!lay || !layoutIntact_(lay)) return false;
   var ks = Object.keys(hashes);
   var stored = Object.keys(lay.keys).filter(function (k) { return CORRUPT_.indexOf(k) < 0; });
   if (ks.length !== stored.length) return false;
@@ -121,7 +136,7 @@ function writeState_(strs, hashes) {
   keys.forEach(function (k) { need[k] = Math.max(1, Math.ceil(strs[k].length / CHUNK)); });
 
   var lay = readLayout_();
-  var inPlace = !!lay && s.getLastRow() <= lay.rows;
+  var inPlace = !!lay && layoutIntact_(lay);
   if (inPlace) {
     keys.forEach(function (k) {
       var e = lay.keys[k];
