@@ -102,3 +102,29 @@ export function suggest(pool, q, { pin = "", area = "", limit = 10 } = {}) {
     .slice(0, limit)
     .map((r) => r.v);
 }
+
+const nrm = (s) => String(s == null ? "" : s).toUpperCase().replace(/\s+/g, "");
+/**
+ * Nilai AKTUAL satu rak Aging yang sudah dicek, sebagai satu-satunya sumber untuk tampilan, laporan, CSV, dan Sheets.
+ * x = baris master (tumpak, item, onhand); a = catatan cek ({tumpak, pipa, qty, sesuai}).
+ * "Semua sama dengan sistem" (a.sesuai) berarti tumpak & item aktual = nilai sistem, bukan teks "Sesuai".
+ * Rak dinilai sesuai bila qty sama DAN tumpak sama DAN item sama (tumpak/item yang tidak diisi atau tidak ada di sistem tidak dianggap beda).
+ */
+export function actualOf(x, a) {
+  if (!a) return null;
+  const sesuai = !!a.sesuai;
+  const tumpak = sesuai ? String(x.tumpak || "") : String(a.tumpak || "").trim();
+  const item = sesuai ? String(x.item || "") : String(a.pipa || "").trim();
+  const qty = a.qty === "" || a.qty == null ? null : Number(a.qty);
+  const sys = Number(x.onhand) || 0;
+  const diff = qty == null ? 0 : qty - sys;
+  const qtyOk = qty != null && diff === 0;
+  const tumpakOk = sesuai || !tumpak || !x.tumpak || nrm(tumpak) === nrm(x.tumpak);
+  const itemOk = sesuai || !item || nrm(item) === nrm(x.item);
+  const reasons = [];
+  if (qty == null) reasons.push("qty belum diisi");
+  else if (diff) reasons.push("qty " + (diff > 0 ? "+" : "") + diff);
+  if (!tumpakOk) reasons.push("tumpak beda");
+  if (!itemOk) reasons.push("item beda");
+  return { sesuai, tumpak, item, qty, sys, diff, qtyOk, tumpakOk, itemOk, ok: qtyOk && tumpakOk && itemOk, reasons };
+}

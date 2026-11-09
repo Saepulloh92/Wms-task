@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useWms } from "../legacy/bridge.js";
 import { fmt } from "../lib/format.js";
-import { SIGNALS, CLASSES, NO_CLASS, SIGNAL_COLOR, DEFAULT_PIC, normSignal, buildAging, checklist, groupByClass, buildPool, suggest, agingText } from "../lib/aging.js";
+import { SIGNALS, CLASSES, NO_CLASS, SIGNAL_COLOR, DEFAULT_PIC, normSignal, buildAging, checklist, groupByClass, buildPool, suggest, agingText, actualOf } from "../lib/aging.js";
 
 const K_AREA = "warehouse_so_aging_area_v1"; // pilihan area: preferensi per perangkat, tidak disinkron
 const EMPTY = {};
@@ -57,8 +57,8 @@ export default function AgingView() {
     );
   const csv = () => {
     const q = (v) => '"' + String(v ?? "").replace(/"/g, '""') + '"';
-    const head = ["Area", "Rak", "Sinyal", "Aging", "Nama Item", "Kelas Pipa", "Stok Sistem", "Actual Tumpak", "Actual Pipa", "Actual Qty"];
-    const body = list.map((x) => { const a = act[x.bin] || {}; return [x.area, x.bin, normSignal(x.sinyal), x.aging, x.item, cls[x.kode] || "", x.onhand, a.tumpak, a.pipa, a.qty].map(q).join(","); });
+    const head = ["Area", "Rak", "Sinyal", "Aging", "Nama Item", "Kelas Pipa", "Tumpak Sistem", "Stok Sistem", "Actual Tumpak", "Actual Pipa", "Actual Qty", "Selisih", "Status"];
+    const body = list.map((x) => { const t = actualOf(x, act[x.bin]); return [x.area, x.bin, normSignal(x.sinyal), x.aging, x.item, cls[x.kode] || "", x.tumpak || "", x.onhand, t ? t.tumpak : "", t ? t.item : "", t && t.qty != null ? t.qty : "", t && t.qty != null ? t.diff : "", t ? (t.ok ? "Sesuai" : "Selisih: " + t.reasons.join(", ")) : "Belum dicek"].map(q).join(","); });
     const url = URL.createObjectURL(new Blob(["\ufeff" + [head.map(q).join(","), ...body].join("\r\n")], { type: "text/csv" }));
     const a = Object.assign(document.createElement("a"), { href: url, download: `aging-stock-${cur || "semua"}-${new Date().toISOString().slice(0, 10)}.csv` });
     document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);

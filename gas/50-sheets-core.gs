@@ -288,15 +288,26 @@ function renderSheetsBody_(st, withMaster) {
   var ag = st[K.aging] || {}, agk = st[K.agcls] || {}, byBin = {};
   master.forEach(function (m) { byBin[m.bin] = m; });
   var kelasOf = function (kode) { var r = agk[kode]; return (r && r.c) || ''; };
+  var nrm_ = function (v) { return String(v == null ? '' : v).toUpperCase().replace(/\s+/g, ''); };
   writeTable_(SH.aging,
-    ['Area', 'Rak', 'Sinyal', 'Aging (hari)', 'Nama Item', 'Kelas Pipa', 'Stok Sistem', 'Actual Tumpak', 'Actual Pipa', 'Actual Qty', 'Selisih', 'Dicek oleh', 'Waktu cek'],
+    ['Area', 'Rak', 'Sinyal', 'Aging (hari)', 'Nama Item', 'Kelas Pipa', 'Tumpak Sistem', 'Stok Sistem', 'Actual Tumpak', 'Actual Pipa', 'Actual Qty', 'Selisih', 'Status', 'Dicek oleh', 'Waktu cek'],
     Object.keys(ag).sort().map(function (bin) {
       var a = ag[bin] || {}, m = byBin[bin] || {};
       var sis = Number(m.onhand) || 0;
       var q = (a.qty === '' || a.qty == null) ? '' : Number(a.qty);
-      return [m.area || '', bin, m.sinyal || '', m.aging == null ? '' : m.aging, m.item || '', kelasOf(m.kode), sis,
-        a.tumpak || '', a.pipa || '', q, q === '' ? '' : q - sis, a.by || '', fmtTime_(a.at)];
-    }), [1, 2, 3, 5, 6, 8, 9, 12]);
+      // "Semua sama dengan sistem" disimpan sebagai tumpak/pipa 'Sesuai': tulis nilai sistemnya agar sheet sama dengan aplikasi
+      var tum = a.sesuai ? (m.tumpak || '') : String(a.tumpak || '').trim();
+      var itm = a.sesuai ? (m.item || '') : String(a.pipa || '').trim();
+      var tumOk = a.sesuai || !tum || !m.tumpak || nrm_(tum) === nrm_(m.tumpak);
+      var itmOk = a.sesuai || !itm || nrm_(itm) === nrm_(m.item);
+      var qtyOk = q !== '' && q === sis;
+      var why = [];
+      if (q === '') why.push('qty belum diisi'); else if (q !== sis) why.push('qty ' + (q - sis > 0 ? '+' : '') + (q - sis));
+      if (!tumOk) why.push('tumpak beda');
+      if (!itmOk) why.push('item beda');
+      return [m.area || '', bin, m.sinyal || '', m.aging == null ? '' : m.aging, m.item || '', kelasOf(m.kode), m.tumpak || '', sis,
+        tum, itm, q, q === '' ? '' : q - sis, (qtyOk && tumOk && itmOk) ? 'Sesuai' : 'Selisih: ' + why.join(', '), a.by || '', fmtTime_(a.at)];
+    }), [1, 2, 3, 5, 6, 7, 9, 10, 13, 14]);
 
   var SIG = ['Hijau 1', 'Hijau 2', 'Kuning 1', 'Kuning 2', 'Kuning 3', 'Kuning 4', 'Merah'];
   var rk = {};

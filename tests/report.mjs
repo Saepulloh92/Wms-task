@@ -1,4 +1,4 @@
-import { periodStart, shiftPeriod, periodLabel, buckets, dayKey, buildReport, reportText, reportCsv, tone, muatTone } from "../src/lib/report.js";
+import { binStatus, periodStart, shiftPeriod, periodLabel, buckets, dayKey, buildReport, reportText, reportCsv, tone, muatTone } from "../src/lib/report.js";
 let bad = 0;
 const ok = (c, m) => { console.log((c ? "OK   " : "GAGAL ") + m); if (!c) bad++; };
 const eq = (a, b, m) => { const s = JSON.stringify(a) === JSON.stringify(b); ok(s, m + (s ? "" : "  → " + JSON.stringify(a) + " ≠ " + JSON.stringify(b))); };
@@ -69,9 +69,40 @@ ok(tx.includes("*LAPORAN MINGGUAN GUDANG*") && tx.includes("2–8 Nov 2026") && 
 ok(tm.includes("LAPORAN BULANAN") && tm.includes("Area B1"), "teks WhatsApp bulanan memuat area terfilter");
 const csv = reportCsv(w, events);
 const lines = csv.replace("\ufeff", "").split("\r\n");
-eq([lines.length, lines[0].split(",").length], [1 + 6, 10], "CSV: header + 6 baris (4 bin + 1 DC + 1 aging), 10 kolom");
+eq([lines.length, lines[0].split(",").length], [1 + 6, 14], "CSV: header + 6 baris (4 bin + 1 DC + 1 aging), 14 kolom (termasuk tumpak sistem/aktual, item aktual, keterangan)");
 ok(csv.startsWith("\ufeff"), "CSV pakai BOM agar Excel membaca UTF-8");
 eq([tone(0.97), tone(0.9), tone(0.5), tone(null), muatTone(4, 4), muatTone(1, 4)], ["g", "a", "r", "n", "g", "r"], "warna status");
 const kosong = buildReport({ period: "month", start: D(11, 1), today: D(11, 5), events: [], staff: [] });
 eq([kosong.total, kosong.flags.some((f) => f.lvl === "r")], [0, false], "periode kosong tidak error");
+// ---- Rak Aging selisih (qty / tumpak / item) dan keluarannya
+const agEv = [
+  { mod: "aging", at: new Date(2026, 10, 3, 9).toISOString(), by: "Ani", ok: false, diff: -1, key: "B1-01-A", area: "B1", item: "PIPA A", sys: 10, fis: 9, tumpakSys: "AK1", tumpak: "AK1", itemAct: "PIPA A", why: "qty -1" },
+  { mod: "aging", at: new Date(2026, 10, 4, 9).toISOString(), by: "Budi", ok: false, diff: 0, key: "B1-02-A", area: "B1", item: "PIPA B", sys: 5, fis: 5, tumpakSys: "AK2", tumpak: "AK9", itemAct: "PIPA B", why: "tumpak beda" },
+  { mod: "aging", at: new Date(2026, 10, 4, 10).toISOString(), by: "Budi", ok: true, diff: 0, key: "B1-03-A", area: "B1", item: "PIPA C", sys: 7, fis: 7, tumpakSys: "AK3", tumpak: "AK3", itemAct: "PIPA C", why: "" },
+];
+const ra = buildReport({ period: "week", start: D(11, 2), today: D(11, 8), events: agEv });
+eq([ra.mods.aging.n, ra.mods.aging.bad, ra.agingBad.map((e) => e.key)], [3, 2, ["B1-01-A", "B1-02-A"]], "Aging: 3 dicek, 2 selisih (qty & tumpak), diurutkan");
+ok(ra.flags.some((f) => f.t.includes("2 rak Aging selisih (qty, tumpak, atau item)")), "flag Aging menyebut qty/tumpak/item");
+ok(reportText(ra).includes("*Rak Aging selisih*") && reportText(ra).includes("B1-02-A: tumpak beda (tumpak AK2 → AK9)"), "teks WhatsApp: rak Aging selisih dengan tumpak sistem → aktual");
+const ca = reportCsv(ra, agEv).replace("\ufeff", "").split("\r\n");
+ok(ca[2].includes("AK2") && ca[2].includes("AK9") && ca[2].includes("tumpak beda"), "CSV: tumpak sistem, tumpak aktual, keterangan terisi");
+// ---- Satu input Per Bin → dua laporan: stok per bin (qty) & kesesuaian rak (item)
+eq([binStatus({ ok: true, diff: 0 }).label, binStatus({ ok: false, diff: -2 }).label, binStatus({ ok: false, diff: 0, itemOk: false, qtyOk: true }).label, binStatus({ ok: false, diff: 3, itemOk: false, qtyOk: false }).label],
+  ["Sesuai", "Selisih qty", "Item beda", "Item beda + selisih qty"], "binStatus: 4 kemungkinan label");
+const kv = [
+  { mod: "bin", at: new Date(2026, 10, 3, 9).toISOString(), by: "Ani", ok: true, itemOk: true, qtyOk: true, diff: 0, key: "B1-01-A", area: "B1" },
+  { mod: "bin", at: new Date(2026, 10, 3, 9).toISOString(), by: "Ani", ok: false, itemOk: true, qtyOk: false, diff: -2, key: "B1-02-A", area: "B1" },
+  { mod: "bin", at: new Date(2026, 10, 4, 9).toISOString(), by: "Budi", ok: false, itemOk: false, qtyOk: true, diff: 0, key: "B1-03-A", area: "B1" },
+  { mod: "bin", at: new Date(2026, 10, 4, 9).toISOString(), by: "Budi", ok: false, itemOk: false, qtyOk: false, diff: 5, key: "B1-04-A", area: "B1" },
+];
+const rk = buildReport({ period: "week", start: D(11, 2), today: D(11, 8), events: kv });
+eq([rk.mods.bin.n, rk.mods.bin.qtyOk, rk.mods.bin.qtyBad, rk.mods.bin.itemOk, rk.mods.bin.itemBad, rk.mods.bin.ok], [4, 2, 2, 2, 2, 1], "dua laporan: qty 2 sesuai/2 selisih, item 2 sama/2 beda, sesuai penuh 1");
+eq([rk.mods.bin.accQty, rk.mods.bin.accItem, rk.mods.bin.acc], [0.5, 0.5, 0.25], "akurasi qty, akurasi item, akurasi penuh terpisah");
+eq(rk.mods.bin.perItemBad, [0, 0, 2, 0, 0, 0, 0], "tren item tidak sama per hari (4 Nov = Rabu)");
+eq([rk.areas[0].qtyBad, rk.areas[0].itemBad], [2, 2], "per area: selisih qty & item beda");
+ok(rk.flags.some((f) => f.t === "2 bin selisih qty (stok per bin)") && rk.flags.some((f) => f.t === "2 rak item tidak sama (kesesuaian rak)"), "flag dipisah: selisih qty dan item tidak sama");
+const tk = reportText(rk);
+ok(tk.includes("Stok per Bin: 4 diperiksa, qty sesuai 50%, selisih qty 2") && tk.includes("Kesesuaian Rak: item sama 50%, item tidak sama 2"), "teks WhatsApp memuat dua laporan");
+const ck = reportCsv(rk, kv).replace("\ufeff", "").split("\r\n").slice(1).map((l) => l.split('","')[9].replace(/"/g, ""));
+eq(ck, ["Sesuai", "Selisih qty", "Item beda", "Item beda + selisih qty"], "CSV: kolom Status memuat 4 jenis status bin");
 process.exit(bad ? 1 : 0);

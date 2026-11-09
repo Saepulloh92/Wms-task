@@ -1,5 +1,5 @@
 // Uji logika murni aging:  node tests/aging.mjs
-import { buildAging, normSignal, checklist, groupByClass, buildPool, suggest } from "../src/lib/aging.js";
+import { buildAging, normSignal, checklist, groupByClass, buildPool, suggest, actualOf } from "../src/lib/aging.js";
 let fail = 0; const ok = (c, m) => { console.log((c ? "OK   " : "GAGAL ") + m); if (!c) fail++; };
 ok(normSignal(" KUNING  2 ") === "Kuning 2" && normSignal("merah") === "Merah" && normSignal("x") === "", "normSignal");
 const rows = [
@@ -37,4 +37,21 @@ ok(suggest(pool, "", { pin: "AK140", area: "F" }).join() === "AK140,AJ896,AJ767,
 ok(suggest(pool, "aj", { area: "F" }).join() === "AJ896,AJ767,AJ10", "saring 'aj' (tidak peka huruf besar)");
 ok(suggest(pool, "AJ896").length === 0, "nilai yang sudah sama persis tidak ditawarkan lagi");
 ok(suggest(pool, "", { limit: 2 }).length === 2, "batas jumlah pilihan");
+// --- actualOf: nilai aktual rak Aging (satu aturan untuk tampilan, laporan, CSV)
+{
+  const x = { tumpak: "AK140", item: "PIPA A", onhand: 100 };
+  const t = (c, m) => { console.log((c ? "OK   " : "GAGAL ") + m); if (!c) fail++; };
+  const s1 = actualOf(x, { tumpak: "Sesuai", pipa: "Sesuai", qty: "100", sesuai: true });
+  t(s1.ok && s1.tumpak === "AK140" && s1.item === "PIPA A" && s1.qty === 100, "'Semua sama' → tumpak & item = nilai sistem (bukan teks 'Sesuai')");
+  t(actualOf(x, { tumpak: " ak 140 ", pipa: "pipa a", qty: "100" }).ok, "tumpak/item sama walau beda huruf besar & spasi");
+  const s3 = actualOf(x, { tumpak: "AK141", pipa: "PIPA A", qty: "100" });
+  t(!s3.ok && !s3.tumpakOk && s3.reasons.join() === "tumpak beda", "tumpak beda → selisih walau qty sama");
+  const s4 = actualOf(x, { tumpak: "AK140", pipa: "PIPA B", qty: "98" });
+  t(!s4.ok && s4.diff === -2 && s4.reasons.join() === "qty -2,item beda", "qty & item beda → dua alasan");
+  const s5 = actualOf(x, { tumpak: "AK140", pipa: "", qty: "" });
+  t(!s5.ok && s5.reasons.join() === "qty belum diisi", "qty belum diisi → belum sesuai");
+  t(actualOf({ item: "PIPA A", onhand: 5 }, { tumpak: "ZZ9", qty: "5" }).ok, "tumpak sistem kosong → tidak bisa dibandingkan, tidak dianggap beda");
+  t(actualOf(x, null) === null, "tanpa catatan → null");
+}
+
 process.exit(fail ? 1 : 0);

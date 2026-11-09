@@ -8,12 +8,13 @@ const names = ["Budi", "Sari", "Andi"];
 const counts = {};
 master.slice(0, 14).forEach((x, i) => {
   const bad = i % 5 === 0;
-  counts[x.bin] = { itemMatch: true, actualItems: [], actualItem: x.item, actualQty: Number(x.onhand) + (bad ? -2 : 0), note: "", savedAt: at(2 + (i % 5), 8 + (i % 6)), by: names[i % 3], systemQty: Number(x.onhand), systemItem: x.item };
+  counts[x.bin] = { itemMatch: i !== 7, actualItems: [], actualItem: i === 7 ? "PIPA LAIN 2\"" : x.item, actualQty: Number(x.onhand) + (bad ? -2 : 0), note: "", savedAt: at(2 + (i % 5), 8 + (i % 6)), by: names[i % 3], systemQty: Number(x.onhand), systemItem: x.item };
 });
 const dc = {};
 [...new Set(master.map((x) => x.item))].slice(0, 5).forEach((it, i) => { const sys = master.filter((x) => x.item === it).reduce((a, x) => a + Number(x.onhand), 0); dc[it] = { rows: [{ rak: "B1-01-A", qty: sys + (i === 1 ? 4 : 0) }], sys: null, done: true, by: names[i % 3], at: at(3 + (i % 3), 10), adj: "" }; });
 const aging = {};
-master.slice(14, 20).forEach((x, i) => { aging[x.bin] = { tumpak: "AK1" + i, pipa: "AW 3", qty: Number(x.onhand) + (i === 2 ? -1 : 0), by: names[i % 3], at: at(4 + (i % 3), 13) }; });
+master.slice(14, 20).forEach((x, i) => { x.tumpak = "AK1" + i; aging[x.bin] = { tumpak: i === 3 ? "AK999" : "AK1" + i, pipa: x.item, qty: Number(x.onhand) + (i === 2 ? -1 : 0), by: names[i % 3], at: at(4 + (i % 3), 13) }; }); // i=2: qty -1; i=3: tumpak beda (qty sama)
+aging[master[20].bin] = { tumpak: "Sesuai", pipa: "Sesuai", qty: String(master[20].onhand), sesuai: true, by: "Sari", at: at(5, 9) }; // "Semua sama": sesuai
 const muat = ["2026-11-02", "2026-11-03", "2026-11-05", "2026-11-06"].map((tgl, i) => ({ tgl, at: at(2 + i, 17), by: "Sari", dp: 12 + i, ni: 30, total: 9 + i, tdkN: 0, masuk: 0, cpS: i === 1 ? 2 : 0, ci: 0, rows: [], text: "" }));
 const clr = [{ tgl: "2026-11-04", at: at(4, 16), by: "Andi", sig: "x", n: 25, ok: 23, bad: 2, text: "", rows: [] }, { tgl: "2026-10-28", at: at(1, 16), by: "Andi", sig: "y", n: 20, ok: 20, bad: 0, text: "", rows: [] }];
 const b = await chromium.launch();
@@ -44,34 +45,46 @@ const lab = async () => (await tc(".rpt-wk b"))[0];
 const flags = async () => (await tc(".rpt-f")).join("|");
 // --- Mingguan
 ok((await lab()) === "2–8 Nov 2026", "mingguan: periode 2–8 Nov 2026");
-ok((await big()) === "14,5,6,4,25", "mingguan: Bin 14, DC 5, Aging 6, Muat 4 hari, Clearing 25 (" + (await big()) + ")");
+ok((await big()) === "14,1,5,7,4,25", "mingguan: Stok Bin 14, Item beda 1, DC 5, Aging 7, Muat 4 hari, Clearing 25 (" + (await big()) + ")");
 const fl = await flags();
-ok(fl.includes("3 bin selisih") && fl.includes("1 item DC selisih") && fl.includes("1 rak Aging") && fl.includes("2 voucher Clearing") && fl.includes("Kuning/Merah belum dicek"), "mingguan: daftar perlu perhatian lengkap");
+ok(fl.includes("3 bin selisih qty") && fl.includes("1 rak item tidak sama") && fl.includes("1 item DC selisih") && fl.includes("2 rak Aging selisih") && fl.includes("2 voucher Clearing") && fl.includes("Kuning/Merah belum dicek"), "mingguan: daftar perlu perhatian lengkap");
 ok(((await tc(".rpt-p"))[0] || "").startsWith("Sari"), "petugas teraktif = Sari");
 ok((await tc(".rpt-art b"))[0] === "B1", "tabel per area memuat B1");
 ok(((await tc(".rpt-b"))[0] || "").includes("B1-"), "selisih terbesar menampilkan bin");
+const ag = (await tc(".rpt-tb")).join("\n");
+ok(ag.includes("tumpak beda") && ag.includes("qty -1") && ag.includes("AK999"), "daftar Rak Aging selisih: alasan 'tumpak beda' & 'qty -1', tumpak AK3→AK999 tampil");
+ok(!(await tc(".rpt-tb")).join("").includes(master[20].bin + "tumpak beda"), "rak 'Semua sama dengan sistem' tidak masuk daftar selisih");
+const nmRows = (await tc(".rpt-nm b")).join(",");
+ok(nmRows.startsWith("Stok per Bin,Kesesuaian Rak,DC Harian"), "dua laporan dari satu input Per Bin: Stok per Bin + Kesesuaian Rak (" + nmRows + ")");
+const tags = await tc(".rpt-tag");
+ok(tags[0] === "79%" && tags[1] === "93%", "akurasi qty 79% (11/14) dan kesesuaian item 93% (13/14) dihitung terpisah (" + tags.slice(0, 2).join(",") + ")");
+ok((await tc(".rpt-dt .card")).some((t) => t.includes("Kesesuaian Rak") && t.includes("Item tidak sama1")), "rincian Kesesuaian Rak: item tidak sama = 1");
+// --- Daftar bin: filter item beda
+await p.getByRole("button", { name: /^Item beda/ }).click(); await p.waitForTimeout(150);
+const ib = (await tc(".rpt-tb")).join("|");
+ok(ib.includes("Item beda") && ib.includes("ditemukan: PIPA LAIN"), "filter 'Item beda': menampilkan item yang ditemukan");
 // --- Daftar bin: filter
-await p.getByRole("button", { name: /^Sesuai/ }).last().click(); await p.waitForTimeout(150);
-ok((await p.locator(".rpt-tb").last().locator(".rpt-b").count()) === 10, "daftar bin 'Sesuai' dibatasi 10 + tombol Tampilkan lebih");
+await p.getByRole("button", { name: /^Semua/ }).last().click(); await p.waitForTimeout(150);
+ok((await p.locator(".rpt-tb").last().locator(".rpt-b").count()) === 10, "daftar bin 'Semua' (14) dibatasi 10 + tombol Tampilkan lebih");
 await p.getByText(/Tampilkan lebih/).click(); await p.waitForTimeout(150);
-ok((await p.locator(".rpt-tb").last().locator(".rpt-b").count()) === 11, "Tampilkan lebih → 11 bin sesuai");
+ok((await p.locator(".rpt-tb").last().locator(".rpt-b").count()) === 14, "Tampilkan lebih → 14 bin");
 // --- Filter petugas
 await p.locator(".rpt-flt select").nth(1).selectOption("Sari"); await p.waitForTimeout(200);
 ok((await big()).split(",")[0] === "5", "filter petugas Sari: Per Bin 5 (" + (await big()) + ")");
 await p.locator(".rpt-flt select").nth(1).selectOption(""); await p.waitForTimeout(150);
 // --- Navigasi periode
 await p.getByRole("button", { name: "Sebelumnya", exact: true }).click(); await p.waitForTimeout(150);
-ok((await lab()) === "26 Okt–1 Nov 2026" && (await big()).split(",")[0] === "0" && (await big()).split(",")[4] === "20", "minggu lalu: 26 Okt–1 Nov, Bin 0, Clearing 20 (" + (await big()) + ")");
+ok((await lab()) === "26 Okt–1 Nov 2026" && (await big()).split(",")[0] === "0" && (await big()).split(",")[5] === "20", "minggu lalu: 26 Okt–1 Nov, Bin 0, Clearing 20 (" + (await big()) + ")");
 await p.getByText("Kembali ke minggu ini").click(); await p.waitForTimeout(150);
 ok(await p.getByRole("button", { name: "Berikutnya", exact: true }).isDisabled(), "tidak bisa maju melewati periode berjalan");
 // --- Bulanan & Tahunan
 await p.getByRole("button", { name: "Bulanan" }).click(); await p.waitForTimeout(250);
-ok((await lab()) === "November 2026" && (await big()) === "14,5,6,4,25", "bulanan: November 2026, angka sama dengan minggu ini (" + (await big()) + ")");
+ok((await lab()) === "November 2026" && (await big()) === "14,1,5,7,4,25", "bulanan: November 2026, angka sama dengan minggu ini (" + (await big()) + ")");
 await p.getByRole("button", { name: "Sebelumnya", exact: true }).click(); await p.waitForTimeout(150);
-ok((await lab()) === "Oktober 2026" && (await big()).split(",")[4] === "20", "bulan lalu: Oktober 2026, Clearing 20");
+ok((await lab()) === "Oktober 2026" && (await big()).split(",")[5] === "20", "bulan lalu: Oktober 2026, Clearing 20");
 await p.getByText("Kembali ke bulan ini").click();
 await p.getByRole("button", { name: "Tahunan" }).click(); await p.waitForTimeout(250);
-ok((await lab()) === "2026" && (await big()).split(",")[4] === "45", "tahunan: 2026, Clearing 20+25 = 45 (" + (await big()) + ")");
+ok((await lab()) === "2026" && (await big()).split(",")[5] === "45", "tahunan: 2026, Clearing 20+25 = 45 (" + (await big()) + ")");
 ok((await p.evaluate(() => localStorage.getItem("warehouse_so_rptp_v1"))) === "year", "pilihan periode diingat");
 // --- Unduh CSV
 const [dl] = await Promise.all([p.waitForEvent("download"), p.getByRole("button", { name: /Unduh CSV/ }).click()]);

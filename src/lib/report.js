@@ -73,11 +73,20 @@ const sum = (a) => a.reduce((x, y) => x + y, 0);
 const mainOf = (id, perB) => sum(perB); // Muat: satu laporan per hari; Clearing: jumlah voucher
 const accOf = (ok, n) => (n ? ok / n : null);
 
+/** Status satu cek Per Bin: qty (stok) dan item (kesesuaian rak) dinilai terpisah dari satu input yang sama. */
+export function binStatus(e) {
+  const itemOk = e.itemOk == null ? true : e.itemOk !== false;
+  const qtyOk = e.qtyOk == null ? Number(e.diff) === 0 : e.qtyOk !== false;
+  return { itemOk, qtyOk, label: itemOk && qtyOk ? "Sesuai" : !itemOk && !qtyOk ? "Item beda + selisih qty" : !itemOk ? "Item beda" : "Selisih qty" };
+}
+
 function build(period, start, today, { events, muat, clr }) {
   const bk = buckets(period, start, today);
   const idx = new Map(bk.map((b, i) => [b.key, i]));
   const blank = () => ({ n: 0, ok: 0, bad: 0, acc: null, perB: bk.map(() => 0), pos: 0, neg: 0 });
   const m = { bin: blank(), dc: blank(), aging: blank(), muat: blank(), clr: blank() };
+  // Satu input Per Bin menghasilkan DUA laporan: stok per bin (qty) dan kesesuaian rak (item sama/tidak).
+  Object.assign(m.bin, { qtyOk: 0, qtyBad: 0, itemOk: 0, itemBad: 0, perItemBad: bk.map(() => 0) });
   const who = {};
   const bump = (name, mod) => { const k = name || "Tanpa petugas"; (who[k] = who[k] || { bin: 0, dc: 0, aging: 0, muat: 0, clr: 0 })[mod]++; };
   const inRange = [];
@@ -90,6 +99,11 @@ function build(period, start, today, { events, muat, clr }) {
     if (e.ok) x.ok++; else x.bad++;
     const d = Number(e.diff) || 0;
     if (d > 0) x.pos += d; else x.neg += d;
+    if (e.mod === "bin") {
+      const { qtyOk, itemOk } = binStatus(e);
+      if (qtyOk) x.qtyOk++; else x.qtyBad++;
+      if (itemOk) x.itemOk++; else { x.itemBad++; x.perItemBad[i]++; }
+    }
     bump(e.by, e.mod);
     inRange.push(e);
   }
@@ -112,6 +126,8 @@ function build(period, start, today, { events, muat, clr }) {
   }
   for (const k of ["bin", "dc", "aging"]) m[k].acc = accOf(m[k].ok, m[k].n);
   m.clr.acc = accOf(m.clr.ok, m.clr.vouchers);
+  m.bin.accQty = accOf(m.bin.qtyOk, m.bin.n);
+  m.bin.accItem = accOf(m.bin.itemOk, m.bin.n);
   return { m, who, bk, inRange };
 }
 
@@ -158,10 +174,12 @@ export function buildReport({ period = "week", start, today = new Date(), events
   binEv.forEach((e) => {
     const a = (areaMap[e.area || "–"] = areaMap[e.area || "–"] || { area: e.area || "–", total: 0, n: 0, ok: 0, bad: 0, pos: 0, neg: 0 });
     a.n++; if (e.ok) a.ok++; else a.bad++;
+    { const st = binStatus(e); a.qtyBad = (a.qtyBad || 0) + (st.qtyOk ? 0 : 1); a.itemBad = (a.itemBad || 0) + (st.itemOk ? 0 : 1); }
     const d = Number(e.diff) || 0; if (d > 0) a.pos += d; else a.neg += d;
   });
   const areas = Object.values(areaMap).filter((a) => !fArea || a.area === fArea).sort((a, b) => b.bad - a.bad || a.area.localeCompare(b.area));
   const bins = [...binEv].sort((a, b) => (b.at > a.at ? 1 : -1));
+  const agingBad = cur.inRange.filter((e) => e.mod === "aging" && !e.ok).sort((a, b) => Math.abs(Number(b.diff) || 0) - Math.abs(Number(a.diff) || 0) || (b.at > a.at ? 1 : -1)).slice(0, 8);
   const topBad = binEv.filter((e) => !e.ok).sort((a, b) => Math.abs(Number(b.diff) || 0) - Math.abs(Number(a.diff) || 0)).slice(0, 8);
 
   // Cakupan data riwayat Muat/Clearing (hanya menyimpan 60 hari terakhir)
@@ -179,9 +197,10 @@ export function buildReport({ period = "week", start, today = new Date(), events
   }
 
   const flags = [];
-  if (M.bin.bad) flags.push({ lvl: "r", mod: "bin", t: M.bin.bad + " bin selisih qty/item" });
+  if (M.bin.qtyBad) flags.push({ lvl: "r", mod: "bin", t: M.bin.qtyBad + " bin selisih qty (stok per bin)" });
+  if (M.bin.itemBad) flags.push({ lvl: "r", mod: "bin", t: M.bin.itemBad + " rak item tidak sama (kesesuaian rak)" });
   if (M.dc.bad) flags.push({ lvl: "r", mod: "dc", t: M.dc.bad + " item DC selisih dengan stok sistem" });
-  if (M.aging.bad) flags.push({ lvl: "r", mod: "aging", t: M.aging.bad + " rak Aging selisih dengan stok sistem" });
+  if (M.aging.bad) flags.push({ lvl: "r", mod: "aging", t: M.aging.bad + " rak Aging selisih (qty, tumpak, atau item)" });
   if (M.clr.bad) flags.push({ lvl: "r", mod: "clr", t: M.clr.bad + " voucher Clearing belum sesuai" });
   if (agingTodo) flags.push({ lvl: "a", mod: "aging", t: agingTodo + " rak Kuning/Merah belum dicek fisik" });
   if (binTodo) flags.push({ lvl: "a", mod: "bin", t: binTodo + " bin belum pernah diperiksa" });
@@ -196,8 +215,8 @@ export function buildReport({ period = "week", start, today = new Date(), events
   return {
     period, start, end, label: periodLabel(period, start), prevLabel: periodLabel(period, prevStart),
     buckets: cur.bk, elapsed, totalDays, elapsedDays,
-    mods: M, mains, prevMains, delta: Object.fromEntries(MODS.map((x) => [x.id, mains[x.id] - prevMains[x.id]])),
-    total, prevTotal, people, flags, areas, bins, topBad, missing: missing.length,
+    mods: M, mains, prevMains, delta: { ...Object.fromEntries(MODS.map((x) => [x.id, mains[x.id] - prevMains[x.id]])), kes: M.bin.itemBad - prev.m.bin.itemBad },
+    total, prevTotal, people, flags, areas, bins, topBad, agingBad, missing: missing.length,
     coverage: { muatSince, clrSince, muatCut: !!muatSince && muatSince > dayKey(start), clrCut: !!clrSince && clrSince > dayKey(start) },
   };
 }
@@ -213,7 +232,8 @@ const kataPeriode = { week: "MINGGUAN", month: "BULANAN", year: "TAHUNAN" };
 export function reportText(r, { area = "", by = "" } = {}) {
   const M = r.mods, d = (id) => (r.delta[id] > 0 ? " (+" + r.delta[id] + ")" : r.delta[id] < 0 ? " (" + r.delta[id] + ")" : "");
   const L = ["*LAPORAN " + kataPeriode[r.period] + " GUDANG*", r.label + (area ? " · Area " + area : "") + (by ? " · " + by : ""), ""];
-  L.push("Per Bin: " + M.bin.n + " diperiksa, akurasi " + pct(M.bin.acc) + ", selisih " + M.bin.bad + d("bin"));
+  L.push("Stok per Bin: " + M.bin.n + " diperiksa, qty sesuai " + pct(M.bin.accQty) + ", selisih qty " + M.bin.qtyBad + d("bin"));
+  L.push("Kesesuaian Rak: item sama " + pct(M.bin.accItem) + ", item tidak sama " + M.bin.itemBad);
   L.push("DC Harian: " + M.dc.n + " item selesai, sesuai " + pct(M.dc.acc) + ", selisih " + M.dc.bad + d("dc"));
   L.push("Aging: " + M.aging.n + " rak dicek, sesuai " + pct(M.aging.acc) + ", selisih " + M.aging.bad + d("aging"));
   L.push("Muat: " + M.muat.days + "/" + r.elapsedDays + " hari lapor, " + M.muat.spm + " SPM, " + M.muat.mobil + " mobil" + d("muat"));
@@ -221,6 +241,10 @@ export function reportText(r, { area = "", by = "" } = {}) {
   if (r.areas.some((a) => a.n)) {
     L.push("", "*Per area (bin)*");
     r.areas.filter((a) => a.n).slice(0, 8).forEach((a) => L.push("- " + a.area + ": " + a.n + "/" + a.total + " diperiksa, selisih " + a.bad));
+  }
+  if (r.agingBad.length) {
+    L.push("", "*Rak Aging selisih*");
+    r.agingBad.slice(0, 5).forEach((e) => L.push("- " + e.key + ": " + (e.why || "selisih") + (e.tumpakSys ? " (tumpak " + e.tumpakSys + (e.tumpak && e.tumpak !== e.tumpakSys ? " → " + e.tumpak : "") + ")" : "") + (e.by ? " (" + e.by + ")" : "")));
   }
   if (r.topBad.length) {
     L.push("", "*Selisih terbesar*");
@@ -238,11 +262,11 @@ export function reportText(r, { area = "", by = "" } = {}) {
 /** Semua aktivitas bin/DC/Aging pada periode sebagai CSV (dibuka di Excel). */
 export function reportCsv(r, events) {
   const q = (v) => '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"';
-  const rows = [["Modul", "Waktu", "Petugas", "Bin/Item", "Area", "Item", "Sistem", "Fisik", "Selisih", "Status"]];
+  const rows = [["Modul", "Waktu", "Petugas", "Bin/Item", "Area", "Item", "Sistem", "Fisik", "Selisih", "Status", "Tumpak Sistem", "Tumpak Aktual", "Item Aktual", "Keterangan"]];
   const lbl = { bin: "Per Bin", dc: "DC Harian", aging: "Aging" };
   const a = dayKey(r.start), b = dayKey(r.end);
   events.filter((e) => { const k = toKey(e.at); return k >= a && k <= b; })
-    .sort((x, y) => (x.at > y.at ? 1 : -1))
-    .forEach((e) => rows.push([lbl[e.mod] || e.mod, e.at, e.by || "", e.key || "", e.area || "", e.item || "", e.sys ?? "", e.fis ?? "", Number(e.diff) || 0, e.ok ? "Sesuai" : "Selisih"]));
+    .sort((x, y) => (x.at > y.at) - (x.at < y.at))
+    .forEach((e) => rows.push([lbl[e.mod] || e.mod, e.at, e.by || "", e.key || "", e.area || "", e.item || "", e.sys ?? "", e.fis ?? "", Number(e.diff) || 0, e.mod === "bin" ? binStatus(e).label : e.ok ? "Sesuai" : "Selisih", e.tumpakSys || "", e.tumpak || "", e.itemAct || "", e.why || ""]));
   return "\ufeff" + rows.map((x) => x.map(q).join(",")).join("\r\n");
 }

@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useWms } from "../legacy/bridge.js";
 import { fmt } from "../lib/format.js";
-import { normSignal, needsWatch, isFilled } from "../lib/aging.js";
-import { MODS, PERIODS, buildReport, dayKey, muatTone, pct, periodStart, reportCsv, reportText, shiftPeriod, tone } from "../lib/report.js";
+import { normSignal, needsWatch, isFilled, actualOf } from "../lib/aging.js";
+import { binStatus, MODS, PERIODS, buildReport, dayKey, muatTone, pct, periodStart, reportCsv, reportText, shiftPeriod, tone } from "../lib/report.js";
 
-const COLOR = { bin: "#1d4ed8", dc: "#0f766e", aging: "#c2410c", muat: "#7c3aed", clr: "#be185d" };
+const COLOR = { kes: "#b91c1c", bin: "#1d4ed8", dc: "#0f766e", aging: "#c2410c", muat: "#7c3aed", clr: "#be185d" };
 const K_P = "warehouse_so_rptp_v1";
 const BULAN = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
 const when = (iso) => { const d = new Date(iso); return isNaN(d) ? "" : d.getDate() + " " + BULAN[d.getMonth()] + " " + String(d.getHours()).padStart(2, "0") + "." + String(d.getMinutes()).padStart(2, "0"); };
@@ -31,7 +31,7 @@ export default function ReportView() {
   const [off, setOff] = useState(0); // 0 = periode berjalan, -1 = sebelumnya, dst.
   const [area, setArea] = useState("");
   const [by, setBy] = useState("");
-  const [bf, setBf] = useState("bad"); // daftar bin: bad | ok | all
+  const [bf, setBf] = useState("bad"); // daftar bin: bad (selisih qty) | item (item beda) | ok | all
   const [lim, setLim] = useState(10);
   if (wms.view !== "rpt" || !wms.DATA) return <section id="v-rpt" hidden />;
 
@@ -45,15 +45,19 @@ export default function ReportView() {
   const events = [];
   DATA.forEach((x) => {
     const c = counts[x.bin];
-    if (c && c.savedAt) events.push({ mod: "bin", at: c.savedAt, by: c.by, ok: stat(x) === "ok", diff: Number(c.actualQty) - (Number(x.onhand) || 0), key: x.bin, area: x.area, item: x.item, sys: Number(x.onhand) || 0, fis: Number(c.actualQty) });
+    if (c && c.savedAt) {
+      const sys = Number(c.systemQty ?? x.onhand) || 0; // stok sistem saat dicek (sama dengan yang dipakai menu Periksa Bin)
+      events.push({ mod: "bin", at: c.savedAt, by: c.by, ok: stat(x) === "ok", itemOk: c.itemMatch === true, qtyOk: Number(c.actualQty) === sys, diff: Number(c.actualQty) - sys, key: x.bin, area: x.area, item: x.item, sys, fis: Number(c.actualQty), itemAct: c.itemMatch === false ? c.actualItem || "" : "" });
+    }
   });
   (wms.dcRows ? wms.dcRows() : []).forEach((x) => {
     if ((x.st === "ok" || x.st === "bad") && x.at) events.push({ mod: "dc", at: x.at, by: x.by, ok: x.st === "ok", diff: x.diff, key: x.item, item: x.item, sys: x.sys, fis: x.fis });
   });
   Object.entries(aging || {}).forEach(([bin, a]) => {
-    if (!a || !a.at || a.qty === "" || a.qty == null) return;
-    const x = rowOf.get(bin), sys = x ? Number(x.onhand) || 0 : null, diff = sys == null ? 0 : Number(a.qty) - sys;
-    events.push({ mod: "aging", at: a.at, by: a.by, ok: diff === 0, diff, key: bin, area: x && x.area, item: x && x.item, sys, fis: Number(a.qty) });
+    const x = rowOf.get(bin);
+    if (!a || !a.at || !x) return;
+    const t = actualOf(x, a); // aturan tunggal "aktual": sama dengan menu Aging, CSV, dan Sheets
+    events.push({ mod: "aging", at: a.at, by: a.by, ok: t.ok, diff: t.diff, key: bin, area: x.area, item: x.item, sys: t.sys, fis: t.qty, tumpakSys: x.tumpak || "", tumpak: t.tumpak, itemAct: t.item, why: t.reasons.join(", ") });
   });
 
   const inArea = (x) => !area || x.area === area;
@@ -72,22 +76,25 @@ export default function ReportView() {
   const sub = isNow ? "Berjalan · hari ke-" + r.elapsedDays + " dari " + r.totalDays : off === -1 ? nm[0].toUpperCase() + nm.slice(1) + " lalu" : Math.abs(off) + " " + nm + " lalu";
 
   const rows = [
-    { id: "bin", main: M.bin.n, sub: "bin diperiksa", tag: pct(M.bin.acc), tn: tone(M.bin.acc) },
+    { id: "bin", name: "Stok per Bin", main: M.bin.n, sub: "bin diperiksa · selisih qty " + fmt(M.bin.qtyBad), tag: pct(M.bin.accQty), tn: tone(M.bin.accQty) },
+    { id: "kes", name: "Kesesuaian Rak", main: M.bin.itemBad, sub: "item tidak sama dari " + fmt(M.bin.n) + " rak", tag: pct(M.bin.accItem), tn: tone(M.bin.accItem), perB: M.bin.perItemBad, inv: true },
     { id: "dc", main: M.dc.n, sub: "item DC selesai", tag: pct(M.dc.acc), tn: tone(M.dc.acc) },
     { id: "aging", main: M.aging.n, sub: "rak Aging dicek", tag: pct(M.aging.acc), tn: tone(M.aging.acc) },
     { id: "muat", main: M.muat.days, sub: fmt(M.muat.spm) + " SPM · " + fmt(M.muat.mobil) + " mobil", tag: M.muat.days + "/" + r.elapsedDays + " hr", tn: muatTone(M.muat.days, r.elapsedDays) },
     { id: "clr", main: fmt(M.clr.vouchers), sub: "voucher Clearing", tag: pct(M.clr.acc), tn: tone(M.clr.acc) },
   ];
   const det = [
-    ["bin", [["Diperiksa", fmt(M.bin.n) + " / " + fmt(DATA.filter(inArea).length)], ["Sesuai", fmt(M.bin.ok)], ["Selisih", fmt(M.bin.bad)], ["Qty lebih / kurang", sgn(M.bin.pos) + " / " + sgn(M.bin.neg)]]],
+    ["bin", [["Diperiksa", fmt(M.bin.n) + " / " + fmt(DATA.filter(inArea).length)], ["Qty sesuai", fmt(M.bin.qtyOk)], ["Selisih qty", fmt(M.bin.qtyBad)], ["Qty lebih / kurang", sgn(M.bin.pos) + " / " + sgn(M.bin.neg)]], "Stok per Bin"],
+    ["kes", [["Diperiksa", fmt(M.bin.n)], ["Item sama", fmt(M.bin.itemOk)], ["Item tidak sama", fmt(M.bin.itemBad)], ["Sesuai penuh", fmt(M.bin.ok) + " (" + pct(M.bin.acc) + ")"]], "Kesesuaian Rak"],
     ["dc", [["Item selesai", fmt(M.dc.n)], ["Sesuai", fmt(M.dc.ok)], ["Selisih", fmt(M.dc.bad)], ["Qty lebih / kurang", sgn(M.dc.pos) + " / " + sgn(M.dc.neg)]]],
     ["aging", [["Rak dicek", fmt(M.aging.n)], ["Sesuai", fmt(M.aging.ok)], ["Selisih", fmt(M.aging.bad)], ["Kuning/Merah belum dicek", fmt(agingTodo)]]],
     ["muat", [["Hari lapor", M.muat.days + " / " + r.elapsedDays], ["SPM", fmt(M.muat.spm)], ["Mobil", fmt(M.muat.mobil)], ["SPM copy rekom.", fmt(M.muat.cp)]]],
     ["clr", [["Hari clearing", fmt(M.clr.days)], ["Voucher", fmt(M.clr.vouchers)], ["Sesuai", fmt(M.clr.ok)], ["Belum sesuai", fmt(M.clr.bad)]]],
   ];
 
-  const list = r.bins.filter((e) => bf === "all" || (bf === "bad" ? !e.ok : e.ok));
-  const cnt = { bad: r.bins.filter((e) => !e.ok).length, ok: r.bins.filter((e) => e.ok).length, all: r.bins.length };
+  const stOf = (e) => binStatus(e);
+  const list = r.bins.filter((e) => bf === "all" || (bf === "bad" ? !stOf(e).qtyOk : bf === "item" ? !stOf(e).itemOk : e.ok));
+  const cnt = { bad: r.bins.filter((e) => !stOf(e).qtyOk).length, item: r.bins.filter((e) => !stOf(e).itemOk).length, ok: r.bins.filter((e) => e.ok).length, all: r.bins.length };
 
   const pick = (p) => { setPeriod(p); setOff(0); setLim(10); try { localStorage.setItem(K_P, p); } catch (e) {} };
   const copy = () => wms.outText(reportText(r, { area, by })).then(() => wms.toast("Tersalin. Tempel di WhatsApp."), () => wms.toast("Gagal menyalin. Izinkan akses clipboard di browser."));
@@ -123,13 +130,13 @@ export default function ReportView() {
           <span>vs lalu</span>
         </div>
         {rows.map((x) => {
-          const m = MODS.find((q) => q.id === x.id), dl = r.delta[x.id];
+          const m = x.name ? { name: x.name } : MODS.find((q) => q.id === x.id), dl = r.delta[x.id];
           return (
             <div className="rpt-row" role="row" key={x.id} style={{ "--mc": COLOR[x.id] }}>
               <div className="rpt-nm" role="cell"><b>{m.name}</b><small>{x.sub}</small></div>
-              <div className="rpt-mid" role="cell"><span className="rpt-big">{x.main}</span><Spark vals={M[x.id].perB} bk={r.buckets} color={COLOR[x.id]} /></div>
+              <div className="rpt-mid" role="cell"><span className="rpt-big">{x.main}</span><Spark vals={x.perB || M[x.id].perB} bk={r.buckets} color={COLOR[x.id]} /></div>
               <div className="rpt-rt" role="cell">
-                <span className={"rpt-dl " + (dl > 0 ? "up" : dl < 0 ? "dn" : "")} aria-label={dl > 0 ? "naik " + dl : dl < 0 ? "turun " + -dl : "sama"}>{dl > 0 ? "▲" + fmt(dl) : dl < 0 ? "▼" + fmt(-dl) : "＝"}</span>
+                <span className={"rpt-dl " + (x.inv ? "inv " : "") + (dl > 0 ? "up" : dl < 0 ? "dn" : "")} aria-label={dl > 0 ? "naik " + dl : dl < 0 ? "turun " + -dl : "sama"}>{dl > 0 ? "▲" + fmt(dl) : dl < 0 ? "▼" + fmt(-dl) : "＝"}</span>
                 <span className={"rpt-tag t-" + x.tn}>{x.tag}</span>
               </div>
             </div>
@@ -147,23 +154,24 @@ export default function ReportView() {
 
       <h3 className="rpt-h">Rincian per modul</h3>
       <div className="rpt-dt">
-        {det.map(([id, kv]) => (
+        {det.map(([id, kv, title]) => (
           <div className="card" key={id} style={{ "--mc": COLOR[id] }}>
-            <b>{MODS.find((m) => m.id === id).name}</b>
+            <b>{title || MODS.find((m) => m.id === id).name}</b>
             <dl>{kv.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
           </div>
         ))}
       </div>
 
-      <h3 className="rpt-h">Per Bin <small>{fmt(M.bin.n)} diperiksa · {pct(M.bin.acc)} akurasi</small></h3>
+      <h3 className="rpt-h">Per Bin: stok &amp; kesesuaian rak <small>{fmt(M.bin.n)} diperiksa · qty {pct(M.bin.accQty)} · item {pct(M.bin.accItem)}</small></h3>
       <div className="card rpt-ar">
-        <div className="rpt-art rpt-arh"><span>Area</span><span>Periksa</span><span>Selisih</span><span>Akurasi</span></div>
+        <div className="rpt-art rpt-arh"><span>Area</span><span>Periksa</span><span>Selisih qty</span><span>Item beda</span><span>Qty OK</span></div>
         {r.areas.length ? r.areas.map((a) => (
           <div className="rpt-art" key={a.area}>
             <b>{a.area}</b>
             <span>{fmt(a.n)}<small> / {fmt(a.total)}</small></span>
-            <span className={a.bad ? "bad" : ""}>{fmt(a.bad)}</span>
-            <span className={"rpt-tag t-" + tone(a.n ? a.ok / a.n : null)}>{a.n ? pct(a.ok / a.n) : "–"}</span>
+            <span className={a.qtyBad ? "bad" : ""}>{fmt(a.qtyBad || 0)}</span>
+            <span className={a.itemBad ? "bad" : ""}>{fmt(a.itemBad || 0)}</span>
+            <span className={"rpt-tag t-" + tone(a.n ? (a.n - (a.qtyBad || 0)) / a.n : null)}>{a.n ? pct((a.n - (a.qtyBad || 0)) / a.n) : "–"}</span>
           </div>
         )) : <p className="hint">Tidak ada data area.</p>}
       </div>
@@ -180,15 +188,27 @@ export default function ReportView() {
         </div>
       </>}
 
+      {r.agingBad.length > 0 && <>
+        <h3 className="rpt-h">Rak Aging selisih <small>{r.mods.aging.bad} rak</small></h3>
+        <div className="card rpt-tb">
+          {r.agingBad.map((e, i) => (
+            <div className="rpt-b" key={e.key + i}>
+              <div className="rpt-bt"><b>{e.key}</b><span className="rpt-df neg">{e.why || "Selisih"}</span></div>
+              <small>{e.item} · tumpak {e.tumpakSys || "–"}{e.tumpak && e.tumpak !== e.tumpakSys ? " → " + e.tumpak : ""} · qty {fmt(e.sys)} → {e.fis == null ? "–" : fmt(e.fis)}{e.by ? " · " + e.by : ""} · {when(e.at)}</small>
+            </div>
+          ))}
+        </div>
+      </>}
+
       <h3 className="rpt-h">Daftar bin diperiksa</h3>
       <div className="chips rpt-bf" role="group" aria-label="Filter daftar bin">
-        {[["bad", "Selisih"], ["ok", "Sesuai"], ["all", "Semua"]].map(([k, l]) => <button key={k} className={"chip" + (bf === k ? " on" : "")} aria-pressed={bf === k} onClick={() => { setBf(k); setLim(10); }}>{l} <b>{cnt[k]}</b></button>)}
+        {[["bad", "Selisih qty"], ["item", "Item beda"], ["ok", "Sesuai"], ["all", "Semua"]].map(([k, l]) => <button key={k} className={"chip" + (bf === k ? " on" : "")} aria-pressed={bf === k} onClick={() => { setBf(k); setLim(10); }}>{l} <b>{cnt[k]}</b></button>)}
       </div>
       <div className="card rpt-tb">
         {list.length ? list.slice(0, lim).map((e, i) => (
           <div className="rpt-b" key={e.key + i}>
-            <div className="rpt-bt"><b>{e.key}</b><span className={"rpt-df " + (e.ok ? "ok" : e.diff > 0 ? "pos" : "neg")}>{e.ok ? "Sesuai" : e.diff ? sgn(e.diff) : "Item beda"}</span></div>
-            <small>{e.item} · {fmt(e.sys)} → {fmt(e.fis)}{e.by ? " · " + e.by : ""} · {when(e.at)}</small>
+            <div className="rpt-bt"><b>{e.key}</b><span className="rpt-pl">{!stOf(e).itemOk && <span className="rpt-df neg">Item beda</span>}<span className={"rpt-df " + (stOf(e).qtyOk ? "ok" : e.diff > 0 ? "pos" : "neg")}>{stOf(e).qtyOk ? "Qty sesuai" : "Qty " + sgn(e.diff)}</span></span></div>
+            <small>{e.item}{e.itemAct ? " → ditemukan: " + e.itemAct : ""} · {fmt(e.sys)} → {fmt(e.fis)}{e.by ? " · " + e.by : ""} · {when(e.at)}</small>
           </div>
         )) : <p className="hint">Tidak ada bin pada filter ini.</p>}
         {list.length > lim && <button className="btn" onClick={() => setLim(lim + 20)}>Tampilkan lebih ({list.length - lim} lagi)</button>}

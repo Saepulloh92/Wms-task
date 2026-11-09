@@ -69,9 +69,6 @@
 .chips.rpt-per { grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0 0 10px; }
 .chips.rpt-per .chip:last-child:nth-child(odd) { grid-column: auto; }
 .chips.rpt-per .chip { padding-left: 4px; padding-right: 4px; }
-.chips.rpt-bf { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.chips.rpt-bf .chip:last-child:nth-child(odd) { grid-column: auto; }
-.chips.rpt-bf .chip { padding-left: 4px; padding-right: 4px; }
 .rpt-days.dense { letter-spacing: 0; text-transform: none; }
 .rpt-flt { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 10px; }
 .rpt-flt label { display: grid; gap: 4px; font-size: 12px; font-weight: 700; color: var(--muted, #6b7a89); text-transform: uppercase; letter-spacing: .04em; }
@@ -87,7 +84,7 @@
 .rpt-dt dd { margin: 0; font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; flex: none; }
 .rpt-dt .card:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .rpt-ar { padding: 4px 12px; }
-.rpt-art { display: grid; grid-template-columns: 1fr 1.2fr .8fr 64px; gap: 6px; align-items: center; padding: 9px 0; border-top: 1px solid var(--line, #e2e8f0); font-size: 14px; font-variant-numeric: tabular-nums; }
+.rpt-art { display: grid; grid-template-columns: .8fr 1.1fr .9fr .8fr 56px; gap: 4px; align-items: center; padding: 9px 0; border-top: 1px solid var(--line, #e2e8f0); font-size: 14px; font-variant-numeric: tabular-nums; }
 .rpt-art:first-child { border-top: 0; }
 .rpt-arh { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted, #6b7a89); padding: 6px 0 4px; }
 .rpt-art small { color: var(--muted, #6b7a89); }
@@ -108,4 +105,9 @@
 .rpt-bf b { margin-left: 4px; }
 .rpt-act { grid-template-columns: 1fr; }
 @media (min-width: 700px) { .rpt-act { grid-template-columns: 1fr 1fr 1fr; } .rpt-dt { grid-template-columns: repeat(3, 1fr); } .rpt-dt .card:last-child:nth-child(odd) { grid-column: auto; } }
-@media (max-width: 359px) { .rpt-dt { grid-template-columns: 1fr; } .rpt-art { grid-template-columns: .9fr 1.2fr .8fr 56px; font-size: 13px; } }
+@media (max-width: 359px) { .rpt-dt { grid-template-columns: 1fr; } .rpt-art { grid-template-columns: .7fr 1.1fr .9fr .8fr 50px; font-size: 12px; } }
+
+.rpt-dl.inv.up { color: #b91c1c; }
+.rpt-dl.inv.dn { color: #15803d; }
+.rpt-pl { display: inline-flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.rpt-arh span { line-height: 1.15; }
