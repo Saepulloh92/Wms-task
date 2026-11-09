@@ -164,3 +164,9 @@
       #v-mon > .dh,
       #v-mon > #dlvPanel ~ * { display: none !important; }
       #v-mon > #dlvPanel { margin-top: 4px; }
+      /* progres delivery: tiga bar (masuk, proses, keluar) seperti di dashboard Excel */
+      .dlv .prow { display: grid; grid-template-columns: 96px 1fr 48px; align-items: center; gap: 8px; min-height: 34px; font-size: 14px; }
+      .dlv .prow .pbar { margin: 0; }
+      .dlv .prow b { text-align: right; }
+      .dlv .dnl .p, .dlv .dnl b { white-space: nowrap; }
+      .dlv .dnl > div { grid-template-columns: 12px 1fr auto 46px; }

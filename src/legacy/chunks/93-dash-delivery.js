@@ -4,7 +4,7 @@
       const K_DLV = "warehouse_so_dlv_v1",
         K_DLVC = "warehouse_so_dlvc_v1";
       const dlvS = ld(K_DLV, {});
-      let dlv = { url: dlvS.url || WMS_CONFIG.deliveryUrl || "", auto: dlvS.auto == null ? 2 : dlvS.auto };
+      let dlv = { url: dlvS.url || WMS_CONFIG.deliveryUrl || "", auto: dlvS.auto == null ? 1 : dlvS.auto };
       let dlvCache = ld(K_DLVC, null), // { at, rows }
         dlvBusy = false,
         dlvErr = "",
@@ -45,6 +45,34 @@
       const dlvOpen = {}; // key -> true/false (pilihan pengguna, bertahan antar muat ulang)
       const dlvFold = (key, t, sum, def, body) => `<details class="dcard dfold" data-k="${key}"${(dlvOpen[key] == null ? def : dlvOpen[key]) ? " open" : ""}><summary><h3>${esc(t)}</h3>${sum ? `<span class="dsum">${esc(sum)}</span>` : ""}</summary>${body}</details>`;
       const dlvAny = (...cells) => cells.some((c) => dlvC(c));
+      // "1.228,97" / "1228,97" / "97,6%" -> angka
+      const dlvNum = (s) => {
+        let t = String(s || "").replace(/[%\s]/g, "");
+        if (!t) return null;
+        if (/,/.test(t)) t = t.replace(/\./g, "").replace(",", ".");
+        const n = parseFloat(t);
+        return isFinite(n) ? n : null;
+      };
+      const dlvPctStr = (raw) => {
+        const n = dlvNum(raw);
+        return n == null ? null : /%/.test(raw) ? n : n <= 1.5 ? n * 100 : n;
+      };
+      // nilai pertama berbentuk angka/jam/persen di kolom (atau beberapa kolom) pada rentang baris. Tahan terhadap sel gabungan yang pojok kirinya bergeser 1 baris.
+      function dlvRng(cols, r1, r2) {
+        for (const col of [].concat(cols)) for (let r = r1; r <= r2; r++) {
+          const v = dlvC(col + r);
+          if (v && /^[-+]?\d[\d.,:]*%?$/.test(v)) return v;
+        }
+        return "";
+      }
+      // nama bulan ringkasan ("NOVEMBER 2026") di sekitar pojok kanan atas dashboard
+      function dlvMonth() {
+        for (let r = 7; r <= 10; r++) for (let c = dlvCI("AL"); c <= dlvCI("AU"); c++) {
+          const v = String(((dlvCache.rows[r - 1] || [])[c]) ?? "").trim();
+          if (/(januari|februari|maret|april|mei|juni|juli|agustus|september|oktober|november|desember)\s+\d{4}/i.test(v)) return v;
+        }
+        return "";
+      }
       function dlvHtml() {
         const V = dlvV,
           tot = dlvN("B28"),
@@ -54,7 +82,7 @@
           bel = dlvN("B43"),
           share = (n) => (n != null && tot ? Math.round((n / tot) * 100) + "% dari total" : "");
         const kpi = `<div class="kcs">${dlvKpi("tot", tot, "Total Mobil", tot != null && kel != null ? (tot <= 0 ? "Belum ada mobil" : tot - kel > 0 ? tot - kel + " belum keluar" : "Semua keluar") : "")}${dlvKpi("ok", kel, "Mobil Keluar", share(kel))}${dlvKpi("wip", prs, "Mobil Proses", share(prs))}</div>`;
-        const segs = [["Keluar", kel || 0, "#0a5bd3"], ["Proses", prs || 0, "#f5a623"], ["Masuk", Math.max(0, (msk || 0) - (kel || 0) - (prs || 0)), "#2e9e68"], ["Belum masuk", bel || 0, "#9aa5b8"]],
+        const segs = [["Keluar", kel || 0, "#0a5bd3"], ["Proses", prs || 0, "#f5a623"], ["Masuk", Math.max(0, (msk || 0) - (kel || 0) - (prs || 0)), "#2e9e68"], ["Belum masuk", bel || 0, "#9aa5b8"], ["Tidak masuk", Math.max(0, (dlvN("S33") || 0) - (bel || 0)), "#d32f2f"]],
           sum = segs.reduce((a, q) => a + q[1], 0),
           C = 2 * Math.PI * 40;
         let off = 0;
@@ -77,25 +105,41 @@
           .filter(([h]) => dlvC(h))
           .map(([h, p]) => `<span>${esc(dlvC(h))} → <b>${esc(V(p))}</b></span>`)
           .join("");
+        const D = (x) => x || "–";
+        // blok yang pojok sel gabungannya bisa bergeser 1 baris: ambil nilai (angka/jam/persen) pertama pada rentang baris
+        const pMsk = dlvRng(["P", "Q"], 53, 54),
+          pPrs = dlvRng(["P", "Q"], 55, 56),
+          pKel = dlvRng(["P", "Q"], 57, 58),
+          prog = [["Mobil masuk", pMsk, "#2e9e68"], ["Mobil proses", pPrs, "#f5a623"], ["Mobil keluar", pKel, "#0a5bd3"]].filter(([, v]) => v),
+          progHtml = prog.length
+            ? `<div class="lh">Progress delivery</div>` + prog.map(([l, v, c]) => `<div class="prow"><span>${esc(l)}</span><div class="pbar"><i style="width:${Math.max(0, Math.min(100, dlvPctStr(v) || 0))}%;background:${c}"></i></div><b>${esc(v)}</b></div>`).join("")
+            : pm != null ? `<div class="fine mt">Progres keluar dari mobil masuk ${esc(V("P34"))}</div>${dlvBar(pm)}` : "";
         const status = dlvCard(
           "Status Mobil",
           `<div class="dnut"><svg viewBox="0 0 100 100" role="img" aria-label="${pct}% keluar">${arcs}<text x="50" y="52" text-anchor="middle" class="dv">${pct}%</text><text x="50" y="64" text-anchor="middle" class="ds">Keluar</text></svg><div class="dnl">${segs.map(([lb, v, c]) => `<div><i style="background:${c}"></i><span>${lb}</span><b>${esc(fmt(v))}</b><span class="p">${sum ? Math.round((v / sum) * 100) : 0}%</span></div>`).join("")}</div></div>` +
-            (pm != null ? `<div class="fine mt">Progres keluar dari mobil masuk ${esc(V("P34"))}</div>${dlvBar(pm)}` : "") +
+            progHtml +
             (jenis ? `<div class="dchips"><small>Jenis mobil</small>${jenis}</div>` : "") +
-            (jam ? `<div class="dchips"><small>Jam keluar mobil</small>${jam}</div>` : "") +
-            `<div class="xk">Belum / tidak masuk: <b>${esc(V("S33"))}</b> mobil (BOX ${esc(V("S39"))} · FUSO ${esc(V("V39"))} · CONTAINER ${esc(V("S46"))} · TRONTON ${esc(V("V46"))})</div>`,
+            (jam ? `<div class="dchips"><small>Jam keluar mobil</small>${jam}</div>` : ""),
         );
-        const tonase = !dlvAny("S12", "W12", "S19", "W19", "S25", "W25", "B13", "E20", "J10") ? "" : dlvCard(
-          "Tonase Delivery Hari Ini",
-          dlvRow("Mobil masuk > 14:00", "Plan " + V("S12") + " · Aktual " + V("W12"), V("AA14") + " · " + V("AD14"), "wip") +
-            dlvRow("Dalam kota", "Plan " + V("S19") + " · Aktual " + V("W19"), V("AA19"), "ok") +
-            dlvRow("Non omzet", "Plan " + V("S25") + " · Aktual " + V("W25"), V("AA25"), "pd") +
-            `<div class="mg5">${dlvKv("Finish loading", V("B13"))}${dlvKv("Selesai SJ deliv", V("E20"))}${dlvKv("Finish delivery", V("J10"))}</div>`,
+        const waktu = !dlvAny("F8", "B13", "E20", "J10") ? "" : dlvCard(
+          "Waktu Penting",
+          `<div class="mg5 m4">${dlvKv("Jam update", V("F8"))}${dlvKv("Finish loading", V("B13"))}${dlvKv("Selesai SJ deliv (dalam kota)", V("E20"))}${dlvKv("Total finish delivery", V("J10"))}</div>`,
+          dlvC("AJ2") ? `<span class="dsum">${esc(dlvC("AJ2"))}</span>` : "",
         );
+        const kota = { tot: dlvRng("B", 19, 21), gap: dlvRng("J", 20, 22), plan: dlvRng("M", 20, 22), dlv: dlvRng("P", 20, 22) },
+          lt14 = dlvRng("J", 13, 16),
+          tRows =
+            (dlvAny("S12", "W12") ? dlvRow("Tonase delivery", "Plan " + V("S12") + " · Aktual " + V("W12") + " · Selisih " + V("AA14"), V("AD14"), "wip") : "") +
+            (dlvAny("S19", "W19") ? dlvRow("Omzet", "Plan " + V("S19") + " · Aktual " + V("W19"), V("AA19"), "ok") : "") +
+            (dlvAny("S25", "W25") ? dlvRow("Non omzet", "Plan " + V("S25") + " · Aktual " + V("W25"), V("AA25"), "pd") : "") +
+            (kota.tot || kota.plan || kota.dlv ? dlvRow("Dalam kota", "Total " + D(kota.tot) + " · Plan " + D(kota.plan) + " · Deliv " + D(kota.dlv), "Gap " + D(kota.gap), "pd") : "") +
+            (lt14 ? dlvRow("Mobil masuk > 14:00", "Hari ini", lt14 + " mobil", "wip") : "");
+        const tonase = tRows ? dlvCard("Tonase Delivery Hari Ini", tRows) : "";
         const gagal = [];
         for (let r = 35; r <= 47; r += 2) {
-          const n = dlvFirst(r, "AA", "AD");
-          if (n) gagal.push(dlvRow(n, "", dlvC("AE" + r) || "Gagal", "red"));
+          const n = dlvFirst(r, "AA", "AD"),
+            c = dlvC("AE" + r);
+          if (n) gagal.push(dlvRow(n, "", /^\d+$/.test(c) ? c + " mobil" : c || "Gagal", "red"));
         }
         const under = [];
         for (let r = 54; r <= 70; r += 2) {
@@ -103,33 +147,41 @@
             al = dlvFirst(r, "AB", "AF");
           if (n) under.push(dlvRow(n, "", al || "Under", "wip"));
         }
-        const nAb = (dlvN("AL33") || 0) + (dlvN("AL35") || 0);
-        const abn = !dlvAny("AL33", "AL35", "AL37") && !gagal.length && !under.length ? "" : dlvFold(
+        const underNow = dlvRng("S", 53, 58),
+          belum = dlvC("S33"),
+          nAb = (dlvNum(belum) || 0) + (dlvNum(underNow) || 0) + (dlvNum(lt14) || 0);
+        const abn = !belum && !underNow && !lt14 && !gagal.length && !under.length ? "" : dlvFold(
           "abn",
-          "Abnormal",
-          "Gagal " + V("AL33") + " · Under " + V("AL35") + " · >14:00 " + V("AL37"),
+          "Abnormal Hari Ini",
+          "Belum masuk " + D(belum) + " · Under tonage " + D(underNow) + " · >14:00 " + D(lt14),
           nAb > 0 || gagal.length > 0 || under.length > 0,
-          `<div class="mg5">${dlvKv("Gagal masuk", V("AL33"), "c-gagal")}${dlvKv("Under tonage", V("AL35"), "c-proses")}${dlvKv("Mobil > 14:00", V("AL37"), "c-masuk")}</div>` +
+          `<div class="mg5">${dlvKv("Belum / tidak masuk", D(belum), "c-gagal")}${dlvKv("Under tonage", D(underNow), "c-proses")}${dlvKv("Mobil masuk > 14:00", D(lt14), "c-masuk")}</div>` +
+            (dlvAny("S39", "V39", "S46", "V46") ? `<div class="dchips"><small>Belum / tidak masuk per jenis</small><span>BOX: <b>${esc(V("S39"))}</b></span><span>FUSO: <b>${esc(V("V39"))}</b></span><span>CONTAINER: <b>${esc(V("S46"))}</b></span><span>TRONTON: <b>${esc(V("V46"))}</b></span></div>` : "") +
             (gagal.length ? `<div class="lh">Agen gagal masuk</div>${gagal.join("")}` : "") +
             (under.length ? `<div class="lh">Under tonage</div>${under.join("")}` : ""),
         );
+        const mon = dlvMonth(),
+          pTon = (() => { const a = dlvNum(dlvC("AL19")), q = dlvNum(dlvC("AL17")); return a != null && q ? (a / q) * 100 : null; })(),
+          pMob = dlvPct("AR13");
         const bulan = !dlvAny("AL13", "AL15", "AL17", "AL19", "AR13", "AR19", "AL23") ? "" : dlvFold(
           "bln",
-          "Ringkasan Bulan Ini",
-          "Mobil " + V("AR13") + " · Tonase " + V("AR19"),
+          "Ringkasan Bulan Ini" + (mon ? " · " + mon : ""),
+          "Mobil " + V("AR13") + " · Tonase " + (pTon != null ? pTon.toFixed(1).replace(".", ",") + "%" : "–"),
           false,
-          `<div class="fine">Realisasi mobil · ${esc(V("AL15"))} dari ${esc(V("AL13"))}</div>${dlvBar(dlvPct("AR13"))}<div class="bn">${esc(V("AR13"))}</div>` +
-            `<div class="fine mt">Realisasi tonase · ${esc(V("AL19"))} dari ${esc(V("AL17"))}</div>${dlvBar(dlvPct("AR19"))}<div class="bn">${esc(V("AR19"))}</div>` +
-            `<div class="mg5 m4">${dlvKv("Rata² mobil/hari", V("AL23"))}${dlvKv("Ton plan", V("AR23"))}${dlvKv("Ton aktual", V("AR25"))}${dlvKv("Ton omzet", V("AR27"))}</div>` +
-            `<div class="mg5">${dlvKv("Finish kota", V("AL25"))}${dlvKv("Finish loading", V("AL27"))}${dlvKv("Finish delivery", V("AL29"))}</div>`,
+          `<div class="fine">Planning vs actual mobil · ${esc(V("AL15"))} dari ${esc(V("AL13"))}</div>${dlvBar(pMob)}<div class="bn">${esc(V("AR13"))}</div>` +
+            `<div class="fine mt">Planning vs actual tonase · ${esc(V("AL19"))} dari ${esc(V("AL17"))}</div>${dlvBar(pTon)}<div class="bn">${pTon != null ? esc(pTon.toFixed(1).replace(".", ",") + "%") : "–"}</div>` +
+            `<div class="fine mt">Omzet · actual ${esc(V("AR17"))}</div>${dlvBar(dlvPct("AR19"))}<div class="bn">${esc(V("AR19"))}</div>` +
+            `<div class="lh">Rata-rata per hari</div><div class="mg5 m4">${dlvKv("Mobil", V("AL23"))}${dlvKv("Ton plan", V("AR23"))}${dlvKv("Ton actual", V("AR25"))}${dlvKv("Ton omzet", V("AR27"))}</div>` +
+            `<div class="mg5">${dlvKv("Finish kota", V("AL25"))}${dlvKv("Finish loading", V("AL27"))}${dlvKv("Finish delivery", V("AL29"))}</div>` +
+            `<div class="lh">Total abnormal bulan ini</div><div class="mg5">${dlvKv("Gagal masuk", V("AL33"), "c-gagal")}${dlvKv("Under tonage", V("AL35"), "c-proses")}${dlvKv("Mobil > 14:00", V("AL37"), "c-masuk")}</div>`,
         );
         const rank = [["Mobil terbanyak", "AL41", "AO41"], ["Tonase terberat", "AL43", "AO43"], ["Loading terlama", "AL45", "AO45"], ["Delivery terlama", "AL47", "AO47"]]
           .filter(([, v]) => dlvC(v))
           .map(([l, v, d]) => dlvRow(l, dlvC(d), dlvC(v), "ok"))
           .join("");
         const dest = dlvC("AG53") ? dlvRow("Tujuan terbanyak", V("AL55") + " mobil · " + V("AL57") + " ton", dlvC("AG53"), "pd") : "";
-        const rec = rank + dest ? dlvFold("rek", "Rekor Harian & Tujuan", "", false, rank + dest) : "";
-        return kpi + status + tonase + abn + bulan + rec;
+        const rec = rank + dest ? dlvFold("rek", "Rekor Harian & Destinasi", "", false, rank + dest) : "";
+        return kpi + status + waktu + tonase + abn + bulan + rec;
       }
       let dlvLast = ""; // HTML terakhir yang dipasang: tidak dipasang ulang bila sama (tanpa kedip, scroll dan kartu terbuka tetap)
       const dlvPut = (body, html) => {
