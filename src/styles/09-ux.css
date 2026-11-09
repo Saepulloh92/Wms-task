@@ -107,3 +107,6 @@ input[type="file"]::file-selector-button { margin-right: 12px; padding: 10px 16p
 .kc, .ut, .kp-tile, .kp-grid > div, .dnl > div, .ur { min-width: 0; }
 .ucard, .acard, .kp-card, .dcard, .kc, .kp-tile, .ut { overflow-wrap: anywhere; }
 body { overflow-x: clip; }
+
+/* Daftar panjang: browser hanya menggambar kartu yang terlihat (scroll lebih ringan) */
+.ucard, .acard, .kp-card, .dcard { content-visibility: auto; contain-intrinsic-size: auto 150px; }

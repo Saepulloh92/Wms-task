@@ -436,7 +436,7 @@
         renderDc();
       }
       $("pkX").onclick = $("pkOk").onclick = pkClose;
-      $("pkQ").oninput = renderPick;
+      { let _t = 0; $("pkQ").oninput = () => { clearTimeout(_t); _t = setTimeout(renderPick, 120); }; }
       $("pkList").onclick = (e) => {
         const b = e.target.closest("[data-n]");
         if (!b) return;

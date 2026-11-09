@@ -373,13 +373,17 @@
           monRender();
         }
       };
+      let monQT = 0;
       $("monTools").oninput = (e) => {
         if (e.target.id === "monQ") {
           monQ = e.target.value;
           const p = e.target.selectionStart;
-          monRender();
-          const i = $("monQ");
-          if (i) { i.focus(); try { i.setSelectionRange(p, p); } catch (x) {} }
+          clearTimeout(monQT); // tunggu jeda ketik 150 ms agar tidak render ulang tiap huruf
+          monQT = setTimeout(() => {
+            monRender();
+            const i = $("monQ");
+            if (i) { i.focus(); try { i.setSelectionRange(p, p); } catch (x) {} }
+          }, 150);
         }
       };
       keepDom("monOver", "monTools", "monList");
