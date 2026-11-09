@@ -19,15 +19,17 @@ function hash_(str) {
   return Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, str, Utilities.Charset.UTF_8));
 }
 
+// banding dua teks lewat digest (panjang selalu sama): waktu proses tidak membocorkan panjang atau isi token
 function safeEq_(a, b) {
-  if (a.length !== b.length) return false;
-  var r = 0;
-  for (var i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  var x = hash_(String(a)), y = hash_(String(b)), r = x.length ^ y.length;
+  for (var i = 0; i < x.length && i < y.length; i++) r |= x.charCodeAt(i) ^ y.charCodeAt(i);
   return r === 0;
 }
 
-function randomToken_() {          // 28 karakter acak (huruf besar/kecil + angka)
+// 28 karakter acak (huruf besar/kecil + angka tanpa yang membingungkan). Sumber acak: UUID Google (kriptografis), bukan Math.random.
+function randomToken_() {
   var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789', out = '';
-  for (var i = 0; i < 28; i++) out += chars.charAt(Math.floor(Math.random() * chars.length));
+  var hex = (Utilities.getUuid() + Utilities.getUuid() + Utilities.getUuid()).replace(/-/g, '');   // 96 digit heksa
+  for (var i = 0; i < 28; i++) out += chars.charAt(parseInt(hex.substr(i * 3, 3), 16) % chars.length);   // 12 bit per karakter: bias diabaikan
   return out;
 }

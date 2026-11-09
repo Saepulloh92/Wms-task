@@ -31,7 +31,8 @@
  * Tanpa admin ber-password, aplikasi berjalan mode terbuka (semua menu bisa diakses).
  *
  * API (semua pakai token):
- *  GET  ?action=ping&token=XXX
+ *  GET  ?action=ping&token=XXX       -> { ok, time, ver, rev, mrev, warn? }  (ver = versi kode server: cek ini setelah deploy;
+ *                                        warn muncul bila ada data rusak atau sheet laporan gagal diperbarui)
  *  GET  ?action=pull&token=XXX
  *  POST body JSON (kirim sebagai text/plain agar tanpa preflight CORS):
  *    { token, action:"sync",  data:{...}, del:{...}, replace:[...], mrev:N }
@@ -107,9 +108,11 @@ var MENU_OPERATOR = ['mon', 'so', 'dc', 'task'];   // menu standar Petugas di ap
 var MENU_SPV = ['so', 'dc', 'task', 'check', 'kes', 'adj', 'clr', 'mon', 'muat', 'kpi', 'agi'];
 var MENU_PENERIMAAN = ['mon', 'so', 'clr'];
 var ROLE_LABEL = { admin: 'Admin', spv: 'SPV', petugas: 'Petugas', penerimaan: 'Penerimaan' };
+var GAS_VERSION = '2026-11-10';   // naikkan tiap mengubah kode; ping mengembalikannya supaya jelas deploy sudah versi terbaru
 var CHUNK = 45000;          // batas aman per sel (maks 50.000 karakter)
 var BACKUP_FOLDER = 'Stock Control Backup';
 var BACKUP_KEEP = 30;
+var BACKUP_PREFIX = 'cadangan_stock_control_';
 
 /* Token API. JANGAN ditulis di sini kalau repo ini di-push ke GitHub.
    Cara yang disarankan: kosongkan TOKEN_TETAP, lalu jalankan setup() -> token acak dibuat dan disimpan di

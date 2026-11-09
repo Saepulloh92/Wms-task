@@ -14,15 +14,38 @@ function fmtTime_(iso) {
 // Kosong/null = semua kolom teks.
 var SHASH_ = null;   // hash isi tiap sheet terakhir ditulis (satu properti, dimuat sekali per render)
 
+// gabungkan nomor kolom berurutan jadi rentang: [1,2,3,5] -> [[1,3],[5,5]] (satu panggilan API per rentang, bukan per kolom)
+function textRuns_(cols) {
+  var c = cols.slice().sort(function (a, b) { return a - b; }), runs = [];
+  c.forEach(function (n) {
+    var l = runs[runs.length - 1];
+    if (l && n === l[1] + 1) l[1] = n;
+    else if (!l || n > l[1]) runs.push([n, n]);
+  });
+  return runs;
+}
+
+var RENDER_ERR_ = [];   // sheet yang gagal ditulis pada render ini
+
+function renderFail_(name, err) {
+  RENDER_ERR_.push(name);
+  Logger.log('Sheet "' + name + '" gagal ditulis: ' + (err && err.message ? err.message : err));
+}
+
+// satu sheet yang bermasalah tidak boleh menggagalkan sheet lain maupun sinkron; hash baru disimpan bila berhasil, jadi dicoba lagi di sinkron berikutnya
 function writeTable_(name, header, rows, textCols, fmts) {
+  try { writeTableRaw_(name, header, rows, textCols, fmts); } catch (err) { renderFail_(name, err); }
+}
+
+function writeTableRaw_(name, header, rows, textCols, fmts) {
   var h = hash_(JSON.stringify([header, rows, fmts || null]));
-  if (SHASH_ && SHASH_[name] === h) return;   // tidak berubah: tidak perlu menyentuh sheet sama sekali
+  if (SHASH_ && SHASH_[name] === h && ss_().getSheetByName(name)) return;   // tidak berubah dan sheet masih ada: tidak perlu menyentuhnya
   var s = sheet_(name);
   s.clear();                                   // isi + format lama dibuang, supaya format kolom tidak "nyangkut"
   var all = [header].concat(rows);
   var cols = textCols || header.map(function (_, i) { return i + 1; });
-  cols.forEach(function (c) {
-    s.getRange(1, c, all.length, 1).setNumberFormat('@');
+  textRuns_(cols).forEach(function (r) {
+    s.getRange(1, r[0], all.length, r[1] - r[0] + 1).setNumberFormat('@');
   });
   Object.keys(fmts || {}).forEach(function (c) {
     s.getRange(2, Number(c), Math.max(rows.length, 1), 1).setNumberFormat(fmts[c]);
@@ -33,11 +56,13 @@ function writeTable_(name, header, rows, textCols, fmts) {
   if (SHASH_) SHASH_[name] = h;
 }
 
-// beberapa tabel dalam satu sheet (seperti 03.Weekly dan 05.Monitoring JIS di referensi)
-// blocks = [{ title, note, header, rows, textCols, fmts }]
 function writeBlocks_(name, blocks) {
+  try { writeBlocksRaw_(name, blocks); } catch (err) { renderFail_(name, err); }
+}
+
+function writeBlocksRaw_(name, blocks) {
   var h = hash_(JSON.stringify(blocks));
-  if (SHASH_ && SHASH_[name] === h) return;
+  if (SHASH_ && SHASH_[name] === h && ss_().getSheetByName(name)) return;
   var s = sheet_(name);
   s.clear();
   var r = 1;
@@ -46,7 +71,7 @@ function writeBlocks_(name, blocks) {
     if (b.note) { s.getRange(r, 1).setValue(b.note).setFontStyle('italic').setFontColor('#555555'); r++; }
     if (!b.header) { if (b.title || b.note) r++; return; }   // blok judul/catatan saja
     var nc = b.header.length, all = [b.header].concat(b.rows);
-    (b.textCols || []).forEach(function (c) { s.getRange(r, c, all.length, 1).setNumberFormat('@'); });
+    textRuns_(b.textCols || []).forEach(function (q) { s.getRange(r, q[0], all.length, q[1] - q[0] + 1).setNumberFormat('@'); });
     Object.keys(b.fmts || {}).forEach(function (c) {
       s.getRange(r + 1, Number(c), Math.max(b.rows.length, 1), 1).setNumberFormat(b.fmts[c]);
     });
@@ -148,11 +173,14 @@ function sumStats_(list) {         // ringkasan angka dari daftar entry yang sud
 function renderSheets_(st, withMaster, force) {
   var props = PropertiesService.getScriptProperties();
   try { SHASH_ = force ? {} : JSON.parse(props.getProperty('SHEET_HASH') || '{}'); } catch (e) { SHASH_ = {}; }
+  RENDER_ERR_ = [];
   try {
     renderSheetsBody_(st, withMaster);
   } finally {
     props.setProperty('SHEET_HASH', JSON.stringify(SHASH_));
     SHASH_ = null;
+    // sheet yang gagal ditampilkan lewat warn_() (mis. di respons ping/pull); hilang sendiri setelah render berikutnya berhasil
+    if (RENDER_ERR_.length) props.setProperty('RENDER_ERR', RENDER_ERR_.join(', ')); else props.deleteProperty('RENDER_ERR');
   }
 }
 
@@ -162,6 +190,8 @@ function renderSheetsBody_(st, withMaster) {
   var nameOf = {};
   users.forEach(function (u) { nameOf[u.id] = u.name; });
 
+  // Tiap kelompok sheet dibungkus try/catch (var tetap berlaku di seluruh fungsi): satu bagian yang gagal tidak menggagalkan sisanya.
+  try {
   if (withMaster) writeTable_(SH.master,
     ['Lokasi', 'Area', 'Bin', 'Status', 'Kode', 'Aging', 'Sinyal', 'Item', 'On Hand', 'Booking Susun', 'Booking Muat', 'Free Stock'],
     master.map(function (x) {
@@ -242,10 +272,12 @@ function renderSheetsBody_(st, withMaster) {
       rows: jDet, textCols: [1, 2, 3, 4, 5, 6, 10], fmts: { 11: 'yyyy-mm-dd' } }
   ]);
 
-  renderKes_(st);
-  renderMuat_(st);
-  renderClr_(st);
+  } catch (err) { renderFail_('Master/02/03/05', err); }
+  try { renderKes_(st); } catch (err) { renderFail_('Kesesuaian', err); }
+  try { renderMuat_(st); } catch (err) { renderFail_('Laporan Muat', err); }
+  try { renderClr_(st); } catch (err) { renderFail_('Clearing', err); }
 
+  try {
   var dc = st[K.dc] || {};
   var dRows = [];
   var dmRows = [];
@@ -275,6 +307,8 @@ function renderSheetsBody_(st, withMaster) {
         (u.areas || []).join(', '), menus];
     }));
 
+  } catch (err) { renderFail_('DC/Petugas', err); }
+  try {
   var tasks = st[K.tasks] || {};
   var done = counts, agS = st[K.aging] || {}, dcS = st[K.dc] || {};
   // kunci tugas: "B1-01-A" (bin), "AG|B1-01-A" (aging per rak), "DC|NAMA ITEM" (DC per item)
@@ -293,6 +327,8 @@ function renderSheetsBody_(st, withMaster) {
       return [a, (closed[a] || {}).by || '', fmtTime_((closed[a] || {}).at)];
     }));
 
+  } catch (err) { renderFail_('Tugas/Area', err); }
+  try {
   // Aging Stock: hasil cek fisik per rak + rekap sinyal per area dan kelas pipa
   var ag = st[K.aging] || {}, agk = st[K.agcls] || {}, byBin = {};
   master.forEach(function (m) { byBin[m.bin] = m; });
@@ -334,6 +370,7 @@ function renderSheetsBody_(st, withMaster) {
       var p = key.split('|'), v = rk[key];
       return [p[0], p[1]].concat(v).concat([v[2] + v[3] + v[4] + v[5], v.reduce(function (a, b) { return a + b; }, 0)]);
     }), [1, 2]);
+  } catch (err) { renderFail_('Aging', err); }
 }
 
 // bangun ulang sheet dari _STATE secara manual (menu Run)

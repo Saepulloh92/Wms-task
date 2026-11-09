@@ -8,14 +8,14 @@ function backup_() {
   var it = DriveApp.getFoldersByName(BACKUP_FOLDER);
   var folder = it.hasNext() ? it.next() : DriveApp.createFolder(BACKUP_FOLDER);
   var now = new Date();
-  var name = 'cadangan_stock_control_' + Utilities.formatDate(now, ss_().getSpreadsheetTimeZone(), 'yyyy-MM-dd_HHmm') + '.json';
+  var name = BACKUP_PREFIX + Utilities.formatDate(now, ss_().getSpreadsheetTimeZone(), 'yyyy-MM-dd_HHmm') + '.json';
   // format sama dengan tombol "Cadangan" di aplikasi, jadi bisa dipulihkan lewat menu Data WMS
   var body = JSON.stringify({ app: 'stock-control-wms', ver: 5, at: now.toISOString(), data: state });
   folder.createFile(name, body, MimeType.PLAIN_TEXT);
 
   var files = [];
   var fi = folder.getFiles();
-  while (fi.hasNext()) files.push(fi.next());
+  while (fi.hasNext()) { var f = fi.next(); if (f.getName().indexOf(BACKUP_PREFIX) === 0) files.push(f); }   // hanya berkas cadangan: berkas lain di folder tidak disentuh
   files.sort(function (a, b) { return b.getDateCreated() - a.getDateCreated(); });
   files.slice(BACKUP_KEEP).forEach(function (f) { f.setTrashed(true); });
   return name;
@@ -23,7 +23,7 @@ function backup_() {
 
 function dailyBackup() {
   var lock = LockService.getScriptLock();
-  if (!lock.tryLock(30000)) return;
-  try { backup_(); } finally { lock.releaseLock(); }
+  if (!lock.tryLock(30000)) { Logger.log('dailyBackup: server sibuk, cadangan hari ini dilewati.'); return; }
+  try { Logger.log('Cadangan dibuat: ' + backup_()); } finally { lock.releaseLock(); }
 }
 

@@ -27,10 +27,13 @@ function stateSheet_() {
   return s;
 }
 
+var CORRUPT_ = [];   // kunci state yang gagal dibaca pada pembacaan terakhir (dilaporkan lewat warn_)
+
 function readState_() {
   var s = stateSheet_();
   var last = s.getLastRow();
   var state = {};
+  CORRUPT_ = [];
   if (last < 1) return state;
   var rows = s.getRange(1, 1, last, 3).getValues();
   var parts = {};
@@ -40,9 +43,21 @@ function readState_() {
   });
   Object.keys(parts).forEach(function (k) {
     var txt = parts[k].sort(function (a, b) { return a[0] - b[0]; }).map(function (p) { return p[1]; }).join('');
-    try { state[k] = JSON.parse(txt); } catch (e) { /* abaikan bagian rusak */ }
+    try { state[k] = JSON.parse(txt); } catch (e) {
+      CORRUPT_.push(k);   // jangan diam-diam: catat dan laporkan, supaya admin tahu sebelum data itu tertimpa
+      Logger.log('Bagian state rusak, dilewati: ' + k + ' (' + txt.length + ' karakter)');
+    }
   });
   return state;
+}
+
+// ringkasan masalah untuk klien: bagian state rusak dan sheet laporan yang gagal dibuat (kosong bila aman)
+function warn_() {
+  var w = [];
+  if (CORRUPT_.length) w.push('Data rusak dibaca server: ' + CORRUPT_.join(', '));
+  var re = PropertiesService.getScriptProperties().getProperty('RENDER_ERR');
+  if (re) w.push('Sheet laporan gagal diperbarui: ' + re);
+  return w.join(' | ');
 }
 
 function readMeta_() {
@@ -54,8 +69,7 @@ function commit_(state) {
   state = whitelist_(state);
   // simpan state
   var s = stateSheet_();
-  s.clearContents();
-  s.getRange('A:C').setNumberFormat('@');
+  var prevLast = s.getLastRow();
   var rows = [];
   Object.keys(state).forEach(function (k) {
     var str = JSON.stringify(state[k]);
@@ -65,7 +79,13 @@ function commit_(state) {
       rows.push([k, n++, str.substr(i, CHUNK)]);
     }
   });
-  if (rows.length) s.getRange(1, 1, rows.length, 3).setValues(rows);
+  // tulis data BARU dulu, baru buang sisa baris lama: bila penulisan gagal, data lama tetap utuh (sebelumnya sheet dikosongkan lebih dulu)
+  if (rows.length) {
+    if (s.getMaxRows() < rows.length) s.insertRowsAfter(s.getMaxRows(), rows.length - s.getMaxRows());
+    s.getRange('A:C').setNumberFormat('@');
+    s.getRange(1, 1, rows.length, 3).setValues(rows);
+  }
+  if (prevLast > rows.length) s.getRange(rows.length + 1, 1, prevLast - rows.length, 3).clearContent();
 
   var props = PropertiesService.getScriptProperties();
   var h = hash_(JSON.stringify(state[K.master] || []));
