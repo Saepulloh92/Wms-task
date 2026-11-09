@@ -9,7 +9,7 @@
       const syKey = { counts: K_C, dc: K_D, tasks: K_T, closed: K_X, aging: K_AG, agcls: K_AGK };
       const syGetV = { counts: () => counts, dc: () => dc, tasks: () => tasks, closed: () => closed, aging: () => aging, agcls: () => agingCls };
       const sySetV = { counts: (v) => (counts = v), dc: (v) => (dc = v), tasks: (v) => (tasks = v), closed: (v) => (closed = v), aging: (v) => (aging = v), agcls: (v) => (agingCls = v) };
-      const syPlain = { master: K_M, users: K_U, mon: K_MON, codefix: K_F, dcPick: K_DP, dest: "warehouse_so_dest_v1", areacfg: "warehouse_so_areacfg_v1", agingcfg: K_AGC };
+      const syPlain = { master: K_M, users: K_U, mon: K_MON, codefix: K_F, dcPick: K_DP, dest: "warehouse_so_dest_v1", areacfg: "warehouse_so_areacfg_v1", linkcfg: K_LK, agingcfg: K_AGC };
       // riwayat laporan (Kesesuaian, Muat, Clearing): dikirim ke server per tanggal untuk dibuat sheet laporan
       const syRpt = { kesH: K_KESH, muatH: K_MUATH, clrH: K_CLRH };
       const syRptMap = {
@@ -84,6 +84,7 @@
         if (has("dcPick")) data[K_DP] = dcPick;
         if (has("dest")) data[syPlain.dest] = dest;
         if (has("areacfg") && areaCfg) data[syPlain.areacfg] = areaCfg;
+        if (has("linkcfg")) { const lc = linkSnap(); if (lc) data[syPlain.linkcfg] = lc; }
         if (has("agingcfg")) data[syPlain.agingcfg] = agingCfg;
         syRkPend = {};
         Object.keys(syRpt).forEach((n) => {
@@ -178,6 +179,9 @@
             areaCfg = rd[syPlain.areacfg];
             put(syPlain.areacfg, areaCfg);
             changed = true;
+          }
+          if (rd[syPlain.linkcfg] && rd[syPlain.linkcfg].data && !SY.rep.includes("linkcfg") && !same("linkcfg", rd[syPlain.linkcfg])) {
+            if (linkApply(rd[syPlain.linkcfg])) changed = true;
           }
           if (rd[syPlain.agingcfg] && typeof rd[syPlain.agingcfg] === "object" && !SY.rep.includes("agingcfg") && !same("agingcfg", rd[syPlain.agingcfg])) {
             agingCfg = rd[syPlain.agingcfg];

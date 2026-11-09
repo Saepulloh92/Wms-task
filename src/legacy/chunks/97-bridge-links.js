@@ -15,7 +15,7 @@
       });
       // Status DC per item (todo/draft/ok/bad) dari fungsi legacy yang sama dengan menu DC Harian, agar angka laporan identik.
       WMS.dcRows = () => dcItems().map((e) => ({ item: e.item, st: dcSt(e), sys: dcSysOf(e), fis: dc[e.item] ? dcFis(dc[e.item].rows) : 0, diff: dc[e.item] ? dcFis(dc[e.item].rows) - dcSysOf(e) : 0, at: dc[e.item] && dc[e.item].at, by: dc[e.item] && dc[e.item].by }));
-      Object.assign(WMS, { areas, isClosed, owners, staff, stat, toast, outText, esc, curName, blindFor: isBlindFor, taskBadges: () => taskBadges() });
+      Object.assign(WMS, { areas, isClosed, owners, staff, stat, toast, outText, esc, curName, blindFor: isBlindFor, taskBadges: () => taskBadges(), linkSnap, linkApply });
       Object.assign(WMS, {
         setAging(v) { aging = v; sv(K_AG, v); taskBadges(); WMS.emit(); },
         setAgingCls(v) { agingCls = v; sv(K_AGK, v); WMS.emit(); },

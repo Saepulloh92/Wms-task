@@ -4,7 +4,7 @@
       const K_DLV = "warehouse_so_dlv_v1",
         K_DLVC = "warehouse_so_dlvc_v1";
       const dlvS = ld(K_DLV, {});
-      let dlv = { url: dlvS.url || "", auto: dlvS.auto == null ? 2 : dlvS.auto };
+      let dlv = { url: dlvS.url || WMS_CONFIG.deliveryUrl || "", auto: dlvS.auto == null ? 2 : dlvS.auto };
       let dlvCache = ld(K_DLVC, null), // { at, rows }
         dlvBusy = false,
         dlvErr = "",
@@ -227,6 +227,7 @@
         if (u !== dlv.url) dlvCache = null;
         dlv = { url: u, auto: +$("dlvAuto").value || 0 };
         sv(K_DLV, dlv);
+        linkSnap(); // tautan baru dibagikan ke HP lain lewat sinkron
         if (!u) sv(K_DLVC, null);
         dlvEnter();
         if (u) dlvLoad(true);
