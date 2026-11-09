@@ -135,3 +135,19 @@ body { overflow-x: clip; }
 #dcSheet.dc-lock #dcLockBar { display: grid; }
 #dcSheet.dc-lock .sh-foot .row2:not(#dcLockBar), #dcSheet.dc-lock #dcAdd, #dcSheet.dc-lock #dcSug, #dcSheet.dc-lock #dcSugL, #dcSheet.dc-lock #dcAdjWrap, #dcSheet.dc-lock .dr .rm, #dcSheet.dc-lock #dcMiss { display: none; }
 #dcSheet.dc-lock input { background: #f1f4f2; border-color: #0a5532; }
+
+/* Laporan bulanan deviasi DC */
+.dcrep summary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 56px; font-weight: 800; font-size: 17px; cursor: pointer; }
+.dcrep-body { display: grid; gap: 10px; margin-top: 10px; }
+.dcrep-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ut.bad b { color: var(--red); }
+.rcard { background: #fff; border: 2px solid var(--line); border-left-width: 10px; border-radius: 12px; padding: 12px; display: grid; gap: 8px; }
+.rcard.act { border-left-color: #b3261e; background: #fff4f3; } .rcard.mon { border-left-color: #b26a00; }
+.rcard .rh { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.rcard .rh b { font-size: 17px; color: #000; overflow-wrap: anywhere; }
+.rcard small { color: var(--muted); }
+.rmo { display: flex; flex-wrap: wrap; gap: 6px; }
+.mchip { display: inline-flex; align-items: center; gap: 6px; background: #1b2226; color: #fff; border-radius: 8px; padding: 6px 10px; font-size: 14px; }
+.mchip b { font-size: 16px; }
+.rt { font-size: 14px; font-weight: 700; }
+.ra { font-size: 14px; font-weight: 700; color: #6d0f0a; background: #fad3cf; border-radius: 8px; padding: 8px 10px; }

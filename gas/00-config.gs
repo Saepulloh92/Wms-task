@@ -92,6 +92,7 @@ var SH = {
   jis: '05.Monitoring JIS',
   clr: 'Rekap Clearing',
   dc: 'DC_Harian',
+  dcm: 'DC_Bulanan',
   users: 'Petugas',
   tasks: 'Tugas_Bin',
   closed: 'Area_Ditutup',

@@ -35,6 +35,7 @@
       const dcInF = (e, f) => f === "all" || (f === "task" ? tkDcOpen(e.item) : f === "todo" ? ["todo", "draft"].includes(dcSt(e)) : dcSt(e) === f);
       function renderDc() {
         taskBadges();
+        dcRoll();
         const all = dcScope(),
           q = $("dcQ").value.toLowerCase().trim().split(/\s+/).filter(Boolean),
           n = (f) => all.filter((e) => dcInF(e, f)).length,
@@ -75,6 +76,7 @@
               })
               .join("")
           : `<div class="empty">${all.length ? (dcF === "todo" && !q.length ? "Semua item sudah dicek." : "Tidak ada item di filter ini.") : DATA.length ? "Belum ada item yang dipilih. Ketuk Pilih item DC di atas." : "Belum ada data WMS."}</div>`;
+        renderDcRep();
       }
       const dcRead = () =>
         [...document.querySelectorAll("#dcRows .dr")]
@@ -253,6 +255,8 @@
           at: new Date().toISOString(),
           adj: $("dcAdjRak").value || "",
           hist: hist.slice(-10),
+          sy: sys != null ? sys : dcCur.sys,
+          kd: dcCur.kode,
         };
         dcUndoStack.push({ item: dcCur.item, prev: prevDc, saved: dc[dcCur.item] });
         if (dcUndoStack.length > 30) dcUndoStack.shift();
@@ -436,8 +440,8 @@
       };
       $("dcReset").onclick = async () => {
         if (!(await leadAuth())) return;
-        if (await ask("Mulai DC baru?", "Hasil DC dan daftar item yang dipilih dihapus. Unduh rekap dulu jika masih perlu.", "Hapus dan mulai baru", true)) {
-          dc = {};
+        if (await ask("Mulai DC baru?", "Hasil DC bulan ini dan daftar item yang dipilih dihapus. Arsip bulan-bulan lalu dan laporan deviasi tetap tersimpan. Unduh rekap dulu jika masih perlu.", "Hapus dan mulai baru", true)) {
+          dc = Object.fromEntries(Object.entries(dc).filter(([k]) => k[0] === "@")); // arsip bulanan tidak ikut dihapus
           dcPick = {};
           sv(K_D, dc);
           sv(K_DP, dcPick);
@@ -512,4 +516,149 @@
       /* ---- v4: perilaku tambahan ---- */
       document.querySelectorAll("#tabs [data-v]").forEach((b) => (b.onclick = () => nav(b.dataset.v)));
       $("tMenu").onclick = () => side(true);
-
+      /* ---------- arsip bulanan + laporan deviasi ----------
+         Awal bulan: hasil DC bulan lalu dipindah ke arsip (kunci "@YYYY-MM|ITEM" di data DC, ikut tersinkron),
+         lalu daftar DC bulan baru mulai kosong. Item yang selisih bulan lalu otomatis masuk daftar lagi. */
+      const DC_BLN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+      const DC_BLS = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+      const dcYM = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+      const dcML = (m, short) => (short ? DC_BLS : DC_BLN)[Number(m.slice(5)) - 1] + (short ? "" : " " + m.slice(0, 4));
+      const dcMPrev = (m, k) => {
+        let y = Number(m.slice(0, 4)), mo = Number(m.slice(5)) - k;
+        while (mo < 1) { mo += 12; y--; }
+        return y + "-" + String(mo).padStart(2, "0");
+      };
+      function dcRoll() {
+        if (!DATA.length) return 0; // tunggu data WMS agar qty sistem bisa dipastikan
+        const cur = dcYM(new Date());
+        let moved = 0, picked = 0, im = null;
+        Object.keys(dc).forEach((k) => {
+          const r = dc[k];
+          if (k[0] === "@" || !r || !r.at) return;
+          const m = dcYM(new Date(r.at));
+          if (!(m < cur)) return;
+          if (r.done) {
+            im = im || new Map(dcItems().map((e) => [e.item, e]));
+            const e = im.get(k), fis = dcFis(r.rows || []), sys = r.sy != null ? r.sy : r.sys != null ? r.sys : e ? e.sys : null;
+            if (sys != null) {
+              const h0 = r.hist && r.hist[0], key = "@" + m + "|" + k,
+                rec = { m, item: k, kode: r.kd || (e && e.kode) || "", sys, fis, d: fis - sys, d0: h0 ? h0.fis - (h0.sys != null ? h0.sys : sys) : fis - sys, n: (r.hist ? r.hist.length : 0) + 1, by: r.by || "", at: r.at, adj: r.adj || "" };
+              if (!dc[key] || String(dc[key].at) < String(rec.at)) dc[key] = rec;
+              if (rec.d && !dcPick[k]) { dcPick[k] = true; picked++; } // selisih bulan lalu: wajib DC lagi bulan ini
+            }
+          }
+          delete dc[k];
+          moved++;
+        });
+        if (moved) {
+          dcUndoStack.length = 0;
+          sv(K_D, dc);
+          if (picked) sv(K_DP, dcPick);
+        }
+        return moved;
+      }
+      function dcMonthRecs(m, im) {
+        const out = new Map(), cur = dcYM(new Date());
+        Object.keys(dc).forEach((k) => {
+          const r = dc[k];
+          if (!r) return;
+          if (k[0] === "@") { if (r.m === m) out.set(r.item, r); return; }
+          if (m === cur && r.done && r.at && dcYM(new Date(r.at)) === cur) {
+            const e = im.get(k), fis = dcFis(r.rows || []), sys = r.sy != null ? r.sy : r.sys != null ? r.sys : e ? e.sys : null;
+            if (sys != null) out.set(k, { m, item: k, kode: r.kd || (e && e.kode) || "", sys, fis, d: fis - sys, n: (r.hist ? r.hist.length : 0) + 1, by: r.by || "", at: r.at, adj: r.adj || "" });
+          }
+        });
+        return out;
+      }
+      function dcMonths() {
+        const s = new Set(), cur = dcYM(new Date());
+        Object.keys(dc).forEach((k) => {
+          const r = dc[k];
+          if (!r) return;
+          if (k[0] === "@") s.add(r.m);
+          else if (r.done && r.at && dcYM(new Date(r.at)) === cur) s.add(cur);
+        });
+        return [...s].sort().reverse();
+      }
+      /* item yang selisih di bulan M, dihitung mundur: berapa bulan kalender berturut-turut ia selisih */
+      function dcReport(M) {
+        const im = new Map(dcItems().map((e) => [e.item, e])), cache = {},
+          mr = (m) => cache[m] || (cache[m] = dcMonthRecs(m, im)),
+          rows = [];
+        mr(M).forEach((r, item) => {
+          if (!r.d) return;
+          const trail = [r];
+          for (let k = 1; k < 12; k++) {
+            const p = mr(dcMPrev(M, k)).get(item);
+            if (!p || !p.d) break;
+            trail.unshift(p);
+          }
+          rows.push({ item, kode: r.kode, streak: trail.length, trail, total: trail.reduce((a, x) => a + x.d, 0), last: r });
+        });
+        rows.sort((a, b) => b.streak - a.streak || Math.abs(b.total) - Math.abs(a.total) || a.item.localeCompare(b.item, "id"));
+        return { M, rows, act: rows.filter((x) => x.streak >= 3), mon: rows.filter((x) => x.streak === 2), checked: mr(M).size };
+      }
+      let dcRepM = "", dcRepF = "3";
+      const dcRepRows = (rep) => (dcRepF === "3" ? rep.act : dcRepF === "2" ? rep.mon : rep.rows);
+      function renderDcRep() {
+        const ms = dcMonths(), cur = dcYM(new Date());
+        if (!ms.includes(dcRepM)) dcRepM = ms.find((m) => m < cur) || ms[0] || ""; // bawaan: bulan terakhir yang sudah ditutup
+        const rep = dcRepM ? dcReport(dcRepM) : null;
+        $("dcRepSum").innerHTML = "Laporan deviasi " + (rep ? dcML(rep.M) : "bulanan") + (rep ? ` <span class="dcb ${rep.act.length ? "bad" : "ok"}">${rep.act.length ? rep.act.length + " item perlu tindakan" : "Tidak ada yang 3 bulan berturut"}</span>` : ' <span class="fine">belum ada data</span>');
+        if (!$("dcRepBox").open) return;
+        $("dcRepM").innerHTML = ms.map((m) => `<option value="${m}">${dcML(m)}${m === cur ? " (berjalan)" : ""}</option>`).join("");
+        $("dcRepM").value = dcRepM;
+        if (!rep) {
+          $("dcRepTiles").innerHTML = "";
+          $("dcRepChips").innerHTML = "";
+          $("dcRepList").innerHTML = '<div class="empty">Belum ada hasil DC yang selesai. Laporan terisi otomatis dari hasil DC tiap bulan; awal bulan hasilnya diarsipkan.</div>';
+          return;
+        }
+        const tile = (v, l, c) => `<div class="ut ${c || ""}"><b>${v}</b><span>${l}</span></div>`;
+        $("dcRepTiles").innerHTML = tile(rep.checked, "Item di-DC") + tile(rep.act.length, "Selisih 3+ bulan", rep.act.length ? "bad" : "ok") + tile(rep.mon.length, "Selisih 2 bulan", rep.mon.length ? "warn" : "ok");
+        $("dcRepChips").innerHTML = chipsHtml(dcRepF, [["3", "3+ bulan", rep.act.length], ["2", "2 bulan", rep.mon.length], ["all", "Semua selisih", rep.rows.length]]);
+        const L = dcRepRows(rep);
+        $("dcRepList").innerHTML = L.length
+          ? L.map((x) => `<div class="rcard ${x.streak >= 3 ? "act" : "mon"}"><div class="rh"><b>${esc(x.item)}</b><span class="dcb ${x.streak >= 3 ? "bad" : "dr"}">${x.streak} bulan berturut</span></div><small>${esc(x.kode)}</small><div class="rmo">${x.trail.map((t) => `<span class="mchip">${dcML(t.m, true)}<b>${signed(t.d)}</b></span>`).join("")}</div><div class="rt">Total ${signed(x.total)} · DC bulan ini ${x.last.n}×${x.last.by ? " · " + esc(x.last.by) : ""}</div>${x.streak >= 3 ? '<div class="ra">Perlu tindakan: telusuri transaksi dan lokasi rak, cocokkan dengan QAD, lalu koreksi stok.</div>' : ""}</div>`).join("")
+          : `<div class="empty">${dcRepF === "3" ? "Tidak ada item dengan selisih 3 bulan berturut-turut." : "Tidak ada item di kategori ini."}${ms.length < 3 ? " Data tersimpan baru " + ms.length + " bulan, laporan 3 bulan terisi setelah ada 3 bulan data." : ""}</div>`;
+      }
+      function dcRepText(rep, forTg) {
+        const E = (x) => (forTg ? md(x) : x),
+          one = (x, i) => `${i + 1}. ${E(x.item)}${x.kode ? " (" + E(x.kode) + ")" : ""}\n   ${x.trail.map((t) => dcML(t.m, true) + " " + signed(t.d)).join(" · ")} (total ${signed(x.total)})`;
+        const out = [`${forTg ? "*" : ""}LAPORAN DEVIASI DC - ${dcML(rep.M).toUpperCase()}${forTg ? "*" : ""}`, `Item di-DC: ${rep.checked} · Selisih: ${rep.rows.length}`, ""];
+        out.push(`${forTg ? "*" : ""}PERLU TINDAKAN: selisih 3+ bulan berturut-turut (${rep.act.length})${forTg ? "*" : ""}`);
+        out.push(...(rep.act.length ? rep.act.map(one) : ["Tidak ada."]), "");
+        out.push(`${forTg ? "*" : ""}PANTAU: selisih 2 bulan berturut-turut (${rep.mon.length})${forTg ? "*" : ""}`);
+        out.push(...(rep.mon.length ? rep.mon.map(one) : ["Tidak ada."]));
+        return out.join("\n");
+      }
+      $("dcRepBox").addEventListener("toggle", renderDcRep);
+      $("dcRepM").onchange = () => { dcRepM = $("dcRepM").value; renderDcRep(); };
+      $("dcRepChips").onclick = (e) => {
+        const b = e.target.closest("[data-k]");
+        if (b) { dcRepF = b.dataset.k; renderDcRep(); }
+      };
+      $("dcRepSend").onclick = () => {
+        if (!dcRepM) return toast("Belum ada data untuk laporan.");
+        const rep = dcReport(dcRepM);
+        sendAll(dcRepText(rep, false), dcRepText(rep, true), false);
+      };
+      $("dcRepCsv").onclick = () => {
+        if (!dcRepM) return toast("Belum ada data untuk laporan.");
+        const rep = dcReport(dcRepM);
+        csvOut(
+          [
+            ["Bulan laporan", "Item", "Kode Item", "Bulan berturut-turut", "Kategori", "Selisih 2 bulan lalu", "Selisih bulan lalu", "Selisih bulan ini", "Total selisih", "DC bulan ini (kali)", "Petugas terakhir", "Rak adjust"],
+            ...rep.rows.map((x) => {
+              const t = x.trail.map((y) => y.d), pad = Array(Math.max(0, 3 - t.length)).fill(""), last3 = [...pad, ...t.slice(-3)];
+              return [dcML(rep.M), x.item, x.kode, x.streak, x.streak >= 3 ? "Perlu tindakan" : x.streak === 2 ? "Pantau" : "Selisih baru", ...last3, x.total, x.last.n, x.last.by, x.last.adj];
+            }),
+          ],
+          "laporan_deviasi_dc_" + rep.M + ".csv",
+        );
+        toast("Laporan diunduh");
+      };
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden && dcRoll()) { renderDc(); metrics(); }
+      });
+      dcRoll();

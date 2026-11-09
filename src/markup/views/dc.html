@@ -9,6 +9,18 @@
             <div class="chips" id="dcChips"></div>
             <div id="dcList" class="bin-list"></div>
           </div>
+          <details class="panel dcrep" id="dcRepBox">
+            <summary id="dcRepSum">Laporan bulanan deviasi</summary>
+            <div class="dcrep-body">
+              <label for="dcRepM">Bulan laporan</label>
+              <select id="dcRepM"></select>
+              <div class="dcrep-tiles" id="dcRepTiles"></div>
+              <div class="chips" id="dcRepChips"></div>
+              <div id="dcRepList"></div>
+              <button class="btn pri" id="dcRepSend" type="button">Salin &amp; kirim laporan ke Telegram</button>
+              <button class="btn sec mt" id="dcRepCsv" type="button">Unduh laporan (CSV)</button>
+            </div>
+          </details>
           <button class="btn pri ximp" id="dcCsv">Unduh rekap DC (CSV)</button>
           <button class="btn pri mt" id="dcSend" type="button">Salin &amp; kirim rekap ke Telegram</button>
           <button class="ximp" id="dcCopy" type="button" tabindex="-1" aria-hidden="true">x</button>

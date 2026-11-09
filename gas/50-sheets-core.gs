@@ -248,8 +248,13 @@ function renderSheetsBody_(st, withMaster) {
 
   var dc = st[K.dc] || {};
   var dRows = [];
+  var dmRows = [];
   Object.keys(dc).forEach(function (item) {
     var r = dc[item] || {};
+    if (item.charAt(0) === '@') { // arsip bulanan ("@YYYY-MM|ITEM") ke sheet DC_Bulanan, bukan DC_Harian
+      dmRows.push([r.m || '', r.item || '', r.kode || '', r.sys == null ? '' : r.sys, r.fis == null ? '' : r.fis, r.d == null ? '' : r.d, r.n || 1, r.by || '', fmtTime_(r.at), r.adj || '']);
+      return;
+    }
     var rowsArr = Array.isArray(r.rows) ? r.rows : [];
     var fis = rowsArr.reduce(function (a, x) { return a + (Number(x.qty) || 0); }, 0);
     var sys = r.sys == null ? '' : Number(r.sys);
@@ -259,6 +264,8 @@ function renderSheetsBody_(st, withMaster) {
   });
   dRows.sort(function (a, b) { return String(b[0]).localeCompare(String(a[0])); });
   writeTable_(SH.dc, ['Waktu', 'Petugas', 'Item', 'Qty Sistem', 'Qty Fisik', 'Selisih', 'Status', 'Rak Adjust', 'Rincian Rak'], dRows, [1, 2, 3, 7, 8, 9]);
+  dmRows.sort(function (a, b) { return String(b[0]).localeCompare(String(a[0])) || String(a[1]).localeCompare(String(b[1])); });
+  writeTable_(SH.dcm, ['Bulan', 'Item', 'Kode Item', 'Qty Sistem', 'Qty Fisik', 'Selisih', 'DC ke-', 'Petugas', 'Waktu', 'Rak Adjust'], dmRows, [1, 2, 3, 8, 9, 10]);
 
   writeTable_(SH.users, ['ID', 'Nama', 'Peran', 'Aktif', 'Area', 'Menu'],
     users.map(function (u) {
@@ -337,7 +344,7 @@ function rebuildSheets() {
 
 // urutan tab: laporan dulu (01-05, Clearing), lalu data pendukung
 function orderSheets_() {
-  var order = [SH.kes, SH.counts, SH.weekly, SH.muat, SH.jis, SH.clr, SH.dc, SH.tasks, SH.closed, SH.aging, SH.agrekap, SH.users, SH.master];
+  var order = [SH.kes, SH.counts, SH.weekly, SH.muat, SH.jis, SH.clr, SH.dc, SH.dcm, SH.tasks, SH.closed, SH.aging, SH.agrekap, SH.users, SH.master];
   var ss = ss_(), pos = 1;
   order.forEach(function (n) {
     var s = ss.getSheetByName(n);
