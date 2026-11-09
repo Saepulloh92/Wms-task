@@ -43,7 +43,7 @@
         return `<div class="kc ${cls}"><div class="kh"><span class="ki">${monIco[cls]}</span><b>${v == null ? "–" : esc(fmt(v))}</b></div><div class="kl">${esc(lb)}</div><span class="dchip${sub ? "" : " eq"}">${sub ? esc(sub) : "–"}</span></div>`;
       }
       const dlvOpen = {}; // key -> true/false (pilihan pengguna, bertahan antar muat ulang)
-      const dlvFold = (key, t, sum, def, body) => `<details class="dcard dfold" data-k="${key}"${(dlvOpen[key] == null ? def : dlvOpen[key]) ? " open" : ""}><summary><h3>${esc(t)}</h3>${sum ? `<span class="dsum">${esc(sum)}</span>` : ""}</summary>${body}</details>`;
+      const dlvFold = (key, t, sum, def, body) => `<details class="dcard dfold" data-k="${key}"${(dlvOpen[key] == null ? def || innerWidth >= 900 : dlvOpen[key]) ? " open" : ""}><summary><h3>${esc(t)}</h3>${sum ? `<span class="dsum">${esc(sum)}</span>` : ""}</summary>${body}</details>`;
       const dlvAny = (...cells) => cells.some((c) => dlvC(c));
       // "1.228,97" / "1228,97" / "97,6%" -> angka
       const dlvNum = (s) => {
@@ -187,6 +187,7 @@
       const dlvPut = (body, html) => {
         if (html !== dlvLast) {
           body.innerHTML = html;
+          if (document.body.classList.contains("tv")) requestAnimationFrame(dlvTvFit);
           dlvLast = html;
         }
       };
@@ -292,3 +293,36 @@
         dlvEnter();
         if (u) dlvLoad(true);
       };
+
+      /* Layar TV: sembunyikan menu, tampilkan dashboard penuh (Esc untuk keluar) */
+      function dlvTvSet(on) {
+        document.body.classList.toggle("tv", on);
+        const b = $("dlvTv");
+        b.setAttribute("aria-pressed", on ? "true" : "false");
+        b.textContent = on ? "Keluar layar TV" : "Layar TV";
+        requestAnimationFrame(dlvTvFit);
+        if (on && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+        if (!on && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+      }
+      $("dlvTv").onclick = () => dlvTvSet(!document.body.classList.contains("tv"));
+      document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && document.body.classList.contains("tv")) dlvTvSet(false); });
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape" && document.body.classList.contains("tv")) dlvTvSet(false); });
+
+      /* Mode TV: perkecil otomatis sampai seluruh dashboard muat satu layar, tanpa scroll */
+      function dlvTvFit() {
+        const el = $("v-mon");
+        if (!el) return;
+        el.style.zoom = "";
+        if (!document.body.classList.contains("tv")) return;
+        let z = parseFloat(getComputedStyle(el).zoom) || 1;
+        for (let i = 0; i < 6; i++) {
+          const h = document.documentElement.scrollHeight, vh = innerHeight;
+          if (h <= vh + 1) break;
+          const nz = Math.max(0.5, z * (vh / h) * 0.97);
+          if (Math.abs(nz - z) < 0.01) break;
+          z = nz;
+          el.style.zoom = String(z);
+        }
+      }
+      let dlvRz = 0;
+      window.addEventListener("resize", () => { clearTimeout(dlvRz); dlvRz = setTimeout(dlvTvFit, 150); });

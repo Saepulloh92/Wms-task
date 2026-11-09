@@ -1,0 +1,31 @@
+/* Layar besar dan TV (4K): Beranda memakai seluruh lebar dengan kolom ala dashboard Excel.
+   Perbesaran lewat zoom pada #v-mon agar teks terbaca dari jauh; dua kolom di tablet, tiga kolom di layar lebar. */
+@media (min-width: 900px) {
+  #dlvBody { column-count: 2; column-gap: 14px; }
+  #dlvBody > .kcs, #dlvBody > .dcard.span { column-span: all; }
+  #dlvBody > * { break-inside: avoid; }
+}
+@media (min-width: 1500px) {
+  .content, header .prog { max-width: none; }
+  #dlvBody { column-count: 3; column-gap: 16px; }
+  #v-mon { zoom: 1.15; }
+}
+@media (min-width: 2200px) { #v-mon { zoom: 1.7; } }
+@media (min-width: 3000px) { #v-mon { zoom: 2; } #dlvBody { column-count: 4; } }
+/* layar lebar: kotak ringkasan atas lebih rapat, supaya seluruh dashboard muat satu layar */
+@media (min-width: 1500px) {
+  #dlvBody .kcs { gap: 10px; margin-bottom: 10px; }
+  #dlvBody .kc { padding: 10px 14px; }
+  #dlvBody .dcard { margin-bottom: 10px; }
+}
+
+/* Mode TV: hanya dashboard, layar penuh */
+body.tv .side, body.tv header, body.tv .tabs, body.tv #dlvSet, body.tv .mon-bar, body.tv #monTools, body.tv #v-mon > h2, body.tv #v-mon > .hint { display: none !important; }
+body.tv .app { padding: 0 !important; }
+body.tv main { max-width: none !important; padding: 12px 18px !important; }
+body.tv .content { max-width: none !important; }
+body.tv #dlvBody { column-count: 3; }
+@media (max-width: 1100px) { body.tv #dlvBody { column-count: 2; } }
+@media (max-width: 700px) { body.tv #dlvBody { column-count: 1; } }
+#dlvTv { margin-left: 8px; }
+@media (min-width: 3000px) { body.tv #dlvBody { column-count: 4; } }

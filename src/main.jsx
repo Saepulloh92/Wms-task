@@ -10,6 +10,7 @@ import "./styles/06-identity-outdoor.css";
 import "./styles/07-tablet-lite.css";
 import "./styles/08-menu-groups.css";
 import "./styles/09-ux.css";
+import "./styles/10-tv.css";
 import "./styles/10-ux-polish.css";
 import "./styles/11-aging.css";
 import "./styles/12-ux-final.css";
