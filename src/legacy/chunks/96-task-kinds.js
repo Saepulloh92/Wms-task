@@ -67,7 +67,7 @@
         plan.forEach((p) => { const u = users.find((z) => z.id === p.u); per[u ? u.name : "?"] = (per[u ? u.name : "?"] || 0) + 1; });
         const lbl = { bin: "tugas bin", AG: "tugas aging", DC: "tugas DC" }[$("dgKind").value];
         if (!(await ask("Buat " + plan.length + " " + lbl + "?", Object.entries(per).map(([n, c]) => n + ": " + c).join(", ") + ". Tugas yang sudah ada untuk item yang sama diperbarui.", "Buat tugas"))) return;
-        const at = new Date().toISOString();
+        const at = nowIso();
         plan.forEach((p) => {
           const rec = { u: p.u, by: curName() || "Admin", at };
           if (p.show !== undefined) rec.show = p.show;

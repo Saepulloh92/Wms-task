@@ -12,7 +12,7 @@
         // pindahan dari kunci versi awal (kelas & nama petugas disimpan terpisah)
         const oc = raw("warehouse_so_aging_cls_v1"), op = raw("warehouse_so_aging_pic_v1");
         if (oc && typeof oc === "object") {
-          Object.keys(oc).forEach((k) => { if (!agingCls[k] && typeof oc[k] === "string") agingCls[k] = { c: oc[k], at: new Date().toISOString() }; });
+          Object.keys(oc).forEach((k) => { if (!agingCls[k] && typeof oc[k] === "string") agingCls[k] = { c: oc[k], at: nowIso() }; });
           put(K_AGK, agingCls); localStorage.removeItem("warehouse_so_aging_cls_v1");
         }
         if (op && typeof op === "object") { if (!agingCfg.pic) agingCfg.pic = op; put(K_AGC, agingCfg); localStorage.removeItem("warehouse_so_aging_pic_v1"); }

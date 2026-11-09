@@ -5,6 +5,10 @@
         K_F = "warehouse_so_codefix_v1",
         K_B = "warehouse_so_backup_v1";
       const $ = (id) => document.getElementById(id);
+      // jam terkoreksi waktu server (selisih diisi saat sinkron): cap waktu antar-HP tetap adil walau jam HP meleset
+      window.__clkOff = 0;
+      const nowIso = () => new Date(Date.now() + (window.__clkOff || 0)).toISOString();
+      window.nowIso = nowIso;
       const corrupt = [];
       const ld = (k, d) => {
         let raw = null;

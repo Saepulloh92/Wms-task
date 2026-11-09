@@ -33,6 +33,8 @@ function makeServer({ oldVersion = false } = {}) {
     var __S = { state: {}, meta: { rev: 0, mrev: 0, at: '' } };
     function readState_() { return JSON.parse(JSON.stringify(__S.state)); }
     function readMeta_() { return __S.meta; }
+    function keyHashes_(st) { var h = {}; Object.keys(st).forEach(function (k) { h[k] = canon_(st[k]); }); return h; }
+    function sameAsStored_(h) { return canon_(h) === canon_(keyHashes_(__S.state)); }
     function commit_(state) {
       var mc = canon_(state[K.master] || []) !== canon_(__S.state[K.master] || []);
       __S.state = JSON.parse(JSON.stringify(state));

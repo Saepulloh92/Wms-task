@@ -195,7 +195,7 @@
           actualItem: match ? sel.item : al.map((x) => x.item + " (" + x.qty + ")").join("; "),
           actualQty: Number(v),
           note: $("note").value,
-          savedAt: new Date().toISOString(),
+          savedAt: nowIso(),
           by: curName(),
           systemQty: Number(sel.onhand),
           systemItem: sel.item,

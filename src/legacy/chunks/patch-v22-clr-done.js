@@ -19,7 +19,7 @@
           if (cd) {
             const note = await askNote("Tandai voucher selesai?", "Voucher ini sudah dicek dan ditindaklanjuti.");
             if (note === null) return;
-            clrDone[cd.dataset.cd] = { at: new Date().toISOString(), by: curName(), note };
+            clrDone[cd.dataset.cd] = { at: nowIso(), by: curName(), note };
             if (!sv(K_CLRD, clrDone)) return toast("Gagal menyimpan: penyimpanan penuh.");
             buzz(40);
             renderClr();

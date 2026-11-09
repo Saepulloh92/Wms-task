@@ -252,7 +252,7 @@
           sys,
           done,
           by: curName(),
-          at: new Date().toISOString(),
+          at: nowIso(),
           adj: $("dcAdjRak").value || "",
           hist: hist.slice(-10),
           sy: sys != null ? sys : dcCur.sys,

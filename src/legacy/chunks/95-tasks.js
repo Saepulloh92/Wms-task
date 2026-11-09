@@ -134,7 +134,7 @@
         const ov = add.filter((a) => tasks[a.bin]).length;
         const msg = Object.entries(per).map(([n, c]) => n + ": " + c + " bin").join(", ") + "." + (ov ? " " + ov + " bin sudah punya tugas dan akan diperbarui." : "") + (noOwner ? " " + noOwner + " bin belum ada pemilik area." : "");
         if (!(await ask("Tambah " + add.length + " tugas?", msg, "Tambah tugas"))) return;
-        const at = new Date().toISOString();
+        const at = nowIso();
         add.forEach((a) => (tasks[a.bin] = { u: a.u, by: curName() || "Admin", at }));
         sv(K_T, tasks);
         renderTask();

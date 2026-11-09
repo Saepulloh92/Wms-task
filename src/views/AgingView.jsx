@@ -50,7 +50,7 @@ export default function AgingView() {
   // dalam tiap kelas: yang belum dicek di atas, yang sudah dicek turun ke bawah (urutan prioritas tetap)
   const groups = groupByClass(shown.slice(0, 200), cls).map((g) => ({ ...g, items: [...g.items.filter((x) => !act[x.bin]), ...g.items.filter((x) => act[x.bin])] }));
   const pickArea = (v) => { setArea(v); save(K_AREA, v); };
-  const iso = () => new Date().toISOString();
+  const iso = () => (window.nowIso ? window.nowIso() : new Date().toISOString());
   const setClass = (kode, c) => wms.setAgingCls({ ...clsRec, [kode]: { c, at: iso() } });
   const setPicOf = (c, v) => wms.setAgingCfg({ ...cfg, pic: { ...pic, [c]: v } });
   const saveAct = (bin, v) => { wms.setAging({ ...act, [bin]: { ...v, by: wms.curName?.() || "", at: iso() } }); wms.toast("Cek rak " + bin + " tersimpan"); };

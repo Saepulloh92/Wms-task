@@ -32,6 +32,8 @@
       if (!SY.rptInit) { SY.rptInit = true; Object.keys(syRpt).forEach((n) => { if (!SY.rep.includes(n)) SY.rep.push(n); }); SY.dirty = true; } // sekali: kirim riwayat yang sudah ada
       if (typeof SY.known !== "object" || !SY.known) SY.known = {};
       if (typeof SY.hj !== "object" || !SY.hj) SY.hj = {};
+      window.__clkOff = Number(SY.clk) || 0;
+      let syFails = 0;
       let syBusy = false, syAgain = false, syT = 0, syErr = "", syApplying = false, syRefreshPending = false;
       const sySave = () => {
         try { localStorage.setItem(K_SYNC, JSON.stringify(SY)); } catch (e) {}
@@ -109,6 +111,7 @@
       function syApply(resp, sentRep, sentIds) {
         const rd = resp.data || {};
         let changed = false;
+        const clash = [];
         syApplying = true;
         const put = (k, v) => {
           try { localStorage.setItem(k, JSON.stringify(v)); failed.delete(k); } catch (e) { failed.add(k); }
@@ -123,6 +126,13 @@
             Object.keys(sentIds[n]).forEach((id) => {
               if (id in cur && !(id in remote) && syTs(cur[id][SY_STAMP[n]]) === syTs(sentIds[n][id])) delete merged[id];
             });
+            if (n === "counts") {
+              // dua petugas memeriksa bin yang sama: data lokal tertimpa hasil orang lain yang berbeda -> beri tahu
+              Object.keys(merged).forEach((id) => {
+                const m = merged[id], c = cur[id];
+                if (c && m !== c && m && m.by && c.by && m.by !== c.by && Number(m.actualQty) !== Number(c.actualQty)) clash.push(id + " (" + m.by + ": " + m.actualQty + ")");
+              });
+            }
             if (JSON.stringify(merged) !== JSON.stringify(cur)) {
               changed = true;
               sySetV[n](merged);
@@ -196,6 +206,7 @@
         } finally {
           syApplying = false;
         }
+        if (clash.length) toast("Bin sudah diperiksa petugas lain: " + clash.slice(0, 3).join(", ") + (clash.length > 3 ? " +" + (clash.length - 3) : "") + ". Hasil terbaru dipakai.");
         SY.rev = resp.rev;
         SY.mrev = resp.mrev;
         SY.lastAt = new Date().toISOString();
@@ -250,9 +261,17 @@
         const body = syBuild();
         SY.dirty = false;
         try {
+          const t0 = Date.now();
           const resp = await syCall("POST", { action: "sync", ...body, mrev: SY.mrev });
+          const t1 = Date.now();
           if (!resp.ok) throw new Error(resp.error || "Server menolak.");
+          // koreksi jam: selisih server - HP (dipotong separuh latensi). Abaikan bila latensi besar (tidak akurat).
+          if (resp.srv && t1 - t0 < 15000) {
+            const off = Date.parse(resp.srv) - (t0 + t1) / 2;
+            if (!isNaN(off)) { SY.clk = Math.abs(off) < 2000 ? 0 : Math.round(off); window.__clkOff = SY.clk; }
+          }
           syApply(resp, sentRep, sentIds);
+          syFails = 0;
           syErr = "";
           if (manual) toast("Sinkron selesai");
         } catch (e) {
@@ -260,6 +279,9 @@
           sySave();
           syErr = e && e.name === "AbortError" ? "Server terlalu lama menjawab." : String((e && e.message) || e);
           if (manual) toast("Sinkron gagal: " + syErr);
+          // coba lagi otomatis dengan jeda bertahap + acak (30 HP tidak menyerbu server bersamaan)
+          syFails = Math.min(syFails + 1, 6);
+          if (!manual) syAgain = false, sySoon(Math.min(4000 * 2 ** syFails, 120000) * (0.75 + Math.random() * 0.5));
         } finally {
           syBusy = false;
           syUi();
@@ -327,7 +349,7 @@
         };
       }
       setInterval(() => { if (syRefreshPending) syRefresh(); }, 3000);
-      setInterval(syPoll, 45000);
+      setTimeout(function loop() { syPoll(); setTimeout(loop, 40000 + Math.random() * 20000); }, 20000 + Math.random() * 20000); // acak: poll 30 HP tidak serempak
       document.addEventListener("visibilitychange", () => { if (!document.hidden) sySoon(500); });
       window.addEventListener("online", () => {
         sySoon(1000);

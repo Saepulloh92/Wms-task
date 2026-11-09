@@ -302,7 +302,7 @@
         const s = areaStat(a);
         if (!s.total || s.done < s.total) return toast("Area belum bisa ditutup: masih ada bin yang belum diperiksa.");
         if (!(await ask("Tutup area " + a + "?", "Bin di area ini tidak bisa diubah sampai dibuka kembali.", "Tutup area"))) return;
-        closed[a] = { by: curName() || "Supervisor", at: new Date().toISOString() };
+        closed[a] = { by: curName() || "Supervisor", at: nowIso() };
         sv(K_X, closed);
         toast("Area " + a + " ditutup");
         tgArea(a, true);
