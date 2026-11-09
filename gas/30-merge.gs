@@ -59,6 +59,8 @@ function merge_(server, client, del, replace) {
     // data awal (seed) atau data kosong di server boleh langsung digantikan data klien
     var useClient = rep[name] || server[key] == null || isEmpty_(server[key]) ||
       (name === 'master' && isSeed_(server[key]));
+    // jangan biarkan kiriman rusak/kosong (bug klien, cache lama) menghapus data penting di server
+    if (useClient && !clientPlainOk_(name, client[key], server[key])) useClient = false;
     var v = useClient && client[key] != null ? client[key] : server[key];
     if (v != null) out[key] = v;
   });
@@ -78,6 +80,19 @@ function merge_(server, client, del, replace) {
   })();
 
   return out;
+}
+
+// kiriman klien untuk data tanpa cap waktu boleh menimpa server hanya bila bentuknya masuk akal
+function clientPlainOk_(name, c, sv) {
+  if (c == null) return true;                         // tidak dikirim: server dipertahankan di tempat lain
+  if (name === 'master') {
+    return Array.isArray(c) && c.length > 0 && c.every(function (x) { return isObj_(x) && x.bin; });
+  }
+  if (name === 'users') {
+    if (!Array.isArray(c) || c.some(function (u) { return !isObj_(u) || !u.id; })) return false;
+    return c.length > 0 || !Array.isArray(sv) || !sv.length;   // daftar kosong tidak boleh menghapus semua pengguna
+  }
+  return isObj_(c);
 }
 
 function isEmpty_(v) {
