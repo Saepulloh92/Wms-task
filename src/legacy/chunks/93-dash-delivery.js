@@ -184,9 +184,33 @@
         return kpi + status + waktu + tonase + abn + bulan + rec;
       }
       let dlvLast = ""; // HTML terakhir yang dipasang: tidak dipasang ulang bila sama (tanpa kedip, scroll dan kartu terbuka tetap)
+      /* Pembaruan per-elemen untuk layar TV: hanya simpul yang berubah disentuh, sisanya tetap.
+         Layar tidak berkedip, donat & bar bergeser halus (transisi CSS), angka yang berubah menyala sebentar. */
+      const TV_ROOT = 'class="tv-wrap tv-root"';
+      function dlvMorph(root, html) {
+        const t = document.createElement("template");
+        t.innerHTML = html;
+        const calm = matchMedia("(prefers-reduced-motion: reduce)").matches, chg = [];
+        const walk = (a, b) => {
+          for (let i = 0; i < b.childNodes.length; i++) {
+            const nb = b.childNodes[i], na = a.childNodes[i];
+            if (!na) { a.appendChild(nb.cloneNode(true)); continue; }
+            if (na.nodeType !== nb.nodeType || na.nodeName !== nb.nodeName) { a.replaceChild(nb.cloneNode(true), na); continue; }
+            if (nb.nodeType !== 1) { if (na.nodeValue !== nb.nodeValue) { na.nodeValue = nb.nodeValue; if (a.nodeType === 1) chg.push(a); } continue; }
+            for (const at of nb.attributes) if (na.getAttribute(at.name) !== at.value && !(at.name === "style" && na.classList.contains("tv-wrap"))) na.setAttribute(at.name, at.value);
+            for (const at of [...na.attributes]) if (!nb.hasAttribute(at.name) && at.name !== "style" && !(at.name === "open" && na.nodeName === "DETAILS")) na.removeAttribute(at.name);
+            if (!nb.hasAttribute("style") && na.hasAttribute("style") && !na.classList.contains("tv-wrap")) na.removeAttribute("style");
+            walk(na, nb);
+          }
+          while (a.childNodes.length > b.childNodes.length) a.removeChild(a.lastChild);
+        };
+        walk(root, t.content);
+        if (!calm) new Set(chg).forEach((el) => { if (el.isConnected && el.animate) el.animate([{ backgroundColor: "rgba(255,208,0,.55)" }, { backgroundColor: "rgba(255,208,0,0)" }], { duration: 1800, easing: "ease-out" }); });
+      }
       const dlvPut = (body, html) => {
         if (html !== dlvLast) {
-          body.innerHTML = html;
+          if (dlvLast.includes(TV_ROOT) && html.includes(TV_ROOT) && body.firstElementChild && body.firstElementChild.classList.contains("tv-root")) dlvMorph(body, html);
+          else body.innerHTML = html;
           requestAnimationFrame(() => { dlvTvScale(); if (document.body.classList.contains("tv")) dlvTvFit(); });
           dlvLast = html;
         }

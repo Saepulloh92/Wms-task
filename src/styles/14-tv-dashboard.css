@@ -131,3 +131,10 @@ body.tvd.tv #v-mon > #dlvPanel{margin:0!important}
 .tv-root .tv-metric{padding:5px 3px}
 .tv-root .tv-panel-body{padding:10px 16px}
 .tv-root .tv-donut{width:min(100%,190px)}
+/* Gerak halus layar TV: donat & bar bergeser ke nilai baru, kartu diisolasi agar render ringan */
+@property --p { syntax: "<number>"; inherits: false; initial-value: 0; }
+.tv-root .tv-donut { transition: --p 1.1s cubic-bezier(.22, .8, .24, 1); }
+.tv-root .tv-bar span { transition: width 1.1s cubic-bezier(.22, .8, .24, 1); }
+.tv-root .tv-card { contain: layout paint style; }
+.tv-root strong, .tv-root b { transition: color .4s ease; }
+@media (prefers-reduced-motion: reduce) { .tv-root .tv-donut, .tv-root .tv-bar span { transition: none; } }
