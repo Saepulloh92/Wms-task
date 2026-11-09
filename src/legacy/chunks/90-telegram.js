@@ -157,10 +157,10 @@
           `${shut ? "🔒 *Area " + md(a) + " ditutup*" : "🔓 *Area " + md(a) + " dibuka kembali*"}\n${k.done}/${k.total} bin diperiksa · akurasi ${pc(k.ok, k.done)}\n${curName() ? md(curName()) + " · " : ""}${tgTime()}`,
         );
       }
-      function tgDc(item, fis, sys, d, adj) {
+      function tgDc(item, fis, sys, d, adj, ke) {
         if (!tgReady() || !tg.on.dc) return;
         tgSend(
-          `${d ? "⚠️ *DC selisih*" : "✅ *DC sesuai*"}\n${md(item)}\nSistem ${fmt(sys)} · Fisik ${fmt(fis)}${d ? " (" + signed(d) + ")" : ""}${d && adj ? "\nAdjust di rak " + md(adj) : ""}\n${curName() ? md(curName()) + " · " : ""}${tgTime()}`,
+          `${d ? "⚠️ *DC selisih*" : "✅ *DC sesuai*"}${ke > 1 ? " (DC ulang ke-" + ke + ")" : ""}\n${md(item)}\nSistem ${fmt(sys)} · Fisik ${fmt(fis)}${d ? " (" + signed(d) + ")" : ""}${d && adj ? "\nAdjust di rak " + md(adj) : ""}\n${curName() ? md(curName()) + " · " : ""}${tgTime()}`,
         );
       }
       /* layar pengaturan */

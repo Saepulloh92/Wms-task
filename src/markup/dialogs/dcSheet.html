@@ -3,6 +3,7 @@
         <div><b id="dcName"></b><small id="dcKode"></small></div>
       </div>
       <div class="sh-body">
+        <div class="dcinfo" id="dcInfo" hidden></div>
         <div class="itembox">
           <label for="dcSys" style="margin-top: 0">Stok sistem (QAD)</label>
           <input id="dcSys" type="number" inputmode="numeric" min="0" step="1" />
@@ -25,4 +26,5 @@
         <div class="err" id="dcErr" role="alert"></div>
         <div class="tot" id="dcTot"></div>
         <div class="row2"><button class="btn sec" id="dcDraft">Simpan draft</button><button class="btn pri" id="dcDone">Selesai</button></div>
+        <div class="row2" id="dcLockBar"><button class="btn pri" id="dcLockClose" type="button">Tutup</button><button class="btn dng" id="dcUnlock" type="button" hidden>Buka kunci (SPV)</button></div>
       </div>

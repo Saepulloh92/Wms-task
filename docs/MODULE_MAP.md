@@ -16,7 +16,7 @@ Cari fitur di sini, buka **hanya satu file**. Semua chunk `NN-*.js` dijalankan b
 | `55-muat.js` | 356 | Laporan Muat | muPersist, muRestore, muAuto, renderMuHist, muSaveHist, mISO, muRows, mParse, mSet, mBuild | warehouse_so_muat_data_v1<br>warehouse_so_muat_hist_v1<br>warehouse_so_muat_sum_v1 |
 | `60-users.js` | 512 | User (Admin/SPV/Petugas/Penerimaan), login nama + password, area, hak akses menu, navigasi bawah | navPicks, migrateUsers, applySession, applyRole, loginUi, lgSel, lgGo, logout, resetAllPins, areaStat … | warehouse_so_closed_v1<br>warehouse_so_curuser_v1<br>warehouse_so_me_v1<br>warehouse_so_nav_v1<br>warehouse_so_users_v1 |
 | `65-kpi.js` | 11 | KPI Area | – | – |
-| `70-dc.js` | 466 | DC Harian + pilih item DC | dcItems, dcSt, renderDc, dcAddRow, dcUpd, dcOpen, dcHide, dcClose, dcSave, dcAdj … | warehouse_dc_pick_v1<br>warehouse_dc_v1 |
+| `70-dc.js` | 515 | DC Harian + pilih item DC | dcItems, dcSt, renderDc, dcAddRow, dcUpd, dcOpen, dcHide, dcClose, dcSave, dcAdj … | warehouse_dc_pick_v1<br>warehouse_dc_v1 |
 | `75-nav-dialog.js` | 48 | Dialog atur navigasi bawah | navRender, navOpen | – |
 | `80-clearing.js` | 488 | Clearing (Voucher vs counting) | clrAct, clrIdx, clrShiftOf, clrParseRep, clrParseCnt, clrBuild, renderClr, clrFetch, clrReadFile, clrRekap … | warehouse_so_clr_cnt_v1<br>warehouse_so_clr_done_v1<br>warehouse_so_clr_hist_v1<br>warehouse_so_clr_rep_v1<br>warehouse_so_clr_v1 |
 | `85-a11y-bin-nav.js` | 174 | Aksesibilitas + navigasi bin + input | navTo, holdStep | – |

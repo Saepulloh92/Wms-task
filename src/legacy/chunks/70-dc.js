@@ -8,7 +8,8 @@
         dcCur = null,
         dcDirty = false,
         dcAdjSel = "",
-        dcAdjAuto = true;
+        dcAdjAuto = true,
+        dcUnlocked = false;
       function dcItems() {
         const m = new Map();
         DATA.forEach((x) => {
@@ -27,6 +28,10 @@
         if (!r.done) return "draft";
         return dcFis(r.rows) === dcSysOf(e) ? "ok" : "bad";
       }
+      const dcLocked = (e) => dcSt(e) === "ok"; // sudah DC dan sesuai = terkunci
+      const dcWhen = (iso) => (iso ? new Date(iso).toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "");
+      const dcLockSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+      const dcRedoSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9M20 4v5h-5"/></svg>';
       const dcInF = (e, f) => f === "all" || (f === "task" ? tkDcOpen(e.item) : f === "todo" ? ["todo", "draft"].includes(dcSt(e)) : dcSt(e) === f);
       function renderDc() {
         taskBadges();
@@ -47,7 +52,7 @@
           ...(all.some((e) => tasks["DC|" + e.item]) ? [["task", "Tugas", n("task")]] : []),
           ["todo", "Belum", n("todo")],
           ["bad", "Selisih", n("bad")],
-          ["ok", "Sesuai", n("ok")],
+          ["ok", "Terkunci", n("ok")],
           ["all", "Semua", all.length],
         ]);
         dcList = all.filter((e) => dcInF(e, dcF) && q.every((t) => (e.item + " " + e.kode).toLowerCase().includes(t)));
@@ -57,13 +62,16 @@
                 const s = dcSt(e),
                   r = dc[e.item],
                   f = r ? dcFis(r.rows) : 0,
+                  ke = r && r.hist && r.hist.length ? " · DC ke-" + (r.hist.length + 1) : "",
                   pill =
                     s === "ok"
-                      ? '<span class="pill green">Sesuai</span>'
+                      ? `<span class="dcb ok">${dcLockSvg}Sesuai · Terkunci</span>`
                       : s === "bad"
-                        ? `<span class="pill amber">Selisih ${signed(f - dcSysOf(e))}</span>`
-                        : `<span class="pill">${s === "draft" ? "Draft" : "Belum"}</span>`;
-                return `<button class="bin ${s === "ok" ? "done-ok" : s === "bad" ? "done-bad" : ""}" data-i="${i}"><b>${szHtml(e.item)}</b><span class="it">${esc(e.kode)} · Sistem ${fmt(dcSysOf(e))}</span><span class="q">${r ? fmt(f) : "–"}<small>Fisik</small></span><span>${pill}</span></button>`;
+                        ? `<span class="dcb bad">${dcRedoSvg}Selisih ${signed(f - dcSysOf(e))} · DC ulang</span>`
+                        : s === "draft"
+                          ? `<span class="dcb dr">Draft${ke}</span>`
+                          : '<span class="dcb td">Belum DC</span>';
+                return `<button class="bin ${s === "ok" ? "done-ok locked" : s === "bad" ? "done-bad" : ""}" data-i="${i}"><b>${szHtml(e.item)}</b><span class="it">${esc(e.kode)} · Sistem ${fmt(dcSysOf(e))}${s === "bad" ? esc(ke) : ""}</span><span class="q">${r ? fmt(f) : "–"}<small>Fisik</small></span><span>${pill}</span></button>`;
               })
               .join("")
           : `<div class="empty">${all.length ? (dcF === "todo" && !q.length ? "Semua item sudah dicek." : "Tidak ada item di filter ini.") : DATA.length ? "Belum ada item yang dipilih. Ketuk Pilih item DC di atas." : "Belum ada data WMS."}</div>`;
@@ -135,6 +143,27 @@
         });
         $("dcAdjRak").value = !dcAdjAuto && list.includes(dcAdjSel) ? dcAdjSel : pick;
       }
+      /* mode lembar DC: "lock" = baca saja (sudah sesuai), "edit" = boleh diisi (belum DC, draft, atau selisih = DC ulang) */
+      function dcMode(mode, e, r) {
+        const lock = mode === "lock", box = $("dcInfo");
+        $("dcSheet").classList.toggle("dc-lock", lock);
+        document.querySelectorAll("#dcRows input, #dcSys").forEach((i) => (i.readOnly = lock));
+        $("dcUnlock").hidden = !isSup();
+        if (lock) {
+          box.className = "dcinfo ok";
+          box.innerHTML = `${dcLockSvg}<div><b>Sudah DC dan sesuai. Terkunci.</b><br>Dicek ${esc((r && r.by) || "-")} · ${esc(dcWhen(r && r.at))}. Hanya bisa dilihat.</div>`;
+          box.hidden = false;
+        } else if (r && r.done) {
+          box.className = "dcinfo bad";
+          const f = dcFis(r.rows), s0 = dcSysOf(e);
+          box.innerHTML = `${dcRedoSvg}<div><b>DC ulang ke-${(r.hist ? r.hist.length : 0) + 2}.</b><br>DC terakhir: Fisik ${fmt(f)} · Sistem ${fmt(s0)} · selisih ${signed(f - s0)} (${esc(r.by || "-")}, ${esc(dcWhen(r.at))}). Hitung ulang semua rak, lalu tekan Selesai.</div>`;
+          box.hidden = false;
+        } else if (r && r.hist && r.hist.length) {
+          box.className = "dcinfo bad";
+          box.innerHTML = `${dcRedoSvg}<div><b>DC ulang ke-${r.hist.length + 1} (draft).</b><br>Lanjutkan, lalu tekan Selesai.</div>`;
+          box.hidden = false;
+        } else box.hidden = true;
+      }
       function dcOpen(e) {
         dcCur = e;
         const r = dc[e.item];
@@ -151,6 +180,8 @@
         (r && r.rows.length ? r.rows : [{ rak: "", qty: "" }]).forEach((x) => dcAddRow(x.rak, x.qty));
         dcDirty = false;
         wakeOn();
+        dcUnlocked = false;
+        dcMode(r && r.done && dcFis(r.rows) === dcSysOf(e) ? "lock" : "edit", e, r);
         $("dcSheet").hidden = false;
         document.body.style.overflow = "hidden";
         dcUpd();
@@ -179,6 +210,10 @@
             return false;
           },
           dr = () => [...document.querySelectorAll("#dcRows .dr")].map((r) => ({ rk: r.querySelector(".dr-rak"), q: r.querySelector(".dr-qty") }));
+        { // terkunci: item yang sudah DC dan sesuai tidak boleh diubah (kecuali SPV membuka kunci)
+          const cur = dc[dcCur.item];
+          if (cur && cur.done && dcFis(cur.rows) === dcSysOf(dcCur) && !dcUnlocked) return err("Item ini sudah DC dan sesuai, jadi terkunci.");
+        }
         if (!rows.length) return err("Belum ada rak yang dicatat.");
         if (done) {
           if (rows.some((r) => !r.rak)) {
@@ -208,7 +243,8 @@
             miss = dcCur.bins.filter((b) => b.onhand > 0 && !have.has(rakFmt(b.bin)));
           if (miss.length && !(await ask("Ada rak yang belum diisi", miss.length + " rak di WMS masih punya stok tapi belum Anda catat. Selisih " + signed(d) + " bisa muncul karena itu. Tetap simpan sebagai selesai?", "Tetap simpan"))) return false;
         }
-        const prevDc = dc[dcCur.item];
+        const prevDc = dc[dcCur.item], hist = prevDc && prevDc.hist ? [...prevDc.hist] : [];
+        if (prevDc && prevDc.done) hist.push({ fis: dcFis(prevDc.rows), sys: prevDc.sys != null ? prevDc.sys : dcCur.sys, by: prevDc.by, at: prevDc.at }); // jejak DC sebelumnya
         dc[dcCur.item] = {
           rows: rows.map((r) => ({ rak: r.rak, qty: r.qty === "" ? "" : Number(r.qty) })),
           sys,
@@ -216,6 +252,7 @@
           by: curName(),
           at: new Date().toISOString(),
           adj: $("dcAdjRak").value || "",
+          hist: hist.slice(-10),
         };
         dcUndoStack.push({ item: dcCur.item, prev: prevDc, saved: dc[dcCur.item] });
         if (dcUndoStack.length > 30) dcUndoStack.shift();
@@ -225,11 +262,11 @@
         }
         if (done) {
           buzz(d === 0 ? 40 : [70, 50, 70]);
-          tgDc(dcCur.item, fis, sys != null ? sys : dcCur.sys, d, $("dcAdjRak").value);
+          tgDc(dcCur.item, fis, sys != null ? sys : dcCur.sys, d, $("dcAdjRak").value, hist.length + 1);
         }
         dcHide();
         metrics();
-        toast(done ? (d === 0 ? "Tersimpan: sesuai" : "Tersimpan: selisih " + signed(d)) : "Draft tersimpan");
+        toast(done ? (hist.length ? "DC ulang ke-" + (hist.length + 1) + ": " : "Tersimpan: ") + (d === 0 ? "sesuai, item terkunci" : "selisih " + signed(d)) : "Draft tersimpan");
         return true;
       }
       function dcAdj() {
@@ -311,6 +348,17 @@
           empty.querySelector(".dr-qty").focus();
           dcUpd();
         } else dcAddRow(b.dataset.r, "", "qty");
+      };
+      $("dcLockClose").onclick = dcHide;
+      $("dcUnlock").onclick = async () => {
+        if (!isSup() || !(await ask("Buka kunci item ini?", "Item ini sudah DC dan sesuai. Buka kunci hanya jika ada salah catat. Hasil lama tetap tersimpan sebagai riwayat.", "Buka kunci", true))) return;
+        dcUnlocked = true;
+        dcMode("edit", dcCur, null);
+        const b = $("dcInfo");
+        b.className = "dcinfo bad";
+        b.innerHTML = `${dcRedoSvg}<div><b>Kunci dibuka oleh ${esc(curName())}.</b><br>Ubah hasil hitung, lalu tekan Selesai.</div>`;
+        b.hidden = false;
+        dcUpd();
       };
       $("dcDraft").onclick = () => dcSave(false);
       $("dcDone").onclick = () => dcSave(true);

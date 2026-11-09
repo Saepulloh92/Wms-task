@@ -110,3 +110,28 @@ body { overflow-x: clip; }
 
 /* Daftar panjang: browser hanya menggambar kartu yang terlihat (scroll lebih ringan) */
 .ucard, .acard, .kp-card, .dcard { content-visibility: auto; contain-intrinsic-size: auto 150px; }
+
+/* ===== DC: terbaca di bawah matahari, tombol besar untuk sarung tangan ===== */
+.dcb { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 14px; letter-spacing: 0.02em; padding: 7px 11px; border-radius: 8px; color: #fff; text-transform: uppercase; }
+.dcb svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.dcb.ok { background: #0a5532; } .dcb.bad { background: #b3261e; } .dcb.dr { background: #5f3a00; } .dcb.td { background: #1b2226; }
+#dcList .bin { min-height: 80px; border-left-width: 10px; }
+#dcList .bin b { font-size: 18px; color: #000; }
+#dcList .bin.locked { background: #eef6f0; }
+#dcList .bin.done-bad { background: #fff4f3; }
+.dcinfo { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; border: 2px solid; border-radius: 12px; padding: 12px; font-size: 16px; line-height: 1.4; margin-bottom: 12px; }
+.dcinfo > svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.dcinfo.ok { border-color: #0a5532; background: #d9f2e2; color: #073d24; }
+.dcinfo.bad { border-color: #b3261e; background: #fad3cf; color: #6d0f0a; }
+#dcRows .dr { grid-template-columns: 1fr 132px 60px; gap: 10px; margin-bottom: 14px; }
+#dcRows .dr-rak { font-size: 22px; font-weight: 700; min-height: 60px; color: #000; }
+#dcRows .dr-qty { font-size: 28px; min-height: 60px; color: #000; }
+#dcRows .dr .rm { height: 60px; }
+#dcSug .chip { min-height: 52px; font-size: 17px; }
+#dcSheet .tot strong { font-size: 26px; }
+#dcSheet .sh-foot .row2 button { min-height: 64px; font-size: 20px; font-weight: 800; }
+#dcSheet #dcAdd { min-height: 56px; font-size: 18px; }
+#dcLockBar { display: none; }
+#dcSheet.dc-lock #dcLockBar { display: grid; }
+#dcSheet.dc-lock .sh-foot .row2:not(#dcLockBar), #dcSheet.dc-lock #dcAdd, #dcSheet.dc-lock #dcSug, #dcSheet.dc-lock #dcSugL, #dcSheet.dc-lock #dcAdjWrap, #dcSheet.dc-lock .dr .rm, #dcSheet.dc-lock #dcMiss { display: none; }
+#dcSheet.dc-lock input { background: #f1f4f2; border-color: #0a5532; }
