@@ -109,7 +109,7 @@ input[type="file"]::file-selector-button { margin-right: 12px; padding: 10px 16p
 body { overflow-x: clip; }
 
 /* Daftar panjang: browser hanya menggambar kartu yang terlihat (scroll lebih ringan) */
-.ucard, .acard, .kp-card, .dcard { content-visibility: auto; contain-intrinsic-size: auto 150px; }
+.ucard, .acard, .kp-card { content-visibility: auto; contain-intrinsic-size: auto 150px; } /* .dcard sengaja tidak: tingginya bervariasi (dashboard), bisa membuat scroll melompat */
 
 /* ===== DC: terbaca di bawah matahari, tombol besar untuk sarung tangan ===== */
 .dcb { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 14px; letter-spacing: 0.02em; padding: 7px 11px; border-radius: 8px; color: #fff; text-transform: uppercase; }
@@ -151,3 +151,16 @@ body { overflow-x: clip; }
 .mchip b { font-size: 16px; }
 .rt { font-size: 14px; font-weight: 700; }
 .ra { font-size: 14px; font-weight: 700; color: #6d0f0a; background: #fad3cf; border-radius: 8px; padding: 8px 10px; }
+
+/* Gerak halus untuk lembar (sheet), dialog, banner, donat dan bar. Mati otomatis lewat aturan "kurangi gerakan" di 14-motion.css */
+@keyframes sheetUp { from { transform: translateY(28px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes dlgPop { from { transform: scale(0.96); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.sheet:not([hidden]) { animation: sheetUp 0.24s var(--ease, ease-out) both; }
+.dlg:not([hidden]) { animation: fadeIn 0.16s ease both; }
+.dlg:not([hidden]) > div { animation: dlgPop 0.2s var(--ease, ease-out) both; }
+.dcinfo:not([hidden]), .note:not([hidden]) { animation: fadeIn 0.2s ease both; }
+.sheet, .dlg > div { overscroll-behavior: contain; }
+#monOver .dnut circle, #clrRekap .dnut circle { animation: ring 0.7s var(--ease, ease-out) both; }
+.kp-bar i, .shr .pbar i, .acard .pbar i { animation: grow 0.6s var(--ease, ease-out) both; }
+.dcb, .mchip, .pill { transition: background-color 0.15s, color 0.15s; }
