@@ -67,6 +67,8 @@
         $("tkUn").innerHTML = un.length
           ? `<div class="note">${un.length} tugas belum punya petugas (area belum ada pemiliknya).<button class="btn pri sm" data-tk="auto">Bagikan sesuai area</button></div>`
           : "";
+        if (!Object.keys(tasks).length) $("tkRes").innerHTML = '<div class="empty">Belum ada tugas. Pilih file daftar bin di atas (kolom Bin atau Rak). Belum punya file? Unduh contoh file dulu.</div>';
+        else if ($("tkRes").querySelector(".empty")) $("tkRes").innerHTML = "";
         $("tkClear").textContent = me ? "Hapus tugas saya" : "Hapus semua tugas";
         $("tkClear").disabled = !mine.length;
       }

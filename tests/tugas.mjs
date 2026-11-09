@@ -1,0 +1,30 @@
+// Uji Tugas Bin: panel upload terlihat, petunjuk saat kosong, upload CSV membuat tugas.
+//   npm run build && npx vite preview --port 4173 &   lalu   node tests/tugas.mjs
+import { createRequire } from "node:module";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+const { chromium } = createRequire(import.meta.url)("playwright");
+const url = process.env.APP_URL || "http://localhost:4173/";
+const FX = (n) => JSON.parse(fs.readFileSync(new URL("./fixtures/" + n, import.meta.url), "utf8"));
+let fail = 0; const ok = (c, m) => { console.log((c ? "OK   " : "GAGAL ") + m); if (!c) fail++; };
+const csv = path.join(os.tmpdir(), "tugas-uji.csv");
+fs.writeFileSync(csv, "Bin,Petugas\nB1-01-A,Budi\nB1-02-A,Sari\n");
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+await page.route(/^https?:\/\/(?!localhost)/, (r) => r.abort());
+const errors = []; page.on("pageerror", (e) => errors.push(e.message));
+await page.addInitScript(({ m, u }) => { localStorage.setItem("warehouse_so_master_v2", JSON.stringify(m)); localStorage.setItem("warehouse_so_users_v1", JSON.stringify(u)); }, { m: FX("master.json"), u: FX("users.json") });
+await page.goto(url);
+await page.waitForFunction(() => document.getElementById("pgT")?.textContent.trim());
+if (await page.locator("#lsLater").isVisible()) await page.click("#lsLater");
+await page.evaluate(() => window.go("task")); await page.waitForTimeout(300);
+ok(await page.locator("#tkLbl").isVisible(), "tombol pilih file tugas terlihat");
+ok(await page.locator("#tkTpl").isVisible(), "tombol contoh file terlihat");
+ok((await page.locator("#tkRes .empty").count()) === 1, "petunjuk saat belum ada tugas");
+await page.setInputFiles("#tkFile", csv); await page.waitForTimeout(700);
+await page.getByRole("button", { name: "Tambah tugas" }).click(); await page.waitForTimeout(600);
+ok((await page.innerText("#tkStats")).replace(/\s+/g, " ").includes("Total tugas 2"), "upload CSV membuat 2 tugas");
+ok((await page.locator("#tkRes .empty").count()) === 0, "petunjuk hilang setelah ada tugas");
+ok(errors.length === 0, "tanpa error JavaScript " + errors.join(";"));
+await browser.close(); process.exit(fail ? 1 : 0);

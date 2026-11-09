@@ -37,7 +37,7 @@
   "hidden": [
    "v-task"
   ],
-  "text": "Tugas Bin Daftar bin tugas yang ditunjuk ke petugas. Selesai otomatis saat bin disimpan. Total tugas 0 Selesai 0 Belum 0 Tanpa petugas 0 Per petugas Budi Tidak ada tugas Sari Tidak ada tugas Andi Tidak ada tugas Hapus semua tugas"
+  "text": "Tugas Bin Daftar bin tugas yang ditunjuk ke petugas. Selesai otomatis saat bin disimpan. Total tugas 0 Selesai 0 Belum 0 Tanpa petugas 0 Upload tugas (admin atau SPV) Pilih file tugas untuk petugas Kolom wajib: Bin (atau Rak). Kolom Petugas opsional: diisi nama petugas yang sudah terdaftar. Jika kosong, bin dibagi ke petugas pemilik area bin itu. Bin yang sudah pernah diperiksa menjadi tugas hitung ulang. Unduh contoh file (CSV) Belum ada tugas. Pilih file daftar bin di atas (kolom Bin atau Rak). Belum punya file? Unduh contoh file dulu. Per petugas Budi Tidak ada tugas Sari Tidak ada tugas Andi Tidak ada tugas Hapus semua tugas"
  },
  "kes": {
   "title": "Cek Kesesuaian",
