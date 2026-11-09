@@ -17,6 +17,7 @@ import "./styles/12-ux-final.css";
 import "./styles/13-report.css";
 import "./styles/14-tv-dashboard.css";
 import "./styles/14-motion.css";
+import "./styles/15-health.css";
 import App from "./App.jsx";
 
 window.WMS_CONFIG = config;

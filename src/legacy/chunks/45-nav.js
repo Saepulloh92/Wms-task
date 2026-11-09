@@ -14,6 +14,7 @@
           else b.removeAttribute("aria-current");
         });
         curViewId = v;
+        if (v === "data" && typeof hlRun === "function") hlRun();
         if (typeof menuSync === "function") menuSync();
         // judul halaman sama dengan judul di bilah atas: sembunyikan secara visual (tetap terbaca pembaca layar); dijalankan setelah judul bilah atas diperbarui
         setTimeout(() => {

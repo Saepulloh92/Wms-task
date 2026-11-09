@@ -212,6 +212,7 @@
         SY.lastAt = new Date().toISOString();
         sySave();
         if (changed) syRefresh();
+        if (typeof hlRun === "function") hlRun();
       }
       function syRefresh() {
         const open = ["sheet", "dcSheet", "dcPickSheet"].some((id) => $(id) && !$(id).hidden);
@@ -265,6 +266,7 @@
           const resp = await syCall("POST", { action: "sync", ...body, mrev: SY.mrev });
           const t1 = Date.now();
           if (!resp.ok) throw new Error(resp.error || "Server menolak.");
+          SY.warn = resp.warn || "";
           // koreksi jam: selisih server - HP (dipotong separuh latensi). Abaikan bila latensi besar (tidak akurat).
           if (resp.srv && t1 - t0 < 15000) {
             const off = Date.parse(resp.srv) - (t0 + t1) / 2;
