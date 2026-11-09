@@ -12,7 +12,8 @@
     "test:login": "node tests/login.mjs",
     "test:login-sync": "node tests/login-sync.mjs",
     "test:report": "node tests/report.mjs && node tests/report-ui.mjs",
-    "test:aging-prio": "node tests/aging-prioritas.mjs"
+    "test:aging-prio": "node tests/aging-prioritas.mjs",
+    "test:motion": "node tests/motion.mjs"
   },
   "dependencies": {
     "react": "18.3.1",

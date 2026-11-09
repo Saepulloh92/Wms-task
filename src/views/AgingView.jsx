@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useWms } from "../legacy/bridge.js";
 import { fmt } from "../lib/format.js";
 import { SIGNALS, CLASSES, NO_CLASS, SIGNAL_COLOR, DEFAULT_PIC, normSignal, buildAging, checklist, groupByClass, buildPool, suggest, agingText, actualOf } from "../lib/aging.js";
@@ -197,10 +197,23 @@ function advance(d) {
 function RakCard({ x, a, pools, kelas, onClass, onSave, onClear, tugas, blind }) {
   const [f, setF] = useState({ tumpak: a?.sesuai ? "" : a?.tumpak || "", pipa: a?.sesuai ? "" : a?.pipa || "", qty: a?.qty ?? "" });
   const sig = normSignal(x.sinyal);
+  const fr = useRef(null);
+  const canSave = !!(f.tumpak || f.pipa || f.qty !== "");
+  const inputs = () => [...(fr.current ? fr.current.querySelectorAll("input") : [])];
+  // Enter = ke kolom berikutnya; di kolom terakhir = simpan. Fokus otomatis dibawa ke tengah layar (di atas keyboard).
+  const onKey = (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    const els = inputs(), n = els[els.indexOf(e.currentTarget) + 1];
+    if (n) n.focus();
+    else if (canSave && fr.current) fr.current.querySelector(".agi-savebtn").click();
+  };
+  const onFocus = (e) => { const t = e.target; setTimeout(() => t.scrollIntoView({ block: "center", behavior: "smooth" }), 280); };
+  const pick = (key, v) => { setF({ ...f, [key]: v }); const els = inputs(), n = els[key === "tumpak" ? 1 : 2]; if (n) requestAnimationFrame(() => n.focus()); };
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   const sT = suggest(pools.tumpak, f.tumpak, { pin: x.tumpak, area: x.area }), sI = suggest(pools.item, f.pipa, { pin: x.item, area: x.area });
-  const opts = (label, list, key) => list.length > 0 && <div className="agi-opts" role="group" aria-label={label}>{list.map((v) => <button type="button" key={v} className="agi-opt" onClick={() => setF({ ...f, [key]: v })}>{v}</button>)}</div>;
-  const save = (e, v) => { const d = e.currentTarget.closest("details"); onSave(x.bin, v); advance(d); };
+  const opts = (label, list, key) => list.length > 0 && <div className="agi-opts" role="group" aria-label={label}>{list.map((v) => <button type="button" key={v} className="agi-opt" onClick={() => pick(key, v)}>{v}</button>)}</div>;
+  const save = (e, v) => { const d = e.currentTarget.closest("details"); try { navigator.vibrate && navigator.vibrate(18); } catch (_) { /* getar tidak didukung */ } onSave(x.bin, v); advance(d); };
   return (
     <details className={"card agi-rak" + (a ? " done" : "") + (sig === "Merah" ? " red" : "")}>
       <summary>
@@ -208,17 +221,17 @@ function RakCard({ x, a, pools, kelas, onClass, onSave, onClear, tugas, blind })
         <span className="agi-bn"><b>{x.bin}<i className={lvl(kelas)}>{kelas || "?"}</i></b><span className="agi-it">{x.item}</span><small>{tugas ? "TUGAS · " : ""}Tumpak <strong>{x.tumpak || "–"}</strong> · {x.aging} hari{blind ? "" : " · stok " + fmt(x.onhand)}{a ? " · cek " + fmt(a.qty ?? 0) + (a.sesuai ? " (sesuai)" : "") : ""}</small></span>
         <span className={"agi-ck" + (a ? " on" : "")} aria-label={a ? "Sudah dicek" : "Belum dicek"}>{a ? "✓" : ""}</span>
       </summary>
-      <div className="agi-form">
+      <div className="agi-form" ref={fr}>
         <div className="agi-sys">Data sistem: tumpak <b>{x.tumpak || "–"}</b> · item <b>{x.item}</b>{blind ? null : <> · qty <b>{fmt(x.onhand)}</b></>}</div>
         {!blind && <button type="button" className="btn pri agi-all" onClick={(e) => save(e, { tumpak: "Sesuai", pipa: "Sesuai", qty: String(x.onhand), sesuai: true })}>✓ Semua sama dengan sistem</button>}
         <p className="agi-or">Kalau ada yang beda, isi di sini:</p>
-        <label>No. tumpak aktual<input value={f.tumpak} onChange={set("tumpak")} placeholder={x.tumpak || "AK140"} autoCapitalize="characters" autoComplete="off" autoCorrect="off" spellCheck={false} enterKeyHint="next" /></label>
+        <label>No. tumpak aktual<input value={f.tumpak} onChange={set("tumpak")} onKeyDown={onKey} onFocus={onFocus} placeholder={x.tumpak || "AK140"} autoCapitalize="characters" autoComplete="off" autoCorrect="off" spellCheck={false} enterKeyHint="next" /></label>
         {opts("Pilihan tumpak", sT, "tumpak")}
-        <label>Item aktual<input value={f.pipa} onChange={set("pipa")} placeholder="Ketik atau pilih item" autoComplete="off" autoCorrect="off" spellCheck={false} enterKeyHint="next" /></label>
+        <label>Item aktual<input value={f.pipa} onChange={set("pipa")} onKeyDown={onKey} onFocus={onFocus} placeholder="Ketik atau pilih item" autoComplete="off" autoCorrect="off" spellCheck={false} enterKeyHint="next" /></label>
         {opts("Pilihan item", sI, "pipa")}
-        <label>Qty aktual<input inputMode="numeric" enterKeyHint="done" autoComplete="off" value={f.qty} onChange={(e) => setF({ ...f, qty: e.target.value.replace(/[^\d]/g, "") })} placeholder={blind ? "0" : String(x.onhand)} /></label>
+        <label>Qty aktual<input inputMode="numeric" enterKeyHint="done" autoComplete="off" onKeyDown={onKey} onFocus={onFocus} value={f.qty} onChange={(e) => setF({ ...f, qty: e.target.value.replace(/[^\d]/g, "") })} placeholder={blind ? "0" : String(x.onhand)} /></label>
         <div className="row-act">
-          <button className="btn pri" disabled={!(f.tumpak || f.pipa || f.qty !== "")} onClick={(e) => save(e, { tumpak: f.tumpak, pipa: f.pipa, qty: f.qty })}>Simpan cek</button>
+          <button className="btn pri agi-savebtn" disabled={!canSave} onClick={(e) => save(e, { tumpak: f.tumpak, pipa: f.pipa, qty: f.qty })}>Simpan cek</button>
           {a && <button className="btn sec inl" onClick={() => { onClear(x.bin); setF({ tumpak: "", pipa: "", qty: "" }); }}>Hapus</button>}
         </div>
         <details className="agi-kls">

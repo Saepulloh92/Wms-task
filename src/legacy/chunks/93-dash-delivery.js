@@ -131,6 +131,14 @@
         const rec = rank + dest ? dlvFold("rek", "Rekor Harian & Tujuan", "", false, rank + dest) : "";
         return kpi + status + tonase + abn + bulan + rec;
       }
+      let dlvLast = ""; // HTML terakhir yang dipasang: tidak dipasang ulang bila sama (tanpa kedip, scroll dan kartu terbuka tetap)
+      const dlvPut = (body, html) => {
+        if (html !== dlvLast) {
+          body.innerHTML = html;
+          dlvLast = html;
+        }
+      };
+      const dlvSkel = '<div class="skl-kpi" aria-hidden="true"><div class="skl"></div><div class="skl"></div><div class="skl"></div></div><div class="skl skl-card" aria-hidden="true"></div><div class="visually-hidden" role="status">Memuat dashboard delivery…</div>';
       function dlvRender() {
         const body = $("dlvBody");
         if (!body) return;
@@ -141,7 +149,7 @@
           $("dlvAt").className = "sync";
           $("dlvAt").textContent = "";
           $("dlvTitle").textContent = "Hubungkan spreadsheet dashboard delivery";
-          body.innerHTML = msg || '<div class="note info"><b>Dashboard delivery belum terhubung.</b> Isi alamat spreadsheet di "Sumber dashboard delivery" di bawah.<br><button class="btn pri sm mt" id="dlvOpenSet" type="button">Atur sumber data</button></div>';
+          dlvPut(body, msg || (dlvBusy ? dlvSkel : '<div class="note info"><b>Dashboard delivery belum terhubung.</b> Isi alamat spreadsheet di "Sumber dashboard delivery" di bawah.<br><button class="btn pri sm mt" id="dlvOpenSet" type="button">Atur sumber data</button></div>'));
           return;
         }
         const age = (Date.now() - dlvCache.at) / 60000,
@@ -154,7 +162,7 @@
           tgl = dlvC("AJ2"),
           jam = dlvC("F8");
         $("dlvTitle").textContent = [ttl && !/^dashboard\s+delivery$/i.test(ttl) ? ttl : "", tgl, jam ? "update " + jam : ""].filter(Boolean).join(" · ");
-        body.innerHTML = msg + dlvHtml();
+        dlvPut(body, msg + dlvHtml());
       }
       async function dlvLoad(manual) {
         if (dlvBusy) return;
