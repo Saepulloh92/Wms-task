@@ -187,7 +187,7 @@
       const dlvPut = (body, html) => {
         if (html !== dlvLast) {
           body.innerHTML = html;
-          if (document.body.classList.contains("tv")) requestAnimationFrame(dlvTvFit);
+          requestAnimationFrame(() => { dlvTvScale(); if (document.body.classList.contains("tv")) dlvTvFit(); });
           dlvLast = html;
         }
       };
@@ -195,6 +195,9 @@
       function dlvRender() {
         const body = $("dlvBody");
         if (!body) return;
+        const useTv = !!dlvCache && dlvTvUse(); // desain 4K/TV (93-dash-tv.js)
+        document.body.classList.toggle("tvd", useTv);
+        $("v-mon").classList.toggle("tvd-on", useTv);
         const msg = dlvErr ? `<div class="note">${esc(dlvErr)}</div>` : "";
         $("dlvRef").disabled = dlvBusy;
         $("dlvRef").textContent = dlvBusy ? "Memuat…" : "Muat ulang dashboard";
@@ -215,7 +218,7 @@
           tgl = dlvC("AJ2"),
           jam = dlvC("F8");
         $("dlvTitle").textContent = [ttl && !/^dashboard\s+delivery$/i.test(ttl) ? ttl : "", tgl, jam ? "update " + jam : ""].filter(Boolean).join(" · ");
-        dlvPut(body, msg + dlvHtml());
+        dlvPut(body, useTv ? msg + dlvTvHtml() : msg + dlvHtml());
       }
       async function dlvLoad(manual) {
         if (dlvBusy) return;
@@ -258,6 +261,7 @@
         dlvRender();
         if (dlv.url && (!dlvCache || Date.now() - dlvCache.at > 20000)) dlvLoad(false);
         dlvLeave();
+        dlvTvSoon();
         if (dlv.auto && dlv.url)
           dlvTimer = setInterval(() => {
             if (!document.hidden) dlvLoad(false);
@@ -300,7 +304,8 @@
         const b = $("dlvTv");
         b.setAttribute("aria-pressed", on ? "true" : "false");
         b.textContent = on ? "Keluar layar TV" : "Layar TV";
-        requestAnimationFrame(dlvTvFit);
+        dlvRender();
+        requestAnimationFrame(() => { dlvTvScale(); dlvTvFit(); });
         if (on && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
         if (!on && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
       }
@@ -313,7 +318,7 @@
         const el = $("v-mon");
         if (!el) return;
         el.style.zoom = "";
-        if (!document.body.classList.contains("tv")) return;
+        if (!document.body.classList.contains("tv") || el.classList.contains("tvd-on")) return; // desain 4K sudah diskalakan sendiri
         let z = parseFloat(getComputedStyle(el).zoom) || 1;
         for (let i = 0; i < 6; i++) {
           const h = document.documentElement.scrollHeight, vh = innerHeight;

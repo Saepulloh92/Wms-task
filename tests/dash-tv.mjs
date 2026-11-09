@@ -46,7 +46,7 @@ for (const [nama, w, h, kolom] of [["HP 390", 390, 844, 1], ["Full HD", 1920, 10
   const m = await p.evaluate(() => ({ sw: document.documentElement.scrollWidth, vw: innerWidth, cols: getComputedStyle(document.getElementById("dlvBody")).columnCount }));
   ok(m.sw <= m.vw, nama + ": tanpa scroll horizontal");
   if (w >= 900) {
-    ok(String(m.cols) === String(kolom), nama + ": " + kolom + " kolom (dapat " + m.cols + ")");
+    ok(String(m.cols) === String(w >= 2400 ? 1 : kolom), nama + ": " + (w >= 2400 ? "desain 4K satu panggung (1 kolom)" : kolom + " kolom") + " (dapat " + m.cols + ")");
     await p.click("#dlvTv"); await p.waitForTimeout(600);
     const t = await p.evaluate(() => ({ dh: document.documentElement.scrollHeight, vh: innerHeight, side: getComputedStyle(document.querySelector(".side")).display, head: getComputedStyle(document.querySelector("header")).display }));
     ok(t.dh <= t.vh + 1, nama + ": mode TV muat satu layar tanpa scroll (" + t.dh + "/" + t.vh + ")");

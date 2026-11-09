@@ -15,6 +15,7 @@ import "./styles/10-ux-polish.css";
 import "./styles/11-aging.css";
 import "./styles/12-ux-final.css";
 import "./styles/13-report.css";
+import "./styles/14-tv-dashboard.css";
 import "./styles/14-motion.css";
 import App from "./App.jsx";
 
