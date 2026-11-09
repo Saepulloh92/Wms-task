@@ -17,7 +17,7 @@ const ok = (c, m) => { console.log((c ? "OK   " : "GAGAL ") + m); if (!c) fail++
 function makeServer({ oldVersion = false } = {}) {
   const store = { state: {}, meta: { rev: 0, mrev: 0, at: "" } };
   const ctx = vm.createContext({
-    console,
+    console, Logger: { log() {} },
     ContentService: { MimeType: { JSON: "json" }, createTextOutput: (s) => ({ s, setMimeType() { return this; } }) },
     Utilities: {
       DigestAlgorithm: { MD5: "md5" }, Charset: { UTF_8: "utf8" },
@@ -33,6 +33,7 @@ function makeServer({ oldVersion = false } = {}) {
     var __S = { state: {}, meta: { rev: 0, mrev: 0, at: '' } };
     function readState_() { return JSON.parse(JSON.stringify(__S.state)); }
     function readMeta_() { return __S.meta; }
+    var CORRUPT_ = []; function warn_() { return ''; }
     function keyHashes_(st) { var h = {}; Object.keys(st).forEach(function (k) { h[k] = canon_(st[k]); }); return h; }
     function sameAsStored_(h) { return canon_(h) === canon_(keyHashes_(__S.state)); }
     function commit_(state) {
