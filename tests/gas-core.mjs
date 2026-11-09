@@ -21,7 +21,8 @@ function makeEnv() {
         clearContent() { for (let i = 0; i < nr; i++) for (let j = 0; j < nc; j++) if (sh.g[r0 - 1 + i]) sh.g[r0 - 1 + i][c0 - 1 + j] = ""; return rg; },
         setNumberFormat() { env.formatCalls++; return rg; },
       };
-      return new Proxy(rg, { get: (t, k) => (k in t ? t[k] : () => rg) });
+      const px = new Proxy(rg, { get: (t, k) => (k in t ? t[k] : () => px) });
+      return px;
     }
     setFrozenRows() {} getSheetId() { return 1; }
   }
@@ -43,9 +44,11 @@ function makeEnv() {
     MimeType: { PLAIN_TEXT: "text/plain" },
     ScriptApp: { getProjectTriggers: () => [], newTrigger: () => chain(), deleteTrigger() {} },
     Utilities: {
+      parseDate: (str) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(str)); if (!m) throw new Error("Tanggal tidak valid"); return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]) - 7 * 3600e3); },
       getUuid: () => crypto.randomUUID(), DigestAlgorithm: { MD5: "md5" }, Charset: { UTF_8: "utf8" },
       computeDigest: (_a, s) => [...crypto.createHash("md5").update(String(s)).digest()], base64Encode: (b) => Buffer.from(b).toString("base64"),
-      formatDate: (d) => d.toISOString().slice(0, 16).replace(/[-:T]/g, "_"),
+      formatDate: (d, _tz, f) => { if (isNaN(d.getTime())) throw new Error("Invalid time value"); const j = new Date(d.getTime() + 7 * 3600e3), p = (n, w = 2) => String(n).padStart(w, "0");
+        return f.replace("yyyy", j.getUTCFullYear()).replace("MM", p(j.getUTCMonth() + 1)).replace("dd", p(j.getUTCDate())).replace("HH", p(j.getUTCHours())).replace("mm", p(j.getUTCMinutes())).replace("ss", p(j.getUTCSeconds())); },
     },
   };
   const ctx = vm.createContext(sandbox);
@@ -120,16 +123,24 @@ function makeEnv() {
   const e = makeEnv(), C = e.ctx; e.props.set("API_TOKEN", "TOK");
   C.setup();
   T("sheet laporan terbentuk dari data awal", !!e.sheets.get(C.SH.counts) && !!e.sheets.get(C.SH.master));
+  T("render sehat: tidak ada sheet yang gagal (" + C.warn_() + ")", C.warn_() === "");
+  const stm = C.readState_(); stm[C.K.master] = [1, 2, 3].map((i) => ({ bin: "B1-0" + i + "-A", area: "B1", kode: "K" + i, item: "PIPA " + i, onhand: i * 10 }));
+  C.commit_(stm);
+  T("Master_WMS ikut terisi saat data WMS berubah (judul + 3 bin)", e.sheets.get(C.SH.master).getLastRow() === 4);
   T("rentang kolom teks digabung (hemat panggilan API)", JSON.stringify(C.textRuns_([1, 2, 3, 5, 6, 9])) === "[[1,3],[5,6],[9,9]]" && JSON.stringify(C.textRuns_([3, 1, 2, 2])) === "[[1,3]]");
   const hapus = C.SH.users; e.sheets.delete(hapus);
   C.renderSheets_(C.readState_(), false);
   T("sheet laporan yang terhapus dibuat ulang otomatis", !!e.sheets.get(hapus));
   const st = C.readState_(); const buruk = JSON.parse(JSON.stringify(st)); buruk[C.K.tasks] = { "B1-01-A": null, "X": { u: 1 } };
   let lempar = false; try { C.renderSheets_(buruk, false, true); } catch (er) { lempar = true; }
-  T("satu sheet bermasalah tidak menggagalkan sinkron", lempar === false);
-  T("sheet lain tetap terbentuk walau satu bagian bermasalah", !!e.sheets.get(C.SH.closed) && !!e.sheets.get(C.SH.aging));
-  T("sheet yang gagal dilaporkan lewat warn_()", /Tugas/.test(C.warn_()));
-  C.renderSheets_(C.readState_(), false, true);
-  T("peringatan sheet hilang setelah render berikutnya sehat", !C.warn_().includes("Tugas"));
+  T("data tugas janggal tidak menggagalkan sinkron", lempar === false);
+  // satu sheet gagal ditulis (mis. kuota/proteksi sheet): sheet lain tetap diperbarui dan masalahnya dilaporkan
+  e.failSetValuesOn = C.SH.closed;
+  const stx = JSON.parse(JSON.stringify(st)); stx[C.K.closed] = { B1: { by: "Budi", at: "2026-11-10T01:00:00Z" } }; stx[C.K.aging] = { "B1-01-A": { qty: "9", at: "2026-11-10T02:00:00Z" } };
+  C.renderSheets_(stx, false, true);
+  T("sheet yang gagal dilaporkan lewat warn_()", C.warn_().includes(C.SH.closed));
+  T("sheet lain tetap diperbarui walau satu gagal", e.sheets.get(C.SH.aging).getLastRow() >= 2);
+  C.renderSheets_(stx, false, false);
+  T("sheet yang gagal dicoba lagi di render berikutnya dan peringatan hilang", C.warn_() === "" && e.sheets.get(C.SH.closed).getLastRow() >= 2);
 }
 console.log(`${okN} OK, ${bad} gagal`); process.exit(bad ? 1 : 0);
