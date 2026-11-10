@@ -18,7 +18,7 @@
       }
       const CLR_ST = { dup: ["Dobel hitung", "red"], qty: ["Selisih qty", "red"], nq: ["Qty kosong", "amber"], belum: ["Belum dihitung", "amber"], extra: ["Tidak ada di laporan", "amber"], ok: ["Cocok", "green"] };
       const clrKey = (v) => {
-        let s = String(v ?? "").trim();
+        let s = String(v ?? "").normalize("NFKC").trim(); // angka lebar-penuh (４０４…) dibaca sebagai angka biasa
         if (/^\d+\.0+$/.test(s)) s = s.replace(/\.0+$/, ""); // "4043814.0" hasil Excel/CSV
         // nama foto "4043742_2026-11-06-100438": nomor voucher = deretan angka paling depan (>= 5 digit) sebelum tanda lain
         const lead = s.match(/^\s*(\d{5,})(?=\D|$)/),
@@ -152,6 +152,25 @@
           if (!asg.has(best)) asg.set(best, []);
           asg.get(best).push(ck);
         });
+        /* lapisan 3: nomor voucher terselip di nama foto, mis. "2026-11-06_4043733" atau "WhatsApp Image ... (4043733).jpeg".
+           Dipakai hanya bila nomor lengkap dan 7 digit depan tidak ketemu. Deretan angka >= 7 di nama harus berawalan sama (7 digit) dengan voucher.
+           Foto yang sudah dipakai voucher lain (cocok persis / lapisan 2) tidak diambil. */
+        const used = new Set([...asg.values()].flat()),
+          runsOf = (g) => g.rows.flatMap((c) => String(c.v).normalize("NFKC").match(/\d{7,}/g) || []).map((d) => d.replace(/^0+/, "")),
+          open = [...repKeys].filter((k) => /^\d{7,}$/.test(k) && !cm.has(k) && !asg.has(k));
+        cm.forEach((g, ck) => {
+          if (repKeys.has(ck) || used.has(ck)) return;
+          let best = "", bl = 6;
+          runsOf(g).forEach((d) => open.forEach((k) => {
+            if (k.slice(0, 7) !== d.slice(0, 7)) return;
+            const l = cpl(k, d);
+            if (l > bl || (l === bl && best && k < best)) { bl = l; best = k; }
+          }));
+          if (!best) return;
+          if (!asg.has(best)) asg.set(best, []);
+          asg.get(best).push(ck);
+          used.add(ck);
+        });
         const byPrefix = (rk) => {
           const ks = asg.get(rk);
           return ks && ks.length ? { v: cm.get(ks[0]).v, rows: ks.flatMap((ck) => cm.get(ck).rows) } : null;
@@ -196,7 +215,7 @@
         return list;
       }
       /* Diagnosa: versi aturan pencocokan + alasan tiap voucher "belum dihitung" (nama counting terdekat dan kuncinya), agar mudah dilihat langsung di perangkat */
-      const CLR_MATCH_V = "7-digit-depan-v3";
+      const CLR_MATCH_V = "7-digit-depan-v4";
       function clrDiag(all) {
         const el = $("clrDiag");
         if (!el) return;

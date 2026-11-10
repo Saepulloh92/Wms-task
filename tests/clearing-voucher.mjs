@@ -58,7 +58,7 @@ await p2.addInitScript(({ fx, rep, cnt }) => {
 await p2.goto(url); await p2.waitForFunction(() => document.getElementById("pgT")?.textContent.trim());
 await p2.evaluate(() => window.go("clr")); await p2.waitForTimeout(600);
 const dg = await p2.evaluate(() => (document.getElementById("clrDiag").textContent || "").replace(/\s+/g, " "));
-ok(/aturan 7-digit-depan-v3/.test(dg), "diagnosa menampilkan versi aturan pencocokan");
+ok(/aturan 7-digit-depan-v4/.test(dg), "diagnosa menampilkan versi aturan pencocokan");
 ok(/4043750/.test(dg) && /404375/.test(dg) && /kunci 4043750/.test(dg), "diagnosa menjelaskan voucher belum dihitung + nomor counting yang mirip");
 // skenario 3: cocok lewat 7 digit pertama dari depan (nomor tidak saling mengawali) + pengaman voucher 8 digit
 const rep3 = [
@@ -82,4 +82,24 @@ const r3 = await p3.evaluate(() => Object.fromEntries(clrBuild().map((x) => [x.v
 ok(r3["40437421"] === "ok", "7 digit pertama sama (4043742) -> cocok walau nomor tidak saling mengawali");
 ok(r3["40437429"] === "belum", "pengaman: voucher lain dengan 7 digit depan sama tidak mencuri foto yang bukan miliknya... (belum dihitung)");
 ok(r3["4043800"] === "ok", "voucher 7 digit biasa tetap cocok");
+
+// --- nomor voucher terselip di nama foto (kasus "4043733 masih tidak terbaca") ---
+const cek = (rep, cnt) => p3.evaluate(({ rep, cnt }) => { clrRep = { rows: rep }; clrCnt = { rows: cnt }; return Object.fromEntries(clrBuild().map((x) => [x.v, x.st + (x.cv ? "@" + x.cv : "")])); }, { rep, cnt });
+const V = (v, q = 100) => ({ v, q, k: "", n: "", r: "", lr: "", sh: "", pic: "", grp: "" }), C = (v, q = 100) => ({ v, q, k: "", t: "", lr: "" });
+let x = await cek([V("4043733")], [C("2026-11-06_4043733")]);
+ok(x["4043733"].startsWith("ok"), "nama foto diawali tanggal (2026-11-06_4043733) tetap cocok");
+x = await cek([V("4043733")], [C("20261106_4043733.jpg")]);
+ok(x["4043733"].startsWith("ok"), "tanggal tergabung di depan (20261106_4043733.jpg) tetap cocok");
+x = await cek([V("4043733")], [C("WhatsApp Image 2026-11-06 at 10.04.38 (4043733).jpeg")]);
+ok(x["4043733"].startsWith("ok"), "nama gaya WhatsApp dengan nomor di dalam kurung tetap cocok");
+x = await cek([V("4043733")], [C("\uff14\uff10\uff14\uff13\uff17\uff13\uff13")]);
+ok(x["4043733"].startsWith("ok"), "angka lebar-penuh dibaca sebagai angka biasa");
+x = await cek([V("4043733")], [C("20261106"), C("2026-11-06"), C("photo_20261106_100438")]);
+ok(x["4043733"] === "belum", "pengaman: tanggal atau angka lain tidak dianggap voucher (tetap belum dihitung)");
+x = await cek([V("4043733"), V("4043744")], [C("4043744_2026-11-06-100438"), C("2026-11-06_4043733")]);
+ok(x["4043733"].startsWith("ok") && x["4043744"].startsWith("ok"), "dua voucher dengan pola nama berbeda cocok masing-masing");
+x = await cek([V("4043733"), V("4043744")], [C("4043744_2026-11-06-100438"), C("4043744_2026-11-06-120000")]);
+ok(x["4043733"] === "belum", "pengaman: foto voucher lain tidak dipakai voucher yang tidak punya foto");
+x = await cek([V("4043733"), V("40437339")], [C("2026-11-06_4043733")]);
+ok(Object.values(x).filter((t) => t.startsWith("ok")).length === 1, "satu foto terselip hanya untuk satu voucher (voucher kembar 7 digit depan)");
 await b.close(); process.exit(fail ? 1 : 0);
