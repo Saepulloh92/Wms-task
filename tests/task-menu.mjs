@@ -20,13 +20,13 @@ L("jumlah kartu",await p.evaluate(()=>document.querySelectorAll("#tskList .card.
 L("kartu 1",await T("#tskList .card.tsk"));
 L("aksi admin ada?",await p.evaluate(()=>!!document.querySelector("#tskList [data-tsk=del]")&&!!document.querySelector("#tskList select[data-tsk=re]")));
 // pindah petugas
-await p.selectOption('#tskList .card.tsk[data-key="B1-01-B"] select','ua3andi'); await p.waitForTimeout(400);
+await p.click('#tskList .card.tsk[data-key="B1-01-B"] .tk-more summary'); await p.selectOption('#tskList .card.tsk[data-key="B1-01-B"] select','ua3andi'); await p.waitForTimeout(400);
 L("setelah ganti petugas",await p.evaluate(()=>JSON.parse(localStorage.getItem("warehouse_so_tasks_v1"))["B1-01-B"].u));
 // filter petugas
 await p.selectOption("#tskUser","ua1budi"); await p.waitForTimeout(250);
 L("filter Budi: kartu",await p.evaluate(()=>document.querySelectorAll("#tskList .card.tsk").length)+" (harus 3)");
 // kerjakan bin
-await p.click('#tskList .card.tsk[data-key="B1-01-A"] [data-tsk=go]'); await p.waitForTimeout(500);
+await p.click('#tskList .card.tsk[data-key="B1-01-A"] .tk-title'); await p.waitForTimeout(500);
 L("kerjakan bin -> view",await view()+" | sheet terbuka:"+await p.evaluate(()=>{const e=document.getElementById("sheet");const r=e.getBoundingClientRect();return r.height>50&&r.top<innerHeight})+" | bin:"+await T("#shBin, #shT, #sheet b"));
 await p.reload(); await p.waitForFunction(()=>document.getElementById("pgT")?.textContent.trim());
 await p.evaluate(()=>go("task")); await p.waitForTimeout(300);
@@ -40,7 +40,7 @@ L("kerjakan DC -> view",await view()+" | dialog DC terbuka:"+await p.evaluate(()
 await p.keyboard.press("Escape"); await p.waitForTimeout(400);
 // hapus
 await p.evaluate(()=>go("task")); await p.waitForTimeout(300);
-await p.click('#tskList .card.tsk[data-key^="DC|"] [data-tsk=del]'); await p.waitForTimeout(300); await (await p.$("#dOk"))?.click(); await p.waitForTimeout(400);
+await p.click('#tskList .card.tsk[data-key^="DC|"] .tk-more summary'); await p.click('#tskList .card.tsk[data-key^="DC|"] [data-tsk=del]'); await p.waitForTimeout(300); await (await p.$("#dOk"))?.click(); await p.waitForTimeout(400);
 L("setelah hapus DC: tersisa",await p.evaluate(()=>Object.keys(JSON.parse(localStorage.getItem("warehouse_so_tasks_v1"))).length)+" (harus 3)");
 
 // sebagai petugas Budi
