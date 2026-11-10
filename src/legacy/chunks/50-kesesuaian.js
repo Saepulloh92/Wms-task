@@ -102,7 +102,13 @@
         const el = $("kHist");
         if (!el) return;
         el.innerHTML = kesHist.length
-          ? kesHist.map((h, i) => `<div class="card"><div class="r"><b class="big">${esc(kesTgl(h.tgl))}</b><span class="pill green">Tersimpan</span></div><div class="m">${fmt(h.n)} rak · perlu adjust ${fmt(h.a)} · perlu dicek ${fmt(h.b)} · kosong ${fmt(h.c)}</div><div class="m">${esc(new Date(h.at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }))}${h.by ? " oleh " + esc(h.by) : ""}</div><details><summary>Lihat teks laporan</summary><div><pre class="rep">${esc(h.text)}</pre></div></details><div class="acts"><button class="btn sec sm inl" data-kc="${i}" type="button">Salin</button><button class="btn dng sm inl" data-kd="${i}" type="button">Hapus</button></div></div>`).join("")
+          ? histRows(kesHist, "kes", (h, i) =>
+              histRow(
+                esc(kesTgl(h.tgl)),
+                `${fmt(h.n)} rak · adjust ${fmt(h.a)} · cek ${fmt(h.b)} · kosong ${fmt(h.c)}`,
+                `<div class="m">Disimpan ${esc(new Date(h.at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }))}${h.by ? " oleh " + esc(h.by) : ""}</div><pre class="rep">${esc(h.text)}</pre><div class="acts"><button class="btn sec sm inl" data-kc="${i}" type="button">Salin</button><button class="btn dng sm inl" data-kd="${i}" type="button">Hapus</button></div>`,
+              ),
+            )
           : '<div class="empty">Belum ada laporan tersimpan.</div>';
       }
       // per area: [total rak, rak sesuai]; "sesuai" = definisi yang sama dengan kartu "Sesuai" di menu Cek Kesesuaian
@@ -127,6 +133,7 @@
         renderKesHist();
       }
       $("kHist").onclick = async (e) => {
+        if (histMore(e, "kes", renderKesHist)) return;
         const c = e.target.closest("[data-kc]"), d = e.target.closest("[data-kd]");
         if (c) {
           const h = kesHist[Number(c.dataset.kc)];

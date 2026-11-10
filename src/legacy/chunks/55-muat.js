@@ -45,12 +45,13 @@
         const el = $("muHist");
         if (!el) return;
         el.innerHTML = muatHist.length
-          ? muatHist
-              .map(
-                (h, i) =>
-                  `<div class="card"><div class="r"><b class="big">${esc(muTgl(h.tgl))}</b><span class="pill green">Tersimpan</span></div><div class="m">${fmt(h.dp)} SPM · ${fmt(h.ni)} item · total mobil ${fmt(h.total)}</div><div class="m">Disimpan ${esc(new Date(h.at).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }))}${h.by ? " oleh " + esc(h.by) : ""}</div><details><summary>Lihat teks laporan</summary><div><pre class="rep">${esc(h.text)}</pre></div></details><div class="acts"><button class="btn sec sm inl" data-mc="${i}">Salin</button><button class="btn dng sm inl" data-md="${i}">Hapus</button></div></div>`,
-              )
-              .join("")
+          ? histRows(muatHist, "mu", (h, i) =>
+              histRow(
+                esc(muTgl(h.tgl)),
+                `${fmt(h.dp)} SPM · ${fmt(h.ni)} item · ${fmt(h.total)} mobil`,
+                `<div class="m">Disimpan ${esc(new Date(h.at).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }))}${h.by ? " oleh " + esc(h.by) : ""}</div><pre class="rep">${esc(h.text)}</pre><div class="acts"><button class="btn sec sm inl" data-mc="${i}" type="button">Salin</button><button class="btn dng sm inl" data-md="${i}" type="button">Hapus</button></div>`,
+              ),
+            )
           : '<div class="empty">Belum ada laporan yang disimpan.</div>';
       }
       async function muSaveHist() {
@@ -337,6 +338,7 @@ _Update: ${upd}_`;
         await sendAll(t, t, true);
       };
       $("muHist").onclick = async (e) => {
+        if (histMore(e, "mu", renderMuHist)) return;
         const c = e.target.closest("[data-mc]"), d = e.target.closest("[data-md]");
         if (c) {
           const h = muatHist[Number(c.dataset.mc)];

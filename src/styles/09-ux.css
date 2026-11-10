@@ -164,3 +164,18 @@ body { overflow-x: clip; }
 #monOver .dnut circle, #clrRekap .dnut circle { animation: ring 0.7s var(--ease, ease-out) both; }
 .kp-bar i, .shr .pbar i, .acard .pbar i { animation: grow 0.6s var(--ease, ease-out) both; }
 .dcb, .mchip, .pill { transition: background-color 0.15s, color 0.15s; }
+
+/* Riwayat laporan ringkas */
+.hrow { background: #fff; border: 1px solid var(--line); border-radius: 12px; margin: 0 0 6px; padding: 0; overflow: hidden; }
+.hrow > summary { display: grid; grid-template-columns: 1fr 16px; gap: 8px; align-items: center; min-height: 56px; padding: 8px 12px; cursor: pointer; list-style: none; border: 0; background: none; }
+.hrow > summary::-webkit-details-marker { display: none; }
+.hrow > summary::after { content: "›"; color: var(--muted); font-size: 22px; line-height: 1; transition: transform 0.15s; }
+.hrow[open] > summary::after { transform: rotate(90deg); }
+.hdt { display: grid; min-width: 0; }
+.hdt b { font-size: 16px; }
+.hdt small { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+.hbody { display: grid; gap: 8px; padding: 10px 12px 12px; border-top: 1px solid var(--line); }
+.hbody pre.rep { max-height: 220px; overflow: auto; margin: 0; }
+.hbody .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.hbody .acts .btn { width: 100%; margin: 0; min-height: 44px; }
+.hmore { width: 100%; margin: 2px 0 10px; }

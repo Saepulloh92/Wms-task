@@ -23,6 +23,11 @@
         const d = s.replace(/\D/g, "");
         return d ? d.replace(/^0+/, "") || "0" : s.toUpperCase();
       };
+      /* kunci cadangan: 8 angka dari depan. Dipakai bila nomor lengkap tidak ketemu (mis. nama foto/laporan beda panjang akhiran) */
+      const clrK8 = (v) => {
+        const k = clrKey(v);
+        return /^\d+$/.test(k) ? k.slice(0, 8) : k;
+      };
       const sms8 = (k) => {
         const s = String(k ?? "");
         if (/e\+/i.test(s)) return "";
@@ -130,6 +135,12 @@
           if (!cm.has(k)) cm.set(k, { v: c.v, rows: [] });
           cm.get(k).rows.push(c);
         });
+        const cm8 = new Map(); // 8 angka depan -> semua baris counting yang awalnya sama (nomor kembar dari berbagai panjang ikut terkumpul)
+        cnt.forEach((c) => {
+          const k8 = clrK8(c.v);
+          if (!cm8.has(k8)) cm8.set(k8, { v: c.v, rows: [] });
+          cm8.get(k8).rows.push(c);
+        });
         // satu voucher bisa muncul di beberapa baris laporan (beberapa item): qty dijumlah; baris yang persis sama (dobel input) dihitung sekali
         const ra = new Map();
         rep.forEach((r) => {
@@ -145,7 +156,8 @@
         [...ra.values()].forEach((r) => {
           const k = clrKey(r.v);
           seen.add(k);
-          const g = cm.get(k);
+          let g = cm.get(k), viaP = false;
+          if (!g) { g = cm8.get(clrK8(r.v)); viaP = !!g; } // nomor lengkap tidak ketemu: coba 8 angka dari depan
           if (!g) return list.push({ v: r.v, sms: "", kc: "", qR: r.q, qC: null, diff: null, st: "belum", n: r.n, r: r.r, rc: 0, lori: r.lr || "", shift: r.sh || "", tm: "", pic: r.pic || "", grp: r.grp || "" });
           const lt = clrLatest(g.rows);
           let qC = lt.q == null ? null : clrRnd(lt.q), ik = 0;
@@ -161,7 +173,7 @@
           const sms = sms8(kc);
           const st = nq ? "nq" : diff === 0 ? "ok" : "qty"; // cocok = voucher + qty sama persis
           const tm = lt.t || (g.rows.find((x) => x.t) || {}).t || "", lori = r.lr || lt.lr || (g.rows.find((x) => x.lr) || {}).lr || "";
-          list.push({ v: r.v, sms, kc, qR: r.q, qC, diff, st, ik, n: r.n, r: r.r, rc: g.rows.length, lori, shift: r.sh || clrShiftOf(tm), tm, pic: r.pic || "", grp: r.grp || "" });
+          list.push({ v: r.v, cv: viaP ? lt.v : "", sms, kc, qR: r.q, qC, diff, st, ik, n: r.n, r: r.r, rc: g.rows.length, lori, shift: r.sh || clrShiftOf(tm), tm, pic: r.pic || "", grp: r.grp || "" });
         });
         // hanya voucher yang ada di Laporan Voucher yang diimpor; baris counting lain diabaikan
         const ord = { dup: 0, qty: 1, nq: 2, belum: 3, ok: 4 };
@@ -221,7 +233,7 @@
         $("clrList").innerHTML = (vis.length ? vis.slice(0, 300).map((x) => {
           const [lb, cl] = CLR_ST[x.st];
           const d = x.diff == null ? "" : x.diff === 0 ? "0" : (x.diff > 0 ? "+" : "") + fmt(x.diff);
-          return `<div class="card vc s-${x.st}"><div class="r"><b class="id">${esc(x.v)}</b><span class="pill ${cl}">${lb}</span>${clrIsDone(x) ? ' <span class="pill green">Selesai</span>' : ""}</div>${x.n ? `<div class="nm">${esc(x.n)}${x.r ? ", rak " + esc(x.r) : ""}</div>` : ""}<dl class="kv k3"><div><dt>Shift</dt><dd>${esc(x.shift || "-")}${x.tm ? "<small>" + esc((String(x.tm).match(/\d{1,2}:\d{2}/) || [""])[0]) + "</small>" : ""}</dd></div><div><dt>No Lori</dt><dd class="id">${esc(x.lori || "-")}</dd></div><div><dt>Selisih</dt><dd class="${x.diff ? "neg" : ""}">${d || "-"}</dd></div><div><dt>Qty WMS</dt><dd>${x.qR == null ? "-" : fmt(x.qR)}</dd></div><div><dt>Qty count</dt><dd>${x.qC == null ? "-" : fmt(x.qC)}${x.ik ? ` <small>(${fmt(x.ik)}×${CLR_IKAT})</small>` : ""}</dd></div></dl>${x.st !== "ok" && x.ik ? `<div class="m">Counting ${fmt(x.ik)} ikat × ${CLR_IKAT} = ${fmt(x.qC)}.</div>` : ""}${x.st !== "ok" && x.rc > 1 ? `<div class="m">${x.rc} foto counting untuk voucher ini, dipakai yang terbaru.</div>` : ""}${clrAct(x)}</div>`;
+          return `<div class="card vc s-${x.st}"><div class="r"><b class="id">${esc(x.v)}</b><span class="pill ${cl}">${lb}</span>${clrIsDone(x) ? ' <span class="pill green">Selesai</span>' : ""}</div>${x.n ? `<div class="nm">${esc(x.n)}${x.r ? ", rak " + esc(x.r) : ""}</div>` : ""}<dl class="kv k3"><div><dt>Shift</dt><dd>${esc(x.shift || "-")}${x.tm ? "<small>" + esc((String(x.tm).match(/\d{1,2}:\d{2}/) || [""])[0]) + "</small>" : ""}</dd></div><div><dt>No Lori</dt><dd class="id">${esc(x.lori || "-")}</dd></div><div><dt>Selisih</dt><dd class="${x.diff ? "neg" : ""}">${d || "-"}</dd></div><div><dt>Qty WMS</dt><dd>${x.qR == null ? "-" : fmt(x.qR)}</dd></div><div><dt>Qty count</dt><dd>${x.qC == null ? "-" : fmt(x.qC)}${x.ik ? ` <small>(${fmt(x.ik)}×${CLR_IKAT})</small>` : ""}</dd></div></dl>${x.st !== "ok" && x.ik ? `<div class="m">Counting ${fmt(x.ik)} ikat × ${CLR_IKAT} = ${fmt(x.qC)}.</div>` : ""}${x.cv ? `<div class="m">Dicocokkan lewat 8 angka depan dengan nama foto ${esc(x.cv)}.</div>` : ""}${x.st !== "ok" && x.rc > 1 ? `<div class="m">${x.rc} foto counting untuk voucher ini, dipakai yang terbaru.</div>` : ""}${clrAct(x)}</div>`;
         }).join("") + (vis.length > 300 ? `<p class="fine">Menampilkan 300 dari ${fmt(vis.length)}. Pakai pencarian atau filter.</p>` : "") : `<div class="empty">${all.length ? "Tidak ada voucher di filter ini." : "Muat Laporan Voucher dan counting dulu."}</div>`);
       }
       async function clrFetch(manual) {
@@ -441,7 +453,13 @@
         $("clrSaveHist").disabled = !all.length;
         $("clrSaveInfo").textContent = !all.length ? "Belum ada data untuk disimpan." : same ? "✅ Hasil ini sudah tersimpan (" + clrTglF(same.tgl) + ")." : last ? "⚠️ Ada perubahan yang belum disimpan. Terakhir disimpan: " + new Date(last.at).toLocaleString("id-ID") + "." : "⚠️ Belum pernah disimpan.";
         el.innerHTML = clrHist.length
-          ? clrHist.map((h, i) => `<div class="card"><div class="r"><b class="big">${esc(clrTglF(h.tgl))}</b><span class="pill green">Tersimpan</span></div><div class="m">${fmt(h.n)} voucher · cocok ${fmt(h.ok)} · perlu dicek ${fmt(h.bad)}${h.by ? " · " + esc(h.by) : ""} · ${esc(new Date(h.at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }))}</div><div class="row2"><button class="btn sec sm" data-ch="${i}" type="button">Kirim ke Telegram</button><button class="btn dng sm" data-cd="${i}" type="button">Hapus</button></div></div>`).join("")
+          ? histRows(clrHist, "clr", (h, i) =>
+              histRow(
+                esc(clrTglF(h.tgl)),
+                `${fmt(h.n)} voucher · cocok ${fmt(h.ok)} · cek ${fmt(h.bad)}`,
+                `<div class="m">Disimpan ${esc(new Date(h.at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }))}${h.by ? " oleh " + esc(h.by) : ""}</div><div class="acts"><button class="btn sec sm inl" data-ch="${i}" type="button">Kirim ke Telegram</button><button class="btn dng sm inl" data-cd="${i}" type="button">Hapus</button></div>`,
+              ),
+            )
           : '<div class="empty">Belum ada hasil clearing yang disimpan.</div>';
       }
       $("clrSaveHist").onclick = async () => {
@@ -459,6 +477,7 @@
         await sendAll(ent.text, ent.text, true);
       };
       $("clrHist").onclick = async (e) => {
+        if (histMore(e, "clr", renderClrHist)) return;
         const c = e.target.closest("[data-ch]"), d = e.target.closest("[data-cd]");
         if (c) {
           const h = clrHist[Number(c.dataset.ch)];

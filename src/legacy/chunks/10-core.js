@@ -125,6 +125,14 @@
           return "w" + h;
         }
       }
+      /* Riwayat laporan ringkas: satu baris per laporan (ketuk untuk buka isi + tombol), 7 terbaru saja, sisanya lewat "Tampilkan semua" */
+      const HIST_SHOW = 7, histAll = {};
+      const histRow = (title, meta, body) => `<details class="hrow"><summary><span class="hdt"><b>${title}</b><small>${meta}</small></span></summary><div class="hbody">${body}</div></details>`;
+      function histRows(arr, key, rowFn) {
+        const all = !!histAll[key], list = all ? arr : arr.slice(0, HIST_SHOW);
+        return list.map(rowFn).join("") + (arr.length > HIST_SHOW ? `<button class="btn sec sm hmore" data-more type="button">${all ? "Ringkas (7 terbaru)" : "Tampilkan semua (" + arr.length + ")"}</button>` : "");
+      }
+      const histMore = (e, key, render) => { if (!e.target.closest("[data-more]")) return false; histAll[key] = !histAll[key]; render(); return true; };
       /* Cegah kedip saat muat ulang otomatis: isi elemen hanya diganti kalau HTML-nya benar-benar berbeda
          (posisi scroll dan bagian yang sedang dibuka ikut terjaga). */
       function keepDom(...ids) {
