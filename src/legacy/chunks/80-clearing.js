@@ -20,13 +20,10 @@
       const clrKey = (v) => {
         let s = String(v ?? "").trim();
         if (/^\d+\.0+$/.test(s)) s = s.replace(/\.0+$/, ""); // "4043814.0" hasil Excel/CSV
-        const d = s.replace(/\D/g, "");
+        // nama foto "4043742_2026-11-06-100438": nomor voucher = deretan angka paling depan (>= 5 digit) sebelum tanda lain
+        const lead = s.match(/^\s*(\d{5,})(?=\D|$)/),
+          d = lead ? lead[1] : s.replace(/\D/g, "");
         return d ? d.replace(/^0+/, "") || "0" : s.toUpperCase();
-      };
-      /* kunci cadangan: 8 angka dari depan. Dipakai bila nomor lengkap tidak ketemu (mis. nama foto/laporan beda panjang akhiran) */
-      const clrK8 = (v) => {
-        const k = clrKey(v);
-        return /^\d+$/.test(k) ? k.slice(0, 8) : k;
       };
       const sms8 = (k) => {
         const s = String(k ?? "");
@@ -135,12 +132,19 @@
           if (!cm.has(k)) cm.set(k, { v: c.v, rows: [] });
           cm.get(k).rows.push(c);
         });
-        const cm8 = new Map(); // 8 angka depan -> semua baris counting yang awalnya sama (nomor kembar dari berbagai panjang ikut terkumpul)
-        cnt.forEach((c) => {
-          const k8 = clrK8(c.v);
-          if (!cm8.has(k8)) cm8.set(k8, { v: c.v, rows: [] });
-          cm8.get(k8).rows.push(c);
+        /* cadangan bila nomor lengkap tidak ketemu: nomor counting yang diawali nomor laporan (atau sebaliknya), minimal 7 angka sama dari depan */
+        const cm7 = new Map();
+        cm.forEach((g, k) => {
+          if (!/^\d{7,}$/.test(k)) return;
+          const p = k.slice(0, 7);
+          if (!cm7.has(p)) cm7.set(p, []);
+          cm7.get(p).push(k);
         });
+        const byPrefix = (rk) => {
+          if (!/^\d{7,}$/.test(rk)) return null;
+          const ks = (cm7.get(rk.slice(0, 7)) || []).filter((ck) => ck !== rk && (ck.length > rk.length ? ck.startsWith(rk) : rk.startsWith(ck)));
+          return ks.length ? { v: cm.get(ks[0]).v, rows: ks.flatMap((ck) => cm.get(ck).rows) } : null;
+        };
         // satu voucher bisa muncul di beberapa baris laporan (beberapa item): qty dijumlah; baris yang persis sama (dobel input) dihitung sekali
         const ra = new Map();
         rep.forEach((r) => {
@@ -157,7 +161,7 @@
           const k = clrKey(r.v);
           seen.add(k);
           let g = cm.get(k), viaP = false;
-          if (!g) { g = cm8.get(clrK8(r.v)); viaP = !!g; } // nomor lengkap tidak ketemu: coba 8 angka dari depan
+          if (!g) { g = byPrefix(k); viaP = !!g; } // nomor lengkap tidak ketemu: coba awalan angka
           if (!g) return list.push({ v: r.v, sms: "", kc: "", qR: r.q, qC: null, diff: null, st: "belum", n: r.n, r: r.r, rc: 0, lori: r.lr || "", shift: r.sh || "", tm: "", pic: r.pic || "", grp: r.grp || "" });
           const lt = clrLatest(g.rows);
           let qC = lt.q == null ? null : clrRnd(lt.q), ik = 0;
@@ -233,7 +237,7 @@
         $("clrList").innerHTML = (vis.length ? vis.slice(0, 300).map((x) => {
           const [lb, cl] = CLR_ST[x.st];
           const d = x.diff == null ? "" : x.diff === 0 ? "0" : (x.diff > 0 ? "+" : "") + fmt(x.diff);
-          return `<div class="card vc s-${x.st}"><div class="r"><b class="id">${esc(x.v)}</b><span class="pill ${cl}">${lb}</span>${clrIsDone(x) ? ' <span class="pill green">Selesai</span>' : ""}</div>${x.n ? `<div class="nm">${esc(x.n)}${x.r ? ", rak " + esc(x.r) : ""}</div>` : ""}<dl class="kv k3"><div><dt>Shift</dt><dd>${esc(x.shift || "-")}${x.tm ? "<small>" + esc((String(x.tm).match(/\d{1,2}:\d{2}/) || [""])[0]) + "</small>" : ""}</dd></div><div><dt>No Lori</dt><dd class="id">${esc(x.lori || "-")}</dd></div><div><dt>Selisih</dt><dd class="${x.diff ? "neg" : ""}">${d || "-"}</dd></div><div><dt>Qty WMS</dt><dd>${x.qR == null ? "-" : fmt(x.qR)}</dd></div><div><dt>Qty count</dt><dd>${x.qC == null ? "-" : fmt(x.qC)}${x.ik ? ` <small>(${fmt(x.ik)}×${CLR_IKAT})</small>` : ""}</dd></div></dl>${x.st !== "ok" && x.ik ? `<div class="m">Counting ${fmt(x.ik)} ikat × ${CLR_IKAT} = ${fmt(x.qC)}.</div>` : ""}${x.cv ? `<div class="m">Dicocokkan lewat 8 angka depan dengan nama foto ${esc(x.cv)}.</div>` : ""}${x.st !== "ok" && x.rc > 1 ? `<div class="m">${x.rc} foto counting untuk voucher ini, dipakai yang terbaru.</div>` : ""}${clrAct(x)}</div>`;
+          return `<div class="card vc s-${x.st}"><div class="r"><b class="id">${esc(x.v)}</b><span class="pill ${cl}">${lb}</span>${clrIsDone(x) ? ' <span class="pill green">Selesai</span>' : ""}</div>${x.n ? `<div class="nm">${esc(x.n)}${x.r ? ", rak " + esc(x.r) : ""}</div>` : ""}<dl class="kv k3"><div><dt>Shift</dt><dd>${esc(x.shift || "-")}${x.tm ? "<small>" + esc((String(x.tm).match(/\d{1,2}:\d{2}/) || [""])[0]) + "</small>" : ""}</dd></div><div><dt>No Lori</dt><dd class="id">${esc(x.lori || "-")}</dd></div><div><dt>Selisih</dt><dd class="${x.diff ? "neg" : ""}">${d || "-"}</dd></div><div><dt>Qty WMS</dt><dd>${x.qR == null ? "-" : fmt(x.qR)}</dd></div><div><dt>Qty count</dt><dd>${x.qC == null ? "-" : fmt(x.qC)}${x.ik ? ` <small>(${fmt(x.ik)}×${CLR_IKAT})</small>` : ""}</dd></div></dl>${x.st !== "ok" && x.ik ? `<div class="m">Counting ${fmt(x.ik)} ikat × ${CLR_IKAT} = ${fmt(x.qC)}.</div>` : ""}${x.cv ? `<div class="m">Dicocokkan lewat awalan angka dengan nama foto ${esc(x.cv)}.</div>` : ""}${x.st !== "ok" && x.rc > 1 ? `<div class="m">${x.rc} foto counting untuk voucher ini, dipakai yang terbaru.</div>` : ""}${clrAct(x)}</div>`;
         }).join("") + (vis.length > 300 ? `<p class="fine">Menampilkan 300 dari ${fmt(vis.length)}. Pakai pencarian atau filter.</p>` : "") : `<div class="empty">${all.length ? "Tidak ada voucher di filter ini." : "Muat Laporan Voucher dan counting dulu."}</div>`);
       }
       async function clrFetch(manual) {
