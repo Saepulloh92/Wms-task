@@ -101,7 +101,7 @@ var SH = {
   agrekap: 'Aging_Rekap'
 };
 var MENU_LABEL = {
-  so: 'Periksa Bin', dc: 'DC Harian', task: 'Tugas Bin', check: 'Review Supervisor', kes: 'Cek Kesesuaian',
+  so: 'Periksa Bin', dc: 'DC Harian', task: 'Task', check: 'Review Supervisor', kes: 'Cek Kesesuaian',
   adj: 'File Adjust', clr: 'Clearing', mon: 'Beranda', muat: 'Laporan Muat', kpi: 'KPI Area', agi: 'Aging Stock', rpt: 'Laporan', tg: 'Telegram', data: 'Data WMS', usr: 'User & Area'
 };
 var MENU_OPERATOR = ['mon', 'so', 'dc', 'task'];   // menu standar Petugas di aplikasi

@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useWms } from "../legacy/bridge.js";
 import { fmt } from "../lib/format.js";
 import { SIGNALS, CLASSES, NO_CLASS, SIGNAL_COLOR, DEFAULT_PIC, normSignal, buildAging, checklist, groupByClass, buildPool, suggest, agingText, actualOf } from "../lib/aging.js";
@@ -24,6 +24,15 @@ export default function AgingView() {
   const tk = wms.tasks || EMPTY, me = wms.curU || "";
   const taskBins = new Set(Object.keys(tk).filter((k) => k.startsWith("AG|") && (!me || tk[k].u === me)).map((k) => k.slice(3)));
   // dari halaman Tugas: buka langsung daftar tugas aging (semua area)
+  // dari menu Task: buka kartu rak yang dituju
+  useEffect(() => {
+    if (!active || !wms.agiTarget) return;
+    const t = setTimeout(() => {
+      const el = [...document.querySelectorAll("[data-rak]")].find((d) => d.dataset.rak === wms.agiTarget);
+      if (el) { el.open = true; el.scrollIntoView({ block: "center" }); wms.agiTarget = ""; }
+    }, 120);
+    return () => clearTimeout(t);
+  }); // eslint-disable-line react-hooks/exhaustive-deps
   if (active && wms.agiFocus) { wms.agiFocus = false; setTimeout(() => { setArea(""); setFlt("task"); }, 0); }
   const A = active ? wms.areas() : [];
   const cur = A.includes(area) ? area : "";
@@ -215,7 +224,7 @@ function RakCard({ x, a, pools, kelas, onClass, onSave, onClear, tugas, blind })
   const opts = (label, list, key) => list.length > 0 && <div className="agi-opts" role="group" aria-label={label}>{list.map((v) => <button type="button" key={v} className="agi-opt" onClick={() => pick(key, v)}>{v}</button>)}</div>;
   const save = (e, v) => { const d = e.currentTarget.closest("details"); try { navigator.vibrate && navigator.vibrate(18); } catch (_) { /* getar tidak didukung */ } onSave(x.bin, v); advance(d); };
   return (
-    <details className={"card agi-rak" + (a ? " done" : "") + (sig === "Merah" ? " red" : "")}>
+    <details data-rak={x.bin} className={"card agi-rak" + (a ? " done" : "") + (sig === "Merah" ? " red" : "")}>
       <summary>
         <span className="agi-sg" style={{ background: SIGNAL_COLOR[sig] || "#ccc", color: sig === "Kuning 3" || sig === "Hijau 2" || sig === "Merah" ? "#fff" : "#222" }}>{sig || "?"}</span>
         <span className="agi-bn"><b>{x.bin}<i className={lvl(kelas)}>{kelas || "?"}</i></b><span className="agi-it">{x.item}</span><small>{tugas ? "TUGAS · " : ""}Tumpak <strong>{x.tumpak || "–"}</strong> · {x.aging} hari{blind ? "" : " · stok " + fmt(x.onhand)}{a ? " · cek " + fmt(a.qty ?? 0) + (a.sesuai ? " (sesuai)" : "") : ""}</small></span>

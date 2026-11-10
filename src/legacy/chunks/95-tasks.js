@@ -72,6 +72,7 @@
         $("tkClear").textContent = me ? "Hapus tugas saya" : "Hapus semua tugas";
         $("tkClear").disabled = !mine.length && !(typeof tkPendOther === "function" && Object.keys(tasks).length);
         if (typeof renderTkKinds === "function") renderTkKinds();
+        if (typeof renderTsk === "function") renderTsk();
       }
       async function tkIngest(rows) {
         const hi = rows.findIndex((r) => r.some((c) => ["bin", "rak"].includes(nrm(c))));

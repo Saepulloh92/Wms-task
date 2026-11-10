@@ -39,7 +39,7 @@
           tg: "Telegram",
           mon: "Beranda",
           data: "Data WMS",
-          task: "Tugas Bin",
+          task: "Task",
         }[v];
         const soView = v === "so" || v === "check";
         document.querySelector("header .prog").hidden = !soView;
@@ -58,7 +58,7 @@
             tg: "Kirim info ke Telegram",
             mon: "Posisi mobil per wilayah",
             data: "Impor data WMS",
-            task: "Tugas per petugas",
+            task: "Tugas dari admin",
           }[v];
         if (v === "check") renderCheck();
         if (v === "kes") renderKes();
