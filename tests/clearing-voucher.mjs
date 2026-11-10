@@ -58,6 +58,28 @@ await p2.addInitScript(({ fx, rep, cnt }) => {
 await p2.goto(url); await p2.waitForFunction(() => document.getElementById("pgT")?.textContent.trim());
 await p2.evaluate(() => window.go("clr")); await p2.waitForTimeout(600);
 const dg = await p2.evaluate(() => (document.getElementById("clrDiag").textContent || "").replace(/\s+/g, " "));
-ok(/aturan angka-depan-v2/.test(dg), "diagnosa menampilkan versi aturan pencocokan");
+ok(/aturan 7-digit-depan-v3/.test(dg), "diagnosa menampilkan versi aturan pencocokan");
 ok(/4043750/.test(dg) && /404375/.test(dg) && /kunci 4043750/.test(dg), "diagnosa menjelaskan voucher belum dihitung + nomor counting yang mirip");
+// skenario 3: cocok lewat 7 digit pertama dari depan (nomor tidak saling mengawali) + pengaman voucher 8 digit
+const rep3 = [
+  { v: "40437421", q: 50, k: "", n: "", r: "", lr: "", sh: "", pic: "", grp: "" }, // 8 digit; foto counting: 7 digit + tanggal (digit tergabung)
+  { v: "40437429", q: 60, k: "", n: "", r: "", lr: "", sh: "", pic: "", grp: "" }, // 7 digit depan sama dengan voucher di atas, TIDAK ada fotonya
+  { v: "4043800", q: 70, k: "", n: "", r: "", lr: "", sh: "", pic: "", grp: "" },
+];
+const cnt3 = [
+  { v: "IMG-4043742-2026-11-06-100438", q: 50, k: "", t: "", lr: "" }, // digit tergabung: 40437422026110610 0438 (tidak saling mengawali dengan 40437421)
+  { v: "4043800_2026-11-06-110000", q: 70, k: "", t: "", lr: "" },
+];
+const p3 = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+await p3.route(/^https?:\/\/(?!localhost)/, (r) => r.abort());
+await p3.addInitScript(({ fx, rep, cnt }) => {
+  localStorage.setItem("warehouse_so_master_v2", JSON.stringify(fx.master)); localStorage.setItem("warehouse_so_users_v1", JSON.stringify(fx.users)); localStorage.setItem("warehouse_so_lgsetup_v1", "1");
+  localStorage.setItem("warehouse_so_clr_rep_v1", JSON.stringify({ at: Date.now(), name: "l.xlsx", rows: rep })); localStorage.setItem("warehouse_so_clr_cnt_v1", JSON.stringify({ at: Date.now(), src: "file", rows: cnt }));
+}, { fx: { master: FX("master.json"), users: FX("users.json") }, rep: rep3, cnt: cnt3 });
+await p3.goto(url); await p3.waitForFunction(() => document.getElementById("pgT")?.textContent.trim());
+await p3.evaluate(() => window.go("clr")); await p3.waitForTimeout(500);
+const r3 = await p3.evaluate(() => Object.fromEntries(clrBuild().map((x) => [x.v, x.st])));
+ok(r3["40437421"] === "ok", "7 digit pertama sama (4043742) -> cocok walau nomor tidak saling mengawali");
+ok(r3["40437429"] === "belum", "pengaman: voucher lain dengan 7 digit depan sama tidak mencuri foto yang bukan miliknya... (belum dihitung)");
+ok(r3["4043800"] === "ok", "voucher 7 digit biasa tetap cocok");
 await b.close(); process.exit(fail ? 1 : 0);

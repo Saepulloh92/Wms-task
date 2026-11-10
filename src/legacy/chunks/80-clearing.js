@@ -132,18 +132,29 @@
           if (!cm.has(k)) cm.set(k, { v: c.v, rows: [] });
           cm.get(k).rows.push(c);
         });
-        /* cadangan bila nomor lengkap tidak ketemu: nomor counting yang diawali nomor laporan (atau sebaliknya), minimal 7 angka sama dari depan */
-        const cm7 = new Map();
-        cm.forEach((g, k) => {
-          if (!/^\d{7,}$/.test(k)) return;
+        /* cadangan bila nomor lengkap tidak ketemu: cocokkan 7 digit pertama dari depan.
+           Tiap nomor counting hanya dipakai SATU voucher (yang awalannya paling mirip). Nomor counting yang sudah cocok persis dengan voucher lain tidak ikut. */
+        const repKeys = new Set(rep.map((r) => clrKey(r.v))),
+          r7 = new Map(),
+          asg = new Map(); // kunci voucher laporan -> kunci counting yang ditugaskan
+        repKeys.forEach((k) => {
+          if (!/^\d{7,}$/.test(k) || cm.has(k)) return;
           const p = k.slice(0, 7);
-          if (!cm7.has(p)) cm7.set(p, []);
-          cm7.get(p).push(k);
+          if (!r7.has(p)) r7.set(p, []);
+          r7.get(p).push(k);
+        });
+        const cpl = (x, y) => { let i = 0; while (i < x.length && i < y.length && x[i] === y[i]) i++; return i; };
+        cm.forEach((g, ck) => {
+          if (!/^\d{7,}$/.test(ck) || repKeys.has(ck)) return;
+          const cands = r7.get(ck.slice(0, 7));
+          if (!cands) return;
+          const best = cands.slice().sort((x, y) => cpl(y, ck) - cpl(x, ck) || x.localeCompare(y))[0];
+          if (!asg.has(best)) asg.set(best, []);
+          asg.get(best).push(ck);
         });
         const byPrefix = (rk) => {
-          if (!/^\d{7,}$/.test(rk)) return null;
-          const ks = (cm7.get(rk.slice(0, 7)) || []).filter((ck) => ck !== rk && (ck.length > rk.length ? ck.startsWith(rk) : rk.startsWith(ck)));
-          return ks.length ? { v: cm.get(ks[0]).v, rows: ks.flatMap((ck) => cm.get(ck).rows) } : null;
+          const ks = asg.get(rk);
+          return ks && ks.length ? { v: cm.get(ks[0]).v, rows: ks.flatMap((ck) => cm.get(ck).rows) } : null;
         };
         // satu voucher bisa muncul di beberapa baris laporan (beberapa item): qty dijumlah; baris yang persis sama (dobel input) dihitung sekali
         const ra = new Map();
@@ -161,7 +172,7 @@
           const k = clrKey(r.v);
           seen.add(k);
           let g = cm.get(k), viaP = false;
-          if (!g) { g = byPrefix(k); viaP = !!g; } // nomor lengkap tidak ketemu: coba awalan angka
+          if (!g) { g = byPrefix(k); viaP = !!g; } // nomor lengkap tidak ketemu: coba 7 digit pertama dari depan
           if (!g) return list.push({ v: r.v, sms: "", kc: "", qR: r.q, qC: null, diff: null, st: "belum", n: r.n, r: r.r, rc: 0, lori: r.lr || "", shift: r.sh || "", tm: "", pic: r.pic || "", grp: r.grp || "" });
           const lt = clrLatest(g.rows);
           let qC = lt.q == null ? null : clrRnd(lt.q), ik = 0;
@@ -185,7 +196,7 @@
         return list;
       }
       /* Diagnosa: versi aturan pencocokan + alasan tiap voucher "belum dihitung" (nama counting terdekat dan kuncinya), agar mudah dilihat langsung di perangkat */
-      const CLR_MATCH_V = "angka-depan-v2";
+      const CLR_MATCH_V = "7-digit-depan-v3";
       function clrDiag(all) {
         const el = $("clrDiag");
         if (!el) return;
