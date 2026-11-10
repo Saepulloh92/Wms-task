@@ -53,7 +53,7 @@ button, .btn, .chip, .tabs button, summary { touch-action: manipulation; -webkit
 /* Tautan "Cara kerja" dsb. setinggi target sentuh, teks 14px agar terbaca */
 .hint-more > summary { min-height: 44px; font-size: 14px; padding-top: 0; padding-bottom: 0; }
 /* Beranda belum terhubung: sembunyikan kontrol yang belum berguna (filter, muat ulang, Telegram), sisakan satu ajakan jelas */
-#dlvBody:has(#dlvOpenSet) + .mon-bar { display: none; }
+#dlvBody:has(#dlvOpenSet) + .mon-bar #dlvRef { display: none; } /* tombol Layar TV tetap ada */
 #v-mon:has(#monMsg .note.info) .dflt,
 #v-mon:has(#monMsg .note.info) .mon-bar:has(#monRef),
 #v-mon:has(#monMsg .note.info) #monTg { display: none; }

@@ -31,7 +31,7 @@ const mk = (o) => { const rows = Array.from({ length: 80 }, () => Array(50).fill
 const rows = mk({ ...BASE, ...SHIFT.base });
 const HARUS = ["20:02", "18:12", "10:44", "160,97", "160,61", "-0,36", "99,8%", "28", "BOX", "FUSO", "CONTAINER", "TRONTON", "17", "SADAR JAYA JETAK", "NOVEMBER 2026", "167", "97,60%", "1228,97", "1202,46", "38", "231,749", "19:20:57", "22:01:40", "JAKARTA", "72", "311,33", "Plan Delivery", "Act Delivery"];
 const b = await chromium.launch();
-async function buka(w, h) {
+async function buka(w, h, q = "") {
   const p = await (await b.newContext({ viewport: { width: w, height: h } })).newPage();
   const errs = []; p.on("pageerror", (e) => errs.push(e.message));
   await p.route(/^https?:\/\/(?!localhost)/, (r) => r.abort());
@@ -39,7 +39,7 @@ async function buka(w, h) {
     localStorage.setItem("warehouse_so_lgsetup_v1", "1"); localStorage.setItem("warehouse_so_master_v2", JSON.stringify(fx.master)); localStorage.setItem("warehouse_so_users_v1", JSON.stringify(fx.users));
     localStorage.setItem("warehouse_so_dlv_v1", JSON.stringify({ url: "", auto: 0 })); localStorage.setItem("warehouse_so_dlvc_v1", JSON.stringify({ at: Date.now(), rows }));
   }, { fx: { master: FX("master.json"), users: FX("users.json") }, rows });
-  await p.goto(url); await p.waitForFunction(() => document.getElementById("pgT")?.textContent.trim()); await p.waitForTimeout(900);
+  await p.goto(url + q); await p.waitForFunction(() => document.getElementById("pgT")?.textContent.trim()); await p.waitForTimeout(900);
   return { p, errs };
 }
 const geom = (p) => p.evaluate(() => {
@@ -72,6 +72,16 @@ for (const [nama, w, h] of [["4K 3840x2160", 3840, 2160], ["Full HD 1920x1080", 
   ok(!errs.length, nama + ": tanpa error JavaScript " + errs.join(";"));
   await p.close();
 }
+// Tautan ?tv=1: langsung mode TV (desain 4K) walau layar < 2400px, mis. TV 4K dengan skala tampilan 150-200%
+for (const [nama, w, h] of [["Full HD 1920x1080", 1920, 1080], ["TV 4K skala 200% (1920x1080)", 1920, 1080], ["layar 2560x1440", 2560, 1440]]) {
+  const { p, errs } = await buka(w, h, "?tv=1"); await p.waitForTimeout(700);
+  const g = await geom(p);
+  ok(g.has && await p.evaluate(() => document.body.classList.contains("tv")), nama + ": ?tv=1 langsung membuka desain 4K (mode TV)");
+  ok(g.out === 0 && g.sw <= g.vw + 1, nama + ": ?tv=1 satu layar tanpa elemen keluar batas");
+  ok(!errs.length, nama + ": ?tv=1 tanpa error JavaScript " + errs.join(";"));
+  await p.close();
+}
+{ const { p } = await buka(1920, 1080, "#tv"); await p.waitForTimeout(700); ok((await geom(p)).has, "#tv juga membuka desain 4K"); await p.close(); }
 // HP: tidak memakai desain 4K
 { const { p } = await buka(390, 844); ok(!(await geom(p)).has, "HP 390: tetap kartu biasa"); await p.close(); }
 await b.close(); process.exit(fail ? 1 : 0);

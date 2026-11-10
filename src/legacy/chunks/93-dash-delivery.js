@@ -336,6 +336,11 @@
       $("dlvTv").onclick = () => dlvTvSet(!document.body.classList.contains("tv"));
       document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && document.body.classList.contains("tv")) dlvTvSet(false); });
       document.addEventListener("keydown", (e) => { if (e.key === "Escape" && document.body.classList.contains("tv")) dlvTvSet(false); });
+      /* Tautan TV: buka alamat aplikasi dengan ?tv=1 (atau #tv) → langsung Beranda dalam mode Layar TV (desain 4K).
+         Untuk bookmark/kiosk di TV; layar penuh tetap butuh satu ketukan "Layar TV" (aturan browser). Esc keluar. */
+      if (/[?&]tv=1(&|$)/.test(location.search) || location.hash === "#tv") {
+        setTimeout(() => { if (typeof go === "function") go("mon"); if (!document.body.classList.contains("tv")) dlvTvSet(true); }, 400);
+      }
 
       /* Mode TV: perkecil otomatis sampai seluruh dashboard muat satu layar, tanpa scroll */
       function dlvTvFit() {
