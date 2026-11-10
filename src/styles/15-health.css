@@ -1,15 +1,15 @@
 /* Kesehatan data: panel di menu Data WMS + lencana di header */
 #hlB { cursor: pointer; font-family: inherit; }
 #hlB::before { content: "!"; width: auto; height: auto; background: none; font-weight: 900; margin-right: 5px; }
-.hl-sum { font-weight: 800; margin: 0 0 8px; }
-.hl-sum.ok { color: #1c6b43; }
-.hl-sum.bad { color: var(--red); }
-.hl-sum.warn { color: #7a5a00; }
+.hl-sum { font-weight: 800; margin: 0 0 8px; padding: 0; background: none; border: 0; }
+.hl-sum.hl-ok { color: #1c6b43; }
+.hl-sum.hl-bad { color: var(--red); }
+.hl-sum.hl-warn { color: #7a5a00; }
 .hl-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .hl-item { border: 1px solid var(--line); border-left-width: 5px; border-radius: 6px; padding: 8px 10px; background: #fff; }
-.hl-item.bad { border-left-color: var(--red); background: var(--redbg); }
-.hl-item.warn { border-left-color: var(--mark, #f2b705); }
-.hl-item b { display: block; font-size: 14px; }
+.hl-item.hl-bad { border-left-color: var(--red); background: var(--redbg); }
+.hl-item.hl-warn { border-left-color: var(--mark, #f2b705); }
+.hl-item b { display: block; font-size: 14px; color: var(--ink, #1b2733); }
 .hl-item p { margin: 2px 0 6px; font-size: 13px; color: var(--muted); }
 .hl-bins { display: flex; flex-wrap: wrap; gap: 6px; }
 .hl-bins button { min-height: 36px; padding: 4px 10px; border: 2px solid var(--line); border-radius: 6px; background: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }

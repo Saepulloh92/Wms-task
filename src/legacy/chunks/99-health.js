@@ -39,11 +39,11 @@
           });
         }
         const lab = { usr: "Buka User & Area", sync: "Ke pengaturan sinkron", data: "Ke impor data" };
-        const sum = h.ok ? '<div class="hl-sum ok">Semua presisi. Tidak ada temuan.</div>'
-          : '<div class="hl-sum ' + (h.bad ? "bad" : "warn") + '">' + (h.bad ? h.bad + " perlu ditindaklanjuti" : "") + (h.bad && h.warn ? ", " : "") + (h.warn ? h.warn + " perlu dicek" : "") + "</div>";
+        const sum = h.ok ? '<div class="hl-sum hl-ok">Semua presisi. Tidak ada temuan.</div>'
+          : '<div class="hl-sum ' + (h.bad ? "hl-bad" : "hl-warn") + '">' + (h.bad ? h.bad + " perlu ditindaklanjuti" : "") + (h.bad && h.warn ? ", " : "") + (h.warn ? h.warn + " perlu dicek" : "") + "</div>";
         p.innerHTML = '<h2 style="font-size: 18px">Kesehatan data</h2>' + sum +
           (h.ok ? "" : '<ul class="hl-list">' + h.issues.map((i) =>
-            '<li class="hl-item ' + i.level + '"><b>' + esc(i.title) + (i.n ? " (" + i.n + ")" : "") + "</b><p>" + esc(i.detail) + "</p>" +
+            '<li class="hl-item hl-' + i.level + '"><b>' + esc(i.title) + (i.n ? " (" + i.n + ")" : "") + "</b><p>" + esc(i.detail) + "</p>" +
             (i.bins.length ? '<div class="hl-bins">' + i.bins.map((b) => '<button type="button" data-bin="' + esc(b) + '">' + esc(b) + "</button>").join("") + (i.n > i.bins.length ? "<span class=fine>+" + (i.n - i.bins.length) + " lagi</span>" : "") + "</div>" : "") +
             (i.act !== "bin" ? '<button class="btn sec sm hl-act" type="button" data-act="' + i.act + '">' + lab[i.act] + "</button>" : "") + "</li>").join("") + "</ul>" +
             '<button class="btn sec mt" id="hlCopy" type="button">Salin ringkasan</button>') +
