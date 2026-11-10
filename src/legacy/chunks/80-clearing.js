@@ -184,6 +184,19 @@
         list.sort((a, b) => ord[a.st] - ord[b.st] || String(a.v).localeCompare(String(b.v), "id", { numeric: true }));
         return list;
       }
+      /* Diagnosa: versi aturan pencocokan + alasan tiap voucher "belum dihitung" (nama counting terdekat dan kuncinya), agar mudah dilihat langsung di perangkat */
+      const CLR_MATCH_V = "angka-depan-v2";
+      function clrDiag(all) {
+        const el = $("clrDiag");
+        if (!el) return;
+        const bel = all.filter((x) => x.st === "belum" || x.st === "nq");
+        if (!clrCnt || !clrRep || !bel.length) { el.innerHTML = ""; return; }
+        const cnt = clrCnt.rows, row = (c) => `${esc(c.v)} <span class="fine">→ kunci ${esc(clrKey(c.v))}</span>`;
+        const near = (k) => cnt.filter((c) => { const ck = clrKey(c.v); return k.length >= 5 && ck.length >= 5 && ck.slice(0, 5) === k.slice(0, 5); }).slice(0, 3);
+        el.innerHTML = `<details class="clr-diag"><summary>Diagnosa pencocokan · aturan ${CLR_MATCH_V}</summary><p class="fine">Laporan ${fmt(clrRep.rows.length)} voucher · counting ${fmt(cnt.length)} baris. Contoh nama counting yang dibaca: ${cnt.slice(0, 3).map(row).join(" · ")}</p>` +
+          bel.slice(0, 10).map((x) => { const k = clrKey(x.v), nr = near(k); return `<div class="fine"><b>${esc(x.v)}</b> (kunci ${esc(k)}) ${x.st === "nq" ? "ketemu, tapi qty kosong" : nr.length ? "tidak ada yang sama persis. Mirip: " + nr.map(row).join(" · ") : "tidak ada nomor counting yang mirip"}</div>`; }).join("") +
+          (bel.length > 10 ? `<p class="fine">… dan ${fmt(bel.length - 10)} lainnya.</p>` : "") + "</details>";
+      }
       function renderClr() {
         setTimeout(() => typeof renderClrHist === "function" && $("clrHist") && renderClrHist(), 0);
         clearTimeout(clrAT);
@@ -204,6 +217,7 @@
         $("clrLoad").textContent = clrBusy ? "Memuat…" : "Muat counting dari spreadsheet";
         const all = clrBuild(), n = (s) => all.filter((x) => x.st === s).length;
         const nTot = all.length, nOk = n("ok"), nBad = n("qty") + n("dup"), nBel = n("belum") + n("nq");
+        clrDiag(all);
         const kc = (cls, ico, v, lb) => `<div class="kc ${cls}"><div class="kh"><span class="ki">${ico}</span><b>${fmt(v)}</b></div><div class="kl">${lb}</div><span class="dchip eq">${nTot ? Math.round((v / nTot) * 100) : 0}%</span></div>`;
         $("clrStats").innerHTML = kc("ok", monIco.ok, nOk, "Cocok") + kc("bad", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg>', nBad, "Selisih / dobel") + kc("wip", monIco.wip, nBel, "Belum dihitung");
         { // pil sinkron: waktu counting terakhir dimuat
