@@ -17,8 +17,10 @@
         return x.st === "ok" ? "" : `<button class="btn sec sm" data-cd="${esc(k)}">Tandai selesai</button>`;
       }
       const CLR_ST = { dup: ["Dobel hitung", "red"], qty: ["Selisih qty", "red"], nq: ["Qty kosong", "amber"], belum: ["Belum dihitung", "amber"], extra: ["Tidak ada di laporan", "amber"], ok: ["Cocok", "green"] };
+      // huruf O/o yang terselip di antara angka dibaca nol, I/l dibaca satu (salah ketik nama foto: 4O43734 -> 4043734)
+      const clrFixDigits = (v) => { let s = String(v ?? "").normalize("NFKC"); for (let i = 0; i < 4; i++) s = s.replace(/(\d)[Oo](?=[\dOo])/g, "$10").replace(/(\d)[Il](?=\d)/g, "$11").replace(/^[Oo](?=\d{6})/, "0"); return s; };
       const clrKey = (v) => {
-        let s = String(v ?? "").normalize("NFKC").trim(); // angka lebar-penuh (４０４…) dibaca sebagai angka biasa
+        let s = clrFixDigits(v).trim(); // angka lebar-penuh dan O/I yang salah ketik dibaca sebagai angka biasa
         if (/^\d+\.0+$/.test(s)) s = s.replace(/\.0+$/, ""); // "4043814.0" hasil Excel/CSV
         // nama foto "4043742_2026-11-06-100438": nomor voucher = deretan angka paling depan (>= 5 digit) sebelum tanda lain
         const lead = s.match(/^\s*(\d{5,})(?=\D|$)/),
@@ -156,7 +158,7 @@
            Dipakai hanya bila nomor lengkap dan 7 digit depan tidak ketemu. Deretan angka >= 7 di nama harus berawalan sama (7 digit) dengan voucher.
            Foto yang sudah dipakai voucher lain (cocok persis / lapisan 2) tidak diambil. */
         const used = new Set([...asg.values()].flat()),
-          runsOf = (g) => g.rows.flatMap((c) => String(c.v).normalize("NFKC").match(/\d{7,}/g) || []).map((d) => d.replace(/^0+/, "")),
+          runsOf = (g) => g.rows.flatMap((c) => clrFixDigits(c.v).match(/\d{7,}/g) || []).map((d) => d.replace(/^0+/, "")),
           open = [...repKeys].filter((k) => /^\d{7,}$/.test(k) && !cm.has(k) && !asg.has(k));
         cm.forEach((g, ck) => {
           if (repKeys.has(ck) || used.has(ck)) return;
@@ -221,11 +223,37 @@
         if (!el) return;
         const bel = all.filter((x) => x.st === "belum" || x.st === "nq");
         if (!clrCnt || !clrRep || !bel.length) { el.innerHTML = ""; return; }
-        const cnt = clrCnt.rows, row = (c) => `${esc(c.v)} <span class="fine">→ kunci ${esc(clrKey(c.v))}</span>`;
-        const near = (k) => cnt.filter((c) => { const ck = clrKey(c.v); return k.length >= 5 && ck.length >= 5 && ck.slice(0, 5) === k.slice(0, 5); }).slice(0, 3);
-        el.innerHTML = `<details class="clr-diag"><summary>Diagnosa pencocokan · aturan ${CLR_MATCH_V}</summary><p class="fine">Laporan ${fmt(clrRep.rows.length)} voucher · counting ${fmt(cnt.length)} baris. Contoh nama counting yang dibaca: ${cnt.slice(0, 3).map(row).join(" · ")}</p>` +
-          bel.slice(0, 10).map((x) => { const k = clrKey(x.v), nr = near(k); return `<div class="fine"><b>${esc(x.v)}</b> (kunci ${esc(k)}) ${x.st === "nq" ? "ketemu, tapi qty kosong" : nr.length ? "tidak ada yang sama persis. Mirip: " + nr.map(row).join(" · ") : "tidak ada nomor counting yang mirip"}</div>`; }).join("") +
-          (bel.length > 10 ? `<p class="fine">… dan ${fmt(bel.length - 10)} lainnya.</p>` : "") + "</details>";
+        const cnt = clrCnt.rows, dg = (v) => String(v ?? "").normalize("NFKC").replace(/\D/g, "");
+        const row = (c) => `${esc(c.v)} <span class="fine">→ kunci ${esc(clrKey(c.v))}</span>`;
+        /* tiga kemungkinan untuk tiap voucher yang belum cocok:
+           full = ada nama counting yang memuat 7 digit depan voucher tetapi tidak terpakai (mis. diambil voucher lain),
+           typo = ada yang beda <= 2 digit (salah ketik, atau huruf O/I/l tertulis sebagai angka), kosong = fotonya tidak ada di sheet */
+        const ham = (x, y) => { let d = 0; for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) d++; return d; };
+        const runs = (v) => (String(v ?? "").normalize("NFKC").replace(/[Oo]/g, "0").replace(/[Il]/g, "1").match(/\d{7,}/g) || []).map((d) => d.replace(/^0+/, ""));
+        const mine = new Set(clrRep.rows.map((r) => clrKey(r.v))), swap = (x, y) => { const d = []; for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) d.push(i); return d.length === 2 && d[1] === d[0] + 1 && x[d[0]] === y[d[1]] && x[d[1]] === y[d[0]]; };
+        const near = (k) => {
+          const full = [], typo = [];
+          // typo = beda satu digit atau dua digit bertukar, dan nomornya BUKAN milik voucher lain di laporan (nomor berurutan memang selalu mirip)
+          if (k.length >= 7) cnt.forEach((c) => { const rs = runs(c.v); if (rs.some((r) => r.slice(0, 7) === k.slice(0, 7))) full.push(c); else if (rs.some((r) => r.length >= 7 && !mine.has(r.slice(0, 7)) && (ham(r.slice(0, 7), k.slice(0, 7)) === 1 || swap(r.slice(0, 7), k.slice(0, 7))))) typo.push(c); });
+          return { full: full.slice(0, 3), typo: typo.slice(0, 3) };
+        };
+        const names = cnt.map((c) => String(c.v)), longRun = names.filter((n) => /\d{7,}/.test(n.normalize("NFKC"))).length;
+        const head = `Laporan ${fmt(clrRep.rows.length)} voucher · counting ${fmt(cnt.length)} baris (${fmt(new Set(names).size)} nama berbeda, ${fmt(longRun)} memuat angka ≥ 7 digit)`;
+        const first = names.slice(0, 3), last = names.slice(-3);
+        const items = bel.slice(0, 10).map((x) => {
+          const k = clrKey(x.v), n = near(k), h = n.full.length ? n.full : n.typo;
+          const why = x.st === "nq" ? "ketemu, tapi qty kosong"
+            : n.full.length ? "ada nama counting yang memuat angkanya tetapi tidak terpakai (sudah dipakai voucher lain?)"
+            : n.typo.length ? "tidak ada yang sama. Mirip, mungkin salah ketik"
+            : "tidak ada nama counting yang memuat atau mirip " + k.slice(0, 7) + " (fotonya kemungkinan belum ada di sheet counting)";
+          return { x, k, h, why };
+        });
+        const txt = [`Diagnosa Clearing · aturan ${CLR_MATCH_V}`, head, "Nama counting pertama: " + first.join(" | "), "Nama counting terakhir: " + last.join(" | "), ...items.map((i) => `${i.x.v} (kunci ${i.k}, qty laporan ${i.x.qR ?? "-"}) ${i.why}${i.h.length ? ": " + i.h.map((c) => `${c.v} [qty ${c.q}]`).join(" | ") : ""}`), bel.length > 10 ? `… dan ${bel.length - 10} lainnya` : ""].filter(Boolean).join("\n");
+        el.innerHTML = `<details class="clr-diag" open><summary>Diagnosa pencocokan · aturan ${CLR_MATCH_V} · ${fmt(bel.length)} belum cocok</summary><p class="fine">${esc(head)}.</p><p class="fine">Nama counting pertama: ${first.map(esc).join(" · ") || "-"}<br>Nama counting terakhir: ${last.map(esc).join(" · ") || "-"}</p>` +
+          items.map((i) => `<div class="fine"><b>${esc(i.x.v)}</b> (kunci ${esc(i.k)}) ${i.why}${i.h.length ? ": " + i.h.map(row).join(" · ") : ""}</div>`).join("") +
+          (bel.length > 10 ? `<p class="fine">… dan ${fmt(bel.length - 10)} lainnya.</p>` : "") +
+          `<button class="btn sec" id="clrDiagCopy" type="button">Salin diagnosa</button></details>`;
+        $("clrDiagCopy").onclick = () => (navigator.clipboard ? navigator.clipboard.writeText(txt).then(() => toast("Diagnosa tersalin. Tempel ke chat."), () => toast("Gagal menyalin diagnosa")) : toast("Browser tidak mengizinkan salin"));
       }
       function renderClr() {
         setTimeout(() => typeof renderClrHist === "function" && $("clrHist") && renderClrHist(), 0);

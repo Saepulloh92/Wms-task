@@ -102,4 +102,16 @@ x = await cek([V("4043733"), V("4043744")], [C("4043744_2026-11-06-100438"), C("
 ok(x["4043733"] === "belum", "pengaman: foto voucher lain tidak dipakai voucher yang tidak punya foto");
 x = await cek([V("4043733"), V("40437339")], [C("2026-11-06_4043733")]);
 ok(Object.values(x).filter((t) => t.startsWith("ok")).length === 1, "satu foto terselip hanya untuk satu voucher (voucher kembar 7 digit depan)");
+x = await cek([V("4043734")], [C("4O43734_2026-11-06.jpg")]);
+ok(x["4043734"].startsWith("ok"), "huruf O yang diketik sebagai nol (4O43734) tetap cocok");
+x = await cek([V("4043736")], [C("4043763_2026-11-06-100438")]);
+ok(x["4043736"] === "belum", "dua digit bertukar TIDAK dicocokkan otomatis (hanya disarankan di diagnosa)");
+await p3.evaluate(() => { clrRep = { rows: [{ v: "4043736", q: 1, k: "", n: "", r: "", lr: "", sh: "", pic: "", grp: "" }, { v: "4043737", q: 1, k: "", n: "", r: "", lr: "", sh: "", pic: "", grp: "" }] }; clrCnt = { rows: [{ v: "4043763_2026", q: 1, k: "", t: "", lr: "" }, { v: "4043737", q: 1, k: "", t: "", lr: "" }] }; renderClr(); });
+const dg2 = await p3.evaluate(() => document.getElementById("clrDiag").textContent.replace(/\s+/g, " "));
+ok(/4043736/.test(dg2) && /salah ketik/.test(dg2) && /4043763/.test(dg2), "diagnosa menyarankan nama mirip (dua digit bertukar) untuk voucher yang belum cocok");
+await p3.evaluate(() => { clrRep = { rows: [{ v: "4043736", q: 1, k: "", n: "", r: "", lr: "", sh: "", pic: "", grp: "" }, { v: "4043737", q: 1, k: "", n: "", r: "", lr: "", sh: "", pic: "", grp: "" }] }; clrCnt = { rows: [{ v: "4043737", q: 1, k: "", t: "", lr: "" }] }; renderClr(); });
+const dg3 = await p3.evaluate(() => document.getElementById("clrDiag").textContent.replace(/\s+/g, " "));
+ok(/belum ada di sheet counting/.test(dg3) && !/salah ketik/.test(dg3), "tidak ada nama mirip: diagnosa menyatakan foto kemungkinan belum ada di sheet (nomor voucher lain tidak disebut mirip)");
+const salin = await p3.evaluate(() => !!document.getElementById("clrDiagCopy"));
+ok(salin, "tombol Salin diagnosa tersedia");
 await b.close(); process.exit(fail ? 1 : 0);
