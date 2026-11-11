@@ -17,7 +17,7 @@
       ];
       const monS = ld(K_MON, {});
       let mon = {
-        url: monS.url || "",
+        url: monS.url || WMS_CONFIG.monUrl || "",
         start: monS.start || 2,
         auto: monS.auto == null ? 5 : monS.auto,
         alert: !!monS.alert,
