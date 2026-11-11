@@ -2,7 +2,7 @@
 // asal: Code-fix.gs baris 255-378
 /* ===================== MERGE ===================== */
 
-var STAMP = { counts: 'savedAt', dc: 'at', tasks: 'at', closed: 'at', aging: 'at', agcls: 'at', kesH: 'at', muatH: 'at', clrH: 'at' };
+var STAMP = { counts: 'savedAt', dc: 'at', tasks: 'at', closed: 'at', aging: 'at', agcls: 'at', clrdone: 'at', kesH: 'at', muatH: 'at', clrH: 'at' };
 
 function ts_(v) {
   var t = v ? new Date(v).getTime() : 0;
@@ -71,6 +71,13 @@ function merge_(server, client, del, replace) {
     var sv = isObj_(server[key]) ? server[key] : {};
     var c = isObj_(client[key]) ? client[key] : {};
     out[key] = rep[name] ? c : Object.assign({}, sv, c);
+  });
+  // data laporan terakhir yang diunggah (satu berkas utuh): yang cap waktunya (at, ms) paling baru menang, kiriman lama tidak menimpa yang baru
+  ['clrrep', 'muatdata', 'muatsum'].forEach(function (name) {
+    var k = K[name], s = isObj_(server[k]) ? server[k] : null, c = isObj_(client[k]) ? client[k] : null;
+    if (!c) { if (s) out[k] = s; return; }
+    if (!s) { out[k] = c; return; }
+    out[k] = Number(c.at || 0) >= Number(s.at || 0) ? c : s;
   });
   // tautan bersama: versi dengan cap waktu (at) paling baru yang menang, bukan sekadar "klien menang"
   (function () {

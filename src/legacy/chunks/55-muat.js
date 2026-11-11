@@ -13,6 +13,9 @@
       function muPersist() {
         if (!mRecs.length) return;
         const o = { name: $("mfn").textContent, tgl: $("mtgl").value, total: $("mtotal").value, tdk: $("mtdk").value, recs: mRecs.map((r) => [r.spm, r.nop ? 1 : 0, r.tgl, r.pic, r.cp ? 1 : 0]) };
+        const prev = ld(K_MUATD, null);
+        if (prev && JSON.stringify({ ...prev, at: 0 }) === JSON.stringify({ ...o, at: 0 })) return; // isi sama (mis. baru diterima dari perangkat lain): jangan perbarui cap waktu, supaya tidak saling menimpa
+        o.at = Date.now();
         if (!sv(K_MUATD, o)) toast("Penyimpanan penuh: laporan muat tidak tersimpan permanen.");
       }
       function muRestore() {

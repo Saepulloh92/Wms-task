@@ -32,7 +32,7 @@ function seed_() {
     if (Array.isArray(st[K.master]) && st[K.master].length) return false;
     var d = {};
     d[K.master] = JSON.parse(JSON.stringify(SEED_MASTER));
-    d[K.counts] = {}; d[K.dc] = {}; d[K.tasks] = {}; d[K.closed] = {}; d[K.aging] = {}; d[K.agcls] = {};
+    d[K.counts] = {}; d[K.dc] = {}; d[K.tasks] = {}; d[K.closed] = {}; d[K.aging] = {}; d[K.agcls] = {}; d[K.clrdone] = {};
     d[K.users] = SEED_USERS(); d[K.dcPick] = {}; d[K.dest] = {}; d[K.codefix] = {};
     commit_(d);
     return true;

@@ -73,6 +73,10 @@ var K = {
   tasks: 'warehouse_so_tasks_v1',
   aging: 'warehouse_so_aging_v1',          // cek fisik aging per rak: { bin: { tumpak, pipa, qty, by, at } }
   agcls: 'warehouse_so_agcls_v1',          // kelas pipa per kode item: { kode: { c, at } }
+  clrrep: 'warehouse_so_clr_rep_v1',          // Laporan Voucher Clearing terakhir: { at, name, rows } (terbaru menang)
+  clrdone: 'warehouse_so_clr_done_v1',        // tanda selesai Clearing per voucher: { kunci: { at, by, note } }
+  muatdata: 'warehouse_so_muat_data_v1',      // Laporan Muat terakhir: { at, name, tgl, recs, ... } (terbaru menang)
+  muatsum: 'warehouse_so_muat_sum_v1',        // ringkasan Laporan Muat terakhir: { at, ... } (terbaru menang)
   agingcfg: 'warehouse_so_agingcfg_v1',    // { pic: { A: 'nama' } }
   mon: 'warehouse_so_mon_v1',
   // riwayat laporan per tanggal (dikirim aplikasi, hanya untuk membuat sheet laporan)
@@ -108,7 +112,7 @@ var MENU_OPERATOR = ['mon', 'so', 'dc', 'task'];   // menu standar Petugas di ap
 var MENU_SPV = ['so', 'dc', 'task', 'check', 'kes', 'adj', 'clr', 'mon', 'muat', 'kpi', 'agi'];
 var MENU_PENERIMAAN = ['mon', 'so', 'clr'];
 var ROLE_LABEL = { admin: 'Admin', spv: 'SPV', petugas: 'Petugas', penerimaan: 'Penerimaan' };
-var GAS_VERSION = '2026-11-10';   // naikkan tiap mengubah kode; ping mengembalikannya supaya jelas deploy sudah versi terbaru
+var GAS_VERSION = '2026-11-11';   // naikkan tiap mengubah kode; ping mengembalikannya supaya jelas deploy sudah versi terbaru
 var CHUNK = 45000;          // batas aman per sel (maks 50.000 karakter)
 var BACKUP_FOLDER = 'Stock Control Backup';
 var BACKUP_KEEP = 30;

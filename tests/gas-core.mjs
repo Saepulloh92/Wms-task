@@ -143,4 +143,20 @@ function makeEnv() {
   C.renderSheets_(stx, false, false);
   T("sheet yang gagal dicoba lagi di render berikutnya dan peringatan hilang", C.warn_() === "" && e.sheets.get(C.SH.closed).getLastRow() >= 2);
 }
+// --- data laporan bersama: yang terbaru menang, tanda selesai digabung per voucher ---
+{
+  const e = makeEnv(), C = e.ctx, K = C.K; e.props.set("API_TOKEN", "TOK"); C.seed_();
+  const sync = (data, extra = {}) => e.call({ token: "TOK", action: "sync", data, ...extra });
+  sync({ [K.clrrep]: { at: 2000, name: "baru.xlsx", rows: [{ v: "1" }] }, [K.muatdata]: { at: 500, recs: [["A"]] }, [K.muatsum]: { at: 500, sig: "s1" } });
+  const r2 = sync({ [K.clrrep]: { at: 1000, name: "lama.xlsx", rows: [] }, [K.muatdata]: { at: 900, recs: [["B"]] } });
+  T("laporan voucher lama tidak menimpa yang baru", r2.data[K.clrrep].name === "baru.xlsx" && r2.data[K.clrrep].rows.length === 1);
+  T("data muat yang lebih baru menggantikan yang lama", r2.data[K.muatdata].recs[0][0] === "B" && r2.data[K.muatsum].sig === "s1");
+  sync({ [K.clrdone]: { "4043733": { at: "2026-11-10T01:00:00Z", by: "Budi" } } });
+  const r3 = sync({ [K.clrdone]: { "4043734": { at: "2026-11-10T02:00:00Z", by: "Sari" }, "4043733": { at: "2026-11-10T00:30:00Z", by: "Lama" } } });
+  T("tanda selesai digabung per voucher, yang lebih baru menang", r3.data[K.clrdone]["4043733"].by === "Budi" && r3.data[K.clrdone]["4043734"].by === "Sari");
+  const r4 = sync({}, { del: { clrdone: ["4043734"] } });
+  T("tanda selesai yang dibatalkan (dihapus) ikut terhapus di server", !r4.data[K.clrdone]["4043734"] && !!r4.data[K.clrdone]["4043733"]);
+  const r5 = e.call({ token: "TOK", action: "pull" });
+  T("pull mengembalikan semua data laporan", !!r5.data[K.clrrep] && !!r5.data[K.muatdata] && !!r5.data[K.clrdone]);
+}
 console.log(`${okN} OK, ${bad} gagal`); process.exit(bad ? 1 : 0);

@@ -5,11 +5,11 @@
       // Isi dua baris ini jika ingin semua perangkat langsung tersambung tanpa mengetik.
       const SYNC_DEFAULT = { url: WMS_CONFIG.syncUrl, token: WMS_CONFIG.syncToken }; // dari .env (VITE_SYNC_URL / VITE_SYNC_TOKEN), BUKAN ditulis di kode // tempel URL Web app (…/exec) di url sekali saja, semua HP otomatis tersambung
       const K_SYNC = "warehouse_so_sync_v1";
-      const SY_STAMP = { counts: "savedAt", dc: "at", tasks: "at", closed: "at", aging: "at", agcls: "at" };
-      const syKey = { counts: K_C, dc: K_D, tasks: K_T, closed: K_X, aging: K_AG, agcls: K_AGK };
-      const syGetV = { counts: () => counts, dc: () => dc, tasks: () => tasks, closed: () => closed, aging: () => aging, agcls: () => agingCls };
-      const sySetV = { counts: (v) => (counts = v), dc: (v) => (dc = v), tasks: (v) => (tasks = v), closed: (v) => (closed = v), aging: (v) => (aging = v), agcls: (v) => (agingCls = v) };
-      const syPlain = { master: K_M, users: K_U, mon: K_MON, codefix: K_F, dcPick: K_DP, dest: "warehouse_so_dest_v1", areacfg: "warehouse_so_areacfg_v1", linkcfg: K_LK, agingcfg: K_AGC };
+      const SY_STAMP = { counts: "savedAt", dc: "at", tasks: "at", closed: "at", aging: "at", agcls: "at", clrdone: "at" };
+      const syKey = { counts: K_C, dc: K_D, tasks: K_T, closed: K_X, aging: K_AG, agcls: K_AGK, clrdone: K_CLRD };
+      const syGetV = { counts: () => counts, dc: () => dc, tasks: () => tasks, closed: () => closed, aging: () => aging, agcls: () => agingCls, clrdone: () => clrDone };
+      const sySetV = { counts: (v) => (counts = v), dc: (v) => (dc = v), tasks: (v) => (tasks = v), closed: (v) => (closed = v), aging: (v) => (aging = v), agcls: (v) => (agingCls = v), clrdone: (v) => (clrDone = v) };
+      const syPlain = { master: K_M, users: K_U, mon: K_MON, codefix: K_F, dcPick: K_DP, dest: "warehouse_so_dest_v1", areacfg: "warehouse_so_areacfg_v1", linkcfg: K_LK, agingcfg: K_AGC, clrrep: K_CLRR, muatdata: K_MUATD, muatsum: K_MUATS };
       // riwayat laporan (Kesesuaian, Muat, Clearing): dikirim ke server per tanggal untuk dibuat sheet laporan
       const syRpt = { kesH: K_KESH, muatH: K_MUATH, clrH: K_CLRH };
       const syRptMap = {
@@ -69,6 +69,13 @@
         sySave();
         sySoon(1500);
       };
+      /* Data laporan terakhir yang diunggah (satu berkas utuh): yang cap waktunya (at, ms) paling baru menang di server dan di HP.
+         Dengan ini Laporan Voucher Clearing dan Laporan Muat cukup diunggah sekali, HP lain langsung memakainya. */
+      const syNW = {
+        clrrep: { get: () => clrRep, set: (v) => (clrRep = v), after: () => { if (curViewId === "clr") renderClr(); } },
+        muatdata: { get: () => ld(K_MUATD, null), set: () => {}, after: () => { if (typeof muRestore === "function") { muRestore(); if (typeof mBuild === "function") mBuild(); } } },
+        muatsum: { get: () => ld(K_MUATS, null), set: () => {}, after: () => {} },
+      };
       function syBuild() {
         const first = SY.mrev == null;
         const data = {}, del = {};
@@ -88,6 +95,7 @@
         if (has("areacfg") && areaCfg) data[syPlain.areacfg] = areaCfg;
         if (has("linkcfg")) { const lc = linkSnap(); if (lc) data[syPlain.linkcfg] = lc; }
         if (has("agingcfg")) data[syPlain.agingcfg] = agingCfg;
+        Object.keys(syNW).forEach((n) => { if (!has(n)) return; const v = syNW[n].get(); if (v && typeof v === "object") data[syPlain[n]] = v; });
         syRkPend = {};
         Object.keys(syRpt).forEach((n) => {
           if (!has(n)) return;
@@ -198,6 +206,16 @@
             put(syPlain.agingcfg, agingCfg);
             changed = true;
           }
+          Object.keys(syNW).forEach((n) => {
+            const rv = rd[syPlain[n]];
+            if (!rv || typeof rv !== "object" || SY.rep.includes(n)) return;
+            const cur = syNW[n].get();
+            if (cur && Number(cur.at || 0) >= Number(rv.at || 0)) return; // milik perangkat ini sama baru atau lebih baru: tidak ditimpa
+            put(syPlain[n], rv);
+            syNW[n].set(rv);
+            syNW[n].after();
+            changed = true;
+          });
           if (rd[syPlain.dest] && !SY.rep.includes("dest") && !same("dest", rd[syPlain.dest])) {
             dest = rd[syPlain.dest];
             put(syPlain.dest, dest);
@@ -229,6 +247,7 @@
         else if (v === "check") renderCheck();
         else if (v === "task") renderTask();
         else if (v === "kpi" || v === "agi" || v === "rpt") WMS.emit(); // KpiView (React) menggambar ulang
+        else if (v === "clr" && typeof renderClr === "function") renderClr();
         else if (v === "usr") renderUsr();
         else if (v === "kes") renderKes();
         else if (v === "adj") renderAdj();
