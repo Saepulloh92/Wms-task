@@ -454,6 +454,7 @@
         $("monAuto").value = String(mon.auto);
         $("monAlert").checked = mon.alert;
         monRender();
+        if (typeof monClrEnter === "function") monClrEnter();
         if (mon.url && (!monCache || monCache.src !== "file") && (!monCache || Date.now() - monCache.at > 20000)) monLoad(false);
         monLeave();
         if (typeof dlvEnter === "function") dlvEnter();

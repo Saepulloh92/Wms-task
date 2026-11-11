@@ -6,6 +6,7 @@ import * as format from "../lib/format.js";
 import { kpiOf } from "../lib/kpi.js";
 import { checklist, normSignal } from "../lib/aging.js";
 import { healthCheck } from "../lib/health.js";
+import { summarize as clrSummarize, fromHistRows as clrFromHist, trend as clrTrend } from "../lib/clearing-summary.js";
 
 const listeners = new Set();
 let version = 0;
@@ -21,7 +22,7 @@ export const WMS = (window.WMS = {
   },
   getVersion: () => version,
 });
-window.WMSLib = { ...format, kpiOf, agingChecklist: checklist, normSignal, healthCheck };
+window.WMSLib = { ...format, kpiOf, agingChecklist: checklist, normSignal, healthCheck, clrSummarize, clrFromHist, clrTrend };
 
 /** Hook: komponen React re-render tiap legacy memanggil WMS.emit() (ganti view, sinkron selesai, dll). */
 export function useWms() {

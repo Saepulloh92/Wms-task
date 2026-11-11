@@ -1,6 +1,6 @@
 /* Kesehatan data: panel di menu Data WMS + lencana header (hanya admin). Logika murni: src/lib/health.js.
    Dipanggil: tiap 15 dtk, setelah sinkron (98-sync) dan saat membuka menu Data (go di 45-nav). */
-      let hlLast = null;
+      var hlLast = null; // var: hindari TDZ bila dipanggil saat boot
       function hlInput() {
         return {
           data: DATA, counts, users, tasks, closed,

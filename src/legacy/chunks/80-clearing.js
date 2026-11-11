@@ -269,6 +269,7 @@
         $("clrRepInfo").textContent = clrRep ? `${clrRep.name || "Laporan"}: ${fmt(clrRep.rows.length)} voucher, dimuat ${new Date(clrRep.at).toLocaleString("id-ID")}.` : "Belum ada laporan. Pilih file Laporan Voucher.";
         $("clrCntInfo").textContent = clrErr ? clrErr : clrCnt ? `Counting dari ${clrCnt.src === "url" ? "spreadsheet" : "file"}: ${fmt(clrCnt.rows.length)} baris, dimuat ${new Date(clrCnt.at).toLocaleString("id-ID")}.` : clr.url ? "Counting belum dimuat." : "Link spreadsheet counting belum diatur (Pengaturan di bawah), atau muat dari file.";
         $("clrCntInfo").style.color = clrErr ? "var(--red)" : "";
+        if (typeof monClrRender === "function") monClrRender();
         $("clrLoad").disabled = clrBusy;
         $("clrRefresh").disabled = clrBusy;
         $("clrRefresh").textContent = clrBusy ? "Memuat…" : "↻ Refresh";

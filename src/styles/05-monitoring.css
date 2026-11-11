@@ -162,7 +162,7 @@
       .dlv .dfold > :last-child { margin-bottom: 14px; }
       /* Beranda fokus Dashboard Delivery: tampilan Monitoring Kiriman lama (filter, peringatan kolom, kartu SPM, Ringkas/Kartu/Tabel, daftar wilayah, pengaturan) disembunyikan. Logikanya tetap ada di 92-monitoring.js. */
       #v-mon > .dh,
-      #v-mon > #dlvPanel ~ * { display: none !important; }
+      #v-mon > #dlvPanel ~ *:not(#monClr) { display: none !important; }
       #v-mon > #dlvPanel { margin-top: 4px; }
       /* progres delivery: tiga bar (masuk, proses, keluar) seperti di dashboard Excel */
       .dlv .prow { display: grid; grid-template-columns: 96px 1fr 48px; align-items: center; gap: 8px; min-height: 34px; font-size: 14px; }

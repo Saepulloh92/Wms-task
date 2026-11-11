@@ -18,6 +18,7 @@ import "./styles/13-report.css";
 import "./styles/14-tv-dashboard.css";
 import "./styles/14-motion.css";
 import "./styles/15-health.css";
+import "./styles/16-clr-mon.css";
 import "./styles/15-task-menu.css";
 import App from "./App.jsx";
 

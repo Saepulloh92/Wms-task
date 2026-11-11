@@ -1,0 +1,33 @@
+/* Kartu Clearing di menu Monitoring */
+.cm { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-bottom: 12px; }
+.cm-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.cm-h h3 { margin: 0; font-size: 17px; }
+.cm-sub { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+.cm-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 12px 0 10px; }
+@media (min-width: 640px) { .cm-grid { grid-template-columns: repeat(4, 1fr); } }
+.cm-t { border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; background: #f7f9fb; }
+.cm-t b { display: block; font-size: 22px; line-height: 1.15; }
+.cm-t span { font-size: 12px; color: var(--muted); }
+.cm-t.cm-g b { color: var(--green); }
+.cm-t.cm-r b { color: var(--red); }
+.cm-bar { height: 10px; border-radius: 6px; background: #e6ebf0; overflow: hidden; }
+.cm-bar i { display: block; height: 100%; background: var(--green); border-radius: 6px; transition: width 0.3s; }
+.cm-qty { margin: 8px 0 0; font-size: 13px; }
+.cm-qty b.cm-neg { color: var(--red); }
+.cm-det { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+.cm-sec { margin: 12px 0 6px; font-size: 13px; font-weight: 800; }
+.cm-sh { display: grid; grid-template-columns: 1fr auto auto; gap: 4px 12px; font-size: 13px; }
+.cm-sh span:nth-child(3n + 2), .cm-sh span:nth-child(3n) { text-align: right; font-variant-numeric: tabular-nums; }
+.cm-todo { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.cm-todo li { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; border-left: 4px solid var(--red); background: var(--redbg); border-radius: 6px; padding: 6px 8px; font-size: 13px; }
+.cm-todo li.cm-w { border-left-color: #f2b705; background: #fff8e1; }
+.cm-todo b { font-variant-numeric: tabular-nums; }
+.cm-todo small { color: var(--muted); display: block; }
+.cm-tr { display: flex; gap: 6px; align-items: flex-end; height: 64px; }
+.cm-tr div { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; font-size: 10px; color: var(--muted); }
+.cm-tr i { display: block; width: 100%; max-width: 28px; border-radius: 4px 4px 0 0; background: var(--green); min-height: 2px; }
+.cm-tr i.cm-low { background: #d64545; }
+.cm-tr i.cm-mid { background: #f5a623; }
+.cm-act { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+body.tv .cm-act { display: none !important; }
+#monClr:empty { display: none; }
