@@ -236,7 +236,7 @@
           const dots = segs.flat().map((q) => `<circle cx="${q[0]}" cy="${q[1]}" r="4" fill="${col}"/>`).join("");
           return area + line + dots;
         };
-        return `<svg class="dch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Grafik tren total dan terkirim ${pts.length} hari terakhir">${grid}${lab}${series("t", "#0a5bd3")}${series("k", "#2e9e68")}</svg>`;
+        return `<svg class="dch" viewBox="0 0 ${W} ${H}" role="img" aria-label="Grafik tren total dan terkirim ${pts.length} hari terakhir">${grid}${lab}${series("t", "#0a5bd3")}${series("k", "#1f7a4d")}</svg>`;
       }
       const monIco = {
         tot: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 6h11v9H2zM14 9h4l3 3.5V15h-7z"/><circle cx="7" cy="17.5" r="2" style="stroke:#0a5bd3" stroke-width="1.5"/><circle cx="17" cy="17.5" r="2" style="stroke:#0a5bd3" stroke-width="1.5"/></svg>',
@@ -261,7 +261,7 @@
           return `<span class="dchip${d ? "" : " eq"}" title="${ttl}">${d > 0 ? "↑ +" : d < 0 ? "↓ " : ""}${d}%</span>`;
         };
         const card = (cls, v, lb, p) => `<div class="kc ${cls}"><div class="kh"><span class="ki">${monIco[cls]}</span><b>${v == null ? "–" : fmt(v)}</b></div><div class="kl">${lb}</div>${chip(v, p)}</div>`;
-        const segs = [["Terkirim", kel || 0, "#0a5bd3"], ["Dalam Proses", prs || 0, "#f5a623"], ["Pending", bel, "#9aa5b8"]],
+        const segs = [["Terkirim", kel || 0, "#0a5bd3"], ["Dalam Proses", prs || 0, "#b26a00"], ["Pending", bel, "#6b7785"]],
           tot = segs.reduce((a, q) => a + q[1], 0),
           C = 2 * Math.PI * 40;
         let off = 0;

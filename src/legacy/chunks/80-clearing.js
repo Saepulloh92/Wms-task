@@ -290,7 +290,7 @@
         }
         $("clrChips").innerHTML = chipsHtml(clrF, [["all", "Semua", all.length], ["bad", "Perlu dicek", all.filter((x) => x.st !== "ok" && !clrIsDone(x)).length], ["done", "Ditandai selesai", all.filter(clrIsDone).length], ["ok", "Cocok", n("ok")], ["belum", "Belum dihitung", n("belum")]]);
         { // ringkasan: donat status + progres per shift
-          const segs = [["Cocok", nOk, "#2e9e68"], ["Selisih / dobel", nBad, "#d64545"], ["Belum dihitung", nBel, "#f5a623"]], C = 2 * Math.PI * 40;
+          const segs = [["Cocok", nOk, "#1f7a4d"], ["Selisih / dobel", nBad, "#b3261e"], ["Belum dihitung", nBel, "#b26a00"]], C = 2 * Math.PI * 40;
           let off = 0;
           const arcs = segs.map(([, v, c]) => {
             if (!v || !nTot) return "";

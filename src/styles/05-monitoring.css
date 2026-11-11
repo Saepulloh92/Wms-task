@@ -69,7 +69,7 @@
       .kc .ki svg { width: 20px; height: 20px; }
       .kc b { font-size: 26px; line-height: 1; }
       .kc .kl { font-size: 13px; margin: 6px 0 8px; }
-      .kc.tot .ki { background: #0a5bd3; } .kc.ok .ki { background: #2e9e68; } .kc.wip .ki { background: #f5a623; }
+      .kc.tot .ki { background: #0a5bd3; } .kc.ok .ki { background: #1f7a4d; } .kc.wip .ki { background: #b26a00; }
       .dchip { display: inline-block; border-radius: 8px; padding: 3px 8px; font-size: 12px; font-weight: 800; }
       .kc.tot .dchip { background: #e3edfb; color: #0a4aa8; } .kc.ok .dchip { background: var(--greenbg); color: var(--green); } .kc.wip .dchip { background: var(--amberbg); color: var(--amber); }
       .kc .dchip.eq { background: var(--bg); color: var(--muted); }
@@ -84,7 +84,7 @@
       .dch .g { stroke: #e6edf3; stroke-width: 1; }
       .dlg { display: flex; justify-content: center; gap: 18px; font-size: 13px; }
       .dlg span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; background: currentColor; }
-      .dlg .a { color: #0a5bd3; } .dlg .b { color: #2e9e68; }
+      .dlg .a { color: #0a5bd3; } .dlg .b { color: #1f7a4d; }
       .dnut { display: flex; align-items: center; gap: 16px; }
       .dnut > svg { width: 130px; flex: none; }
       .dnut .dv { font-size: 18px; font-weight: 800; fill: var(--ink); } .dnut .ds { font-size: 8px; fill: var(--muted); }
