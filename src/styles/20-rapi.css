@@ -1,0 +1,117 @@
+/* Lapisan penyeragam UI (dimuat TERAKHIR). Hanya CSS: tidak mengubah teks/struktur.
+   Skala: spasi 4/8/12/16/24, radius 10/14, satu gaya kartu, tombol, chip, input, judul bagian. */
+:root {
+  --sp1: 4px; --sp2: 8px; --sp3: 12px; --sp4: 16px; --sp5: 24px;
+  --r-md: 10px; --r-lg: 14px;
+  --shadow-1: 0 1px 2px rgba(29, 35, 39, 0.06);
+  --ctl-h: 48px;
+}
+
+/* ===== Tata letak halaman ===== */
+main { padding: var(--sp4) var(--sp4) calc(var(--sp5) + 72px + env(safe-area-inset-bottom)); }
+main > section > * + * { margin-top: 0; }
+main > section > h2:first-child,
+main > section > .hint:first-of-type { max-width: 62ch; }
+
+/* ===== Hierarki judul ===== */
+main h2 { font-size: 20px; line-height: 1.25; margin: 0 0 var(--sp1); letter-spacing: -0.01em; }
+main h3 { font-size: 16px; line-height: 1.3; font-weight: 800; margin: var(--sp5) 0 var(--sp2); color: var(--ink); }
+main h3:first-child { margin-top: 0; }
+main .hint { font-size: 14px; line-height: 1.45; margin: 0 0 var(--sp3); }
+main h2 + .hint { margin-bottom: var(--sp4); }
+
+/* ===== Satu gaya kartu ===== */
+.panel, .card, .stat, main details {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+}
+.panel { padding: var(--sp4); margin-bottom: var(--sp3); }
+.card { padding: var(--sp3) var(--sp4); margin-bottom: var(--sp2); }
+.panel > :first-child { margin-top: 0; }
+.panel > :last-child { margin-bottom: 0; }
+.panel h3 { margin-top: 0; }
+
+/* Ringkasan angka: rata, rapat, angka sejajar */
+.stats { gap: var(--sp2); margin-bottom: var(--sp3); }
+.stat { padding: var(--sp3) var(--sp4); }
+.stat small { font-size: 13px; line-height: 1.3; font-weight: 600; }
+.stat strong { font-size: 24px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+
+/* Bagian yang dilipat (Pengaturan, Cara kerja, dst.) */
+main details { margin-bottom: var(--sp3); overflow: hidden; }
+main details > summary {
+  list-style: none; cursor: pointer; min-height: var(--ctl-h);
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp2);
+  padding: var(--sp3) var(--sp4); font-weight: 800; font-size: 16px;
+}
+main details > summary::-webkit-details-marker { display: none; }
+main details > summary::after {
+  content: ""; width: 8px; height: 8px; flex: none; margin-right: 2px;
+  border: solid var(--muted); border-width: 0 2px 2px 0; transform: rotate(45deg); transition: transform 0.15s;
+}
+main details[open] > summary::after { transform: rotate(-135deg); }
+main details[open] > summary { border-bottom: 1px solid var(--line); }
+main details > :not(summary) { margin-left: var(--sp4); margin-right: var(--sp4); }
+main details > summary + * { margin-top: var(--sp3); }
+main details > :last-child { margin-bottom: var(--sp4); }
+main details.card > summary, main details.tk-more > summary { padding: var(--sp2) 0; }
+
+/* ===== Tombol ===== */
+.btn { min-height: var(--ctl-h); font-size: 16px; font-weight: 700; border-radius: var(--r-lg); padding: var(--sp3) var(--sp4); }
+.btn.sm { min-height: 40px; font-size: 14px; padding: var(--sp2) var(--sp3); border-radius: var(--r-md); }
+.btn.sec { background: #fff; color: var(--navy); border: 1.5px solid #b9c6d1; }
+.btn + .btn, .btn + button, button + .btn { margin-top: var(--sp2); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.row, .btns, .actions { gap: var(--sp2); }
+.row > .btn + .btn, .btns > .btn + .btn, .actions > .btn + .btn { margin-top: 0; }
+
+/* ===== Chip / filter ===== */
+.chips { gap: var(--sp2); margin: var(--sp2) calc(var(--sp1) * -1) var(--sp1); padding: 2px var(--sp1) var(--sp2); }
+.chip { min-height: 40px; padding: var(--sp2) var(--sp3); border-width: 1.5px; border-radius: 999px; font-size: 14px; white-space: nowrap; }
+.chip.on { box-shadow: none; }
+
+/* ===== Isian formulir ===== */
+label { font-size: 14px; font-weight: 700; margin: var(--sp3) 0 var(--sp1); }
+label:first-child { margin-top: 0; }
+input, select, textarea { min-height: var(--ctl-h); border: 1.5px solid #b9c6d1; border-radius: var(--r-md); padding: var(--sp2) var(--sp3); }
+textarea { width: 100%; font: inherit; color: var(--ink); background: #fff; }
+input:focus, select:focus, textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(20, 86, 160, 0.18); outline: 0; }
+input[type="checkbox"], input[type="radio"] { width: 22px; min-height: 22px; accent-color: var(--blue); }
+input[type="file"] { padding: var(--sp2); }
+input[type="file"]::file-selector-button {
+  margin-right: var(--sp3); border: 0; border-radius: var(--r-md); padding: var(--sp2) var(--sp3);
+  background: var(--navy); color: #fff; font: inherit; font-weight: 700; cursor: pointer;
+}
+/* Dua kolom isian berdampingan (Area / Cari) selalu sejajar */
+.grid2, .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp3); }
+.grid2 > *, .two > * { min-width: 0; }
+
+/* ===== Lencana & tabel ===== */
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th { text-align: left; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+th, td { padding: var(--sp2) var(--sp2); border-bottom: 1px solid var(--line); }
+.table-wrap, .scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* ===== Header & navigasi bawah ===== */
+header { box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); }
+.brand { letter-spacing: -0.01em; }
+.tabs { box-shadow: 0 -1px 0 var(--line), 0 -6px 16px rgba(29, 35, 39, 0.06); padding-bottom: env(safe-area-inset-bottom); }
+.tabs button { font-size: 12px; font-weight: 700; gap: 2px; }
+.tabs button:not(.on) { color: var(--muted); }
+
+/* ===== Layar lebar (tablet/desktop): isi di tengah, ringkasan 4 kolom ===== */
+@media (min-width: 900px) {
+  .content { max-width: 960px; }
+  main { padding: var(--sp5); }
+  .stats { grid-template-columns: repeat(4, 1fr); }
+  .btn { width: auto; min-width: 200px; }
+  .btn.full, .panel > .btn:only-child { width: 100%; }
+}
+
+/* ===== Gerak dikurangi ===== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

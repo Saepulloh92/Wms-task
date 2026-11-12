@@ -20,6 +20,7 @@ import "./styles/14-motion.css";
 import "./styles/15-health.css";
 import "./styles/16-clr-mon.css";
 import "./styles/15-task-menu.css";
+import "./styles/20-rapi.css";
 import App from "./App.jsx";
 
 window.WMS_CONFIG = config;
