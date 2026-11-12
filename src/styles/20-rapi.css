@@ -115,3 +115,14 @@ header { box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
+
+/* ===== Bilah aksi inline (Beranda: Muat ulang / Layar TV) ===== */
+.mon-bar { display: flex; flex-wrap: wrap; gap: var(--sp2); margin: 0 0 var(--sp3); }
+.mon-bar .btn { width: auto; flex: 1 1 auto; min-width: 140px; margin: 0; }
+
+/* ===== Chip pil hanya untuk baris geser; grid filter tetap persegi agar sejajar ===== */
+.chips .chip { border-radius: var(--r-md); }
+
+/* Baris aksi kartu (User, KPI): kolom sama lebar, tidak pernah melebihi kartu */
+.acts, .kp-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: var(--sp2); }
+.acts .btn, .kp-actions .btn { width: 100%; min-width: 0; margin: 0; }
