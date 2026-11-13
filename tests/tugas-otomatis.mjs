@@ -17,7 +17,7 @@ await page.waitForFunction(() => document.getElementById("pgT")?.textContent.tri
 if (await page.locator("#lsLater").isVisible()) await page.click("#lsLater");
 await page.evaluate(() => window.go("dist")); await page.waitForTimeout(300);
 ok(!(await page.locator("#dgGo").isDisabled()), "tombol Buat tugas aktif walau belum ada petugas");
-await page.click("#dgGo"); await page.waitForTimeout(300);
+await page.click("#dgMore > summary"); await page.click("#dgGo"); await page.waitForTimeout(300);
 await page.getByRole("button", { name: "Buat tugas" }).last().click(); await page.waitForTimeout(600);
 const t = (await page.innerText("#tkStats")).replace(/\s+/g, " ");
 ok(/Total tugas [1-9]/.test(t), "tugas bin dibuat otomatis dari data master: " + t);

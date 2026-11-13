@@ -18,7 +18,7 @@ await page.addInitScript(({ m, u }) => { localStorage.setItem("warehouse_so_mast
 await page.goto(url);
 await page.waitForFunction(() => document.getElementById("pgT")?.textContent.trim());
 if (await page.locator("#lsLater").isVisible()) await page.click("#lsLater");
-await page.evaluate(() => window.go("dist")); await page.waitForTimeout(300);
+await page.evaluate(() => window.go("dist")); await page.waitForTimeout(300); await page.click("#dgMore > summary"); await page.waitForTimeout(300);
 ok(await page.locator("#tkLbl").isVisible(), "tombol pilih file tugas terlihat");
 ok(await page.locator("#tkTpl").isVisible(), "tombol contoh file terlihat");
 ok((await page.locator("#tkRes .empty").count()) === 1, "petunjuk saat belum ada tugas");

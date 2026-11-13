@@ -40,6 +40,6 @@ img, svg, canvas, table { max-width: 100%; }
 /* Pratinjau laporan: teks panjang turun baris, tidak terpotong */
 pre.rep { white-space: pre-wrap; overflow-wrap: anywhere; overflow-x: hidden; }
 /* Tugas Bin: panel upload dan contoh file harus terlihat (satu-satunya cara membuat tugas) */
-#v-dist .panel.ximp, #v-dist #tkTpl { display: block !important; }
+#v-dist .dst-box.ximp, #v-dist #tkTpl { display: block !important; }
 #v-dist #tkTpl { width: 100%; }
 #v-task .fine, #v-dist .fine { margin: 8px 0 0; line-height: 1.5; }

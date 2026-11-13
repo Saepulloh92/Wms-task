@@ -96,7 +96,7 @@
         if (!e.target.closest("#tskJump")) return;
         $("dgKind").value = "bin"; $("dgArea").value = ""; $("dgUser").value = "auto"; $("dgShow").value = "";
         renderDg();
-        if ($("dgGo").disabled) { toast($("dgInfo").textContent); return $("tkDlg").scrollIntoView({ behavior: "smooth", block: "start" }); }
+        if ($("dgGo").disabled) { toast($("dgInfo").textContent); { $("dgMore").open = true; return $("tkDlg").scrollIntoView({ behavior: "smooth", block: "start" }); } }
         $("dgGo").click();
       };
       $("tskList").onkeydown = (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.matches(".card.tsk")) { e.preventDefault(); e.target.click(); } };

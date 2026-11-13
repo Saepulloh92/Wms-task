@@ -45,3 +45,18 @@
 .lk-row small { display: block; color: var(--muted, #64748b); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; }
 .lk-st { flex: none; font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 999px; }
 .lk-st.ok { background: #dcfce7; color: #166534; } .lk-st.wip { background: #fef3c7; color: #92400e; } .lk-st.bad { background: #fee2e2; color: #b91c1c; }
+
+/* Distribusi tugas: satu tombol utama, pengaturan lanjutan dilipat (ramah HP) */
+#v-dist .dst-main { width: 100%; min-height: 52px; font-size: 17px; margin: 4px 0 12px; }
+#v-dist .stats { margin-top: 0; }
+#v-dist details.dst-more { padding: 0; margin-top: 18px; }
+#v-dist details.dst-more > summary { list-style: none; cursor: pointer; min-height: 52px; display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; font-weight: 700; }
+#v-dist details.dst-more > summary::-webkit-details-marker { display: none; }
+#v-dist details.dst-more > summary::after { content: ""; width: 9px; height: 9px; border-right: 2.5px solid currentColor; border-bottom: 2.5px solid currentColor; transform: rotate(45deg); margin: -4px 4px 0 0; }
+#v-dist details.dst-more[open] > summary::after { transform: rotate(225deg); margin: 4px 4px 0 0; }
+#v-dist details.dst-more[open] > summary { border-bottom: 1px solid rgba(128, 128, 128, 0.25); }
+#v-dist .dst-box { padding: 14px 16px; border-bottom: 1px solid rgba(128, 128, 128, 0.2); }
+#v-dist .dst-box:last-of-type { border-bottom: 0; }
+#v-dist .dst-box h3 { margin-top: 0; }
+#v-dist #tkRes { padding: 0 16px 14px; }
+#v-dist #tkClear { width: 100%; }

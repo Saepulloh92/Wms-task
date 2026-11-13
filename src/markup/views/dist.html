@@ -1,9 +1,16 @@
             <h2>Distribusi Tugas</h2>
-            <p class="hint">Khusus admin dan SPV: buat tugas dari data master, bagikan ke petugas, dan pantau progresnya. Petugas mengerjakan tugasnya di menu Task.</p>
-            <button class="btn pri tsk-new" id="tskJump" type="button">Buat tugas otomatis</button>
-            <h3 class="sec" id="tskAdminH">Ringkasan tugas</h3>
+            <p class="hint">Buat tugas dari data master, bagikan, dan pantau. Petugas mengerjakannya di menu Task.</p>
+            <button class="btn pri tsk-new dst-main" id="tskJump" type="button">Buat tugas otomatis</button>
+            <div id="tkUn"></div>
+            <h3 class="sec" id="tskAdminH">Progres</h3>
             <div class="stats" id="tkStats"></div>
-            <div class="panel" id="tkDlg" hidden>
+            <h3 class="sec">Per petugas</h3>
+            <div id="tkUsers"></div>
+            <h3 class="sec">Tugas Aging &amp; DC</h3>
+            <div id="tkKinds"></div>
+            <details class="panel dst-more" id="dgMore">
+              <summary>Atur manual &amp; upload file</summary>
+            <div class="dst-box" id="tkDlg" hidden>
               <h3>Delegasikan tugas</h3>
               <label for="dgKind">Jenis tugas</label>
               <select id="dgKind"><option value="bin">Periksa bin (stock opname)</option><option value="AG">Aging per rak</option><option value="DC">DC per item</option></select>
@@ -15,17 +22,13 @@
               <p class="fine" id="dgInfo" role="status"></p>
               <button class="btn pri" id="dgGo" type="button">Buat tugas</button>
             </div>
-            <div class="panel ximp">
+            <div class="dst-box ximp">
               <h3 id="tkWho">Upload tugas</h3>
               <label class="btn pri fl" for="tkFile" id="tkLbl">Pilih file daftar bin</label
               ><input type="file" id="tkFile" accept=".xls,.xlsx,.csv,text/csv" hidden />
               <p class="fine" id="tkHelp"></p>
               <button class="btn sec sm mt ximp" id="tkTpl" type="button">Unduh contoh file (CSV)</button>
             </div>
-            <div id="tkRes"></div>
-            <h3 class="sec">Per petugas</h3>
-            <div id="tkUsers"></div>
-            <h3 class="sec">Tugas Aging &amp; DC</h3>
-            <div id="tkKinds"></div>
-            <div id="tkUn"></div>
-            <button class="btn dng sm mt-lg" id="tkClear">Hapus tugas</button>
+              <div id="tkRes"></div>
+            </details>
+            <button class="btn dng sm mt-lg" id="tkClear">Hapus semua tugas</button>
