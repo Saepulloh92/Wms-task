@@ -125,11 +125,15 @@
 .rpt-dtl .hint { margin: 10px 0 0; }
 
 /* Kartu "Rincian per modul" bisa diketuk -> daftar catatan */
-.rpt-dc .rpt-dh { cursor: pointer; border-radius: 8px; }
-.rpt-dc .rpt-dh:hover { background: rgba(20, 86, 160, 0.05); }
-.rpt-dc .rpt-dh:focus-visible { outline: 3px solid #75b7ed; outline-offset: 2px; }
+.rpt-dc .rpt-dh > b { display: block; cursor: pointer; border-radius: 8px; padding: 4px 0; }
+.rpt-dc .rpt-dh > b:hover { background: rgba(20, 86, 160, 0.05); }
+.rpt-dc .rpt-dh > b:focus-visible, .rpt-kr.click:focus-visible { outline: 3px solid #75b7ed; outline-offset: 2px; }
 .rpt-dc .rpt-dh > b::after { content: " ▾"; color: var(--muted, #6b7a89); }
-.rpt-dc.open .rpt-dh > b::after { content: " ▴"; color: var(--mc); }
+.rpt-dc.open .rpt-dh > b[aria-expanded="true"]::after { content: " ▴"; color: var(--mc); }
+.rpt-kr.click { cursor: pointer; border-radius: 8px; min-height: 44px; padding: 6px 8px; }
+.rpt-kr.click:hover { background: rgba(20, 86, 160, 0.07); }
+.rpt-kr.click::after { content: "›"; color: var(--muted, #6b7a89); float: right; }
+.rpt-kr.click.on { background: rgba(20, 86, 160, 0.12); box-shadow: inset 3px 0 0 var(--mc); }
 .rpt-dt .card.rpt-dc.open { grid-column: 1 / -1; }
 .rpt-dc .rpt-dtl { margin: 8px 0 0; }
 @media print { .rpt-dc .rpt-dtl { display: none; } }

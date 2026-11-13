@@ -75,6 +75,13 @@ ok(nmRows.startsWith("Stok per Bin,Kesesuaian Rak,DC Harian"), "dua laporan dari
 const tags = await tc(".rpt-tag");
 ok(tags[0] === "79%" && tags[1] === "93%", "akurasi qty 79% (11/14) dan kesesuaian item 93% (13/14) dihitung terpisah (" + tags.slice(0, 2).join(",") + ")");
 ok((await tc(".rpt-dt .card")).some((t) => t.includes("Kesesuaian Rak") && t.includes("Item tidak sama1")), "rincian Kesesuaian Rak: item tidak sama = 1");
+// --- Baris di kartu Rincian bisa diketuk -> daftar tersaring
+await p.locator(".rpt-dc .rpt-kr.click", { hasText: "Item tidak sama" }).first().click(); await p.waitForTimeout(150);
+ok((await p.locator("#rptr-kes .rpt-b").count()) === 1, "ketuk 'Item tidak sama' di Rincian Kesesuaian Rak -> 1 catatan");
+await p.locator(".rpt-dc .rpt-kr.click", { hasText: "Selisih qty" }).first().click(); await p.waitForTimeout(150);
+ok((await p.locator("#rptr-bin .rpt-b").count()) === 3, "ketuk 'Selisih qty' di Rincian Stok per Bin -> 3 catatan selisih");
+await p.locator(".rpt-dc .rpt-kr.click", { hasText: "Selisih qty" }).first().click(); await p.waitForTimeout(150);
+ok((await p.locator("#rptr-bin").count()) === 0, "ketuk baris yang sama lagi -> daftar menutup");
 // --- Daftar bin: filter item beda
 await p.getByRole("button", { name: /^Item beda/ }).click(); await p.waitForTimeout(150);
 const ib = (await tc(".rpt-tb")).join("|");

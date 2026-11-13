@@ -40,6 +40,7 @@ export default function ReportView() {
   const [openP, setOpenP] = useState(""); // petugas yang dibuka
   const [openR, setOpenR] = useState(""); // kartu "Rincian per modul" yang dibuka
   const [rlim, setRlim] = useState(15);
+  const [rfl, setRfl] = useState(""); // baris yang diketuk di kartu Rincian (label) -> daftar disaring
   if (wms.view !== "rpt" || !wms.DATA) return <section id="v-rpt" hidden />;
 
   const { DATA, counts, stat, aging } = wms;
@@ -123,6 +124,23 @@ export default function ReportView() {
     if (["dc", "aging", "muat", "clr"].includes(id)) return r.lists[id].map((e) => mkItem(id, e));
     return [];
   };
+  /** Penyaring daftar untuk satu baris kartu Rincian (id modul + label baris). undefined = baris tidak bisa diketuk; null = semua. */
+  const rowFilter = (id, lb) => {
+    const all = ["Diperiksa", "Item selesai", "Rak dicek", "Hari lapor", "SPM", "Mobil", "SPM copy rekom.", "Hari clearing", "Voucher"];
+    if (all.includes(lb)) return null;
+    if (id === "bin") return { "Qty sesuai": (e) => stOf(e).qtyOk, "Selisih qty": (e) => !stOf(e).qtyOk, "Qty lebih / kurang": (e) => !stOf(e).qtyOk }[lb];
+    if (id === "kes") return { "Item sama": (e) => stOf(e).itemOk, "Item tidak sama": (e) => !stOf(e).itemOk, "Sesuai penuh": (e) => !!e.ok }[lb];
+    if (id === "dc") return { "Sesuai": (e) => e.diff === 0, "Selisih": (e) => e.diff !== 0, "Qty lebih / kurang": (e) => e.diff !== 0 }[lb];
+    if (id === "aging") return { "Sesuai": (e) => !!e.ok, "Selisih": (e) => !e.ok }[lb];
+    if (id === "clr") return { "Sesuai": (e) => Number(e.ok) > 0, "Belum sesuai": (e) => Number(e.bad) > 0 }[lb];
+    return undefined;
+  };
+  const rowItems = (id, lb) => {
+    const f = rowFilter(id, lb);
+    if (!f) return detailOf(id);
+    if (id === "bin" || id === "kes") return r.bins.filter(f).map((e) => mkItem(id, e));
+    return r.lists[id].filter(f).map((e) => mkItem(id, e));
+  };
   const byOf = (e) => e.by || "Tanpa petugas";
   /** Semua catatan satu petugas pada periode ini (diberi nama modul di label). */
   const personItems = (name) => [].concat(
@@ -142,7 +160,8 @@ export default function ReportView() {
   );
   const kbd = (fn) => (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); fn(); } };
   const toggle = (id) => { setOpen(open === id ? "" : id); setDlim(15); };
-  const toggleR = (id) => { setOpenR(openR === id ? "" : id); setRlim(15); };
+  const toggleR = (id) => { setOpenR(openR === id && !rfl ? "" : id); setRfl(""); setRlim(15); };
+  const pickR = (id, lb) => { if (openR === id && rfl === lb) { setOpenR(""); setRfl(""); } else { setOpenR(id); setRfl(lb); } setRlim(15); };
 
   const pick = (p) => { setPeriod(p); setOff(0); setLim(10); try { localStorage.setItem(K_P, p); } catch (e) {} };
   const copy = () => wms.outText(reportText(r, { area, by })).then(() => wms.toast("Tersalin. Tempel di WhatsApp."), () => wms.toast("Gagal menyalin. Izinkan akses clipboard di browser."));
@@ -214,13 +233,19 @@ export default function ReportView() {
       <h3 className="rpt-h">Rincian per modul</h3>
       <div className="rpt-dt">
         {det.map(([id, kv, title]) => {
-          const isOpen = openR === id, items = isOpen ? detailOf(id) : [];
+          const isOpen = openR === id, items = isOpen ? rowItems(id, rfl) : [];
           return (
             <div className={"card rpt-dc" + (isOpen ? " open" : "")} key={id} style={{ "--mc": COLOR[id] }}>
-              <div className="rpt-dh" role="button" tabIndex={0} aria-expanded={isOpen} aria-controls={"rptr-" + id}
-                onClick={() => toggleR(id)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleR(id); } }}>
-                <b>{title || MODS.find((m) => m.id === id).name}</b>
-                <dl>{kv.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
+              <div className="rpt-dh">
+                <b role="button" tabIndex={0} aria-expanded={isOpen && !rfl} aria-controls={"rptr-" + id}
+                  onClick={() => toggleR(id)} onKeyDown={kbd(() => toggleR(id))}>{title || MODS.find((m) => m.id === id).name}</b>
+                <dl>{kv.map(([k]) => {
+                  const v = kv.find(([kk]) => kk === k)[1], tap = rowFilter(id, k) !== undefined, on = isOpen && rfl === k;
+                  return tap
+                    ? <div key={k} className={"rpt-kr click" + (on ? " on" : "")} role="button" tabIndex={0} aria-pressed={on} aria-controls={"rptr-" + id}
+                        onClick={() => pickR(id, k)} onKeyDown={kbd(() => pickR(id, k))}><dt>{k}</dt><dd>{v}</dd></div>
+                    : <div key={k} className="rpt-kr"><dt>{k}</dt><dd>{v}</dd></div>;
+                })}</dl>
               </div>
               {isOpen && (
                 <div className="rpt-dtl" id={"rptr-" + id}>
