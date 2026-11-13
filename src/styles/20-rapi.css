@@ -126,3 +126,6 @@ header { box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); }
 /* Baris aksi kartu (User, KPI): kolom sama lebar, tidak pernah melebihi kartu */
 .acts, .kp-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: var(--sp2); }
 .acts .btn, .kp-actions .btn { width: 100%; min-width: 0; margin: 0; }
+
+/* Judul yang sama dengan judul header disembunyikan secara visual (tetap terbaca pembaca layar), juga bila dibungkus div */
+main h2.dup { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

@@ -84,7 +84,7 @@ export default function AgingView() {
 
   return (
     <section id="v-agi" hidden>
-      <h2>Monitoring Aging Stock</h2>
+      <h2>Aging Stock</h2>
       <p className="hint">Cek rak Merah dan Kuning, mulai dari kelas A. Cukup tap "Semua sama" atau perbarui no. tumpak, item, dan qty.</p>
 
       <div className="agi-bar">
