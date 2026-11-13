@@ -22,5 +22,9 @@ await page.getByRole("button", { name: "Buat tugas" }).last().click(); await pag
 const t = (await page.innerText("#tkStats")).replace(/\s+/g, " ");
 ok(/Total tugas [1-9]/.test(t), "tugas bin dibuat otomatis dari data master: " + t);
 ok((await page.locator("#tkUn [data-tk=auto]").count()) === 1, "tombol Bagikan sesuai area tersedia");
+// ulang: tugas yang masih berjalan tidak ditimpa, tombol cepat tidak menambah lagi
+await page.evaluate(() => window.go("task")); await page.waitForTimeout(300);
+await page.click("#tskJump").catch(() => {}); await page.waitForTimeout(400);
+ok(((await page.innerText("#tkStats")).replace(/\s+/g, " ")).includes("Total tugas 36"), "ulang tidak menggandakan tugas");
 ok(errors.length === 0, "tanpa error JavaScript " + errors.join(";"));
 await browser.close(); process.exit(fail ? 1 : 0);

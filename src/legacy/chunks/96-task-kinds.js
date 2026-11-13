@@ -15,8 +15,11 @@
 
       /* ---- delegasi admin ---- */
       const dgState = () => ({ kind: $("dgKind").value, area: $("dgArea").value, sig: $("dgSig").value, user: $("dgUser").value, scope: $("dgScope").value, show: $("dgShow").value });
+      const dgBusy = (key) => { const t = tasks[key]; if (!t) return false; if (key.startsWith("AG|")) return !tkAgDone(key.slice(3)); if (key.startsWith("DC|")) return !tkDcDone(key.slice(3)); return isTaskPend({ bin: key }); };
+      let dgSkip = 0;
       function dgPlan() {
         const g = dgState(), rr = {}, out = [];
+        dgSkip = 0;
         const pickU = (area) => (g.user === "auto" ? tkPick(area, rr) : g.user);
         if (g.kind === "bin") {
           DATA.forEach((x) => { if ((!g.area || x.area === g.area) && !counts[x.bin] && !isClosed(x.area)) out.push({ key: x.bin, u: pickU(x.area), show: g.show === "" ? undefined : g.show === "tampil" }); });
@@ -30,7 +33,9 @@
             if (g.scope === "all" || !r || !r.done) { const b = DATA.find((x) => x.item === e.item); out.push({ key: "DC|" + e.item, u: pickU(b ? b.area : "") }); }
           });
         }
-        return out;
+        const fresh = out.filter((p) => !dgBusy(p.key));
+        dgSkip = out.length - fresh.length;
+        return fresh;
       }
       function renderDg() {
         if (!$("tkDlg")) return;
@@ -46,8 +51,8 @@
         $("dgInfo").innerHTML = g.kind === "DC" && !Object.keys(dcPick).length
           ? "Belum ada item DC terpilih. Pilih dulu lewat DC Harian, tombol Pilih item DC."
           : plan.length
-          ? `<b>${fmt(plan.length)}</b> tugas akan dibuat${no ? `, <b>${fmt(no)}</b> belum punya petugas (nanti dibagikan sesuai area lewat tombol Bagikan)` : ""}.`
-          : "Tidak ada yang perlu ditugaskan dengan pilihan ini.";
+          ? `<b>${fmt(plan.length)}</b> tugas baru akan dibuat${dgSkip ? `, <b>${fmt(dgSkip)}</b> yang masih berjalan dilewati` : ""}${no ? `, <b>${fmt(no)}</b> belum punya petugas (nanti dibagikan sesuai area lewat tombol Bagikan)` : ""}.`
+          : dgSkip ? `Semua sudah punya tugas berjalan (${fmt(dgSkip)}). Tidak ada yang perlu ditambah.` : "Tidak ada yang perlu ditugaskan dengan pilihan ini.";
         $("dgGo").disabled = !plan.length;
       }
       function dgFill() {
@@ -66,7 +71,7 @@
         const per = {};
         plan.forEach((p) => { const u = users.find((z) => z.id === p.u); const nm = u ? u.name : "(belum ada petugas)"; per[nm] = (per[nm] || 0) + 1; });
         const lbl = { bin: "tugas bin", AG: "tugas aging", DC: "tugas DC" }[$("dgKind").value];
-        if (!(await ask("Buat " + plan.length + " " + lbl + "?", Object.entries(per).map(([n, c]) => n + ": " + c).join(", ") + ". Tugas yang sudah ada untuk item yang sama diperbarui.", "Buat tugas"))) return;
+        if (!(await ask("Buat " + plan.length + " " + lbl + "?", Object.entries(per).map(([n, c]) => n + ": " + c).join(", ") + ". Tugas yang masih berjalan tidak diubah.", "Buat tugas"))) return;
         const at = nowIso();
         plan.forEach((p) => {
           const rec = { u: p.u || "", by: curName() || "Admin", at };
