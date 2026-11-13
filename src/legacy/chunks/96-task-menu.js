@@ -59,8 +59,8 @@
         $("tskSum").innerHTML = all.length
           ? `<div class="tsk-ring ${pend.length ? "" : "ok"}" style="--p:${pct}"><b>${pct}%</b></div>
              <div><h3>${pend.length ? fmt(pend.length) + " tugas menunggu" : "Semua tugas selesai"}</h3>
-             <p class="fine">${done} dari ${all.length} selesai${pend.length ? " · bin " + nk("bin") + " · aging " + nk("AG") + " · DC " + nk("DC") : ""}</p></div>${admin ? '<button class="btn sec sm tsk-new" id="tskJump" type="button">Buat tugas otomatis</button>' : ""}`
-          : admin ? '<button class="btn pri tsk-new" id="tskJump" type="button">Buat tugas otomatis</button>' : "";
+             <p class="fine">${done} dari ${all.length} selesai${pend.length ? " · bin " + nk("bin") + " · aging " + nk("AG") + " · DC " + nk("DC") : ""}</p></div>`
+          : admin ? '<p class="fine">Belum ada tugas. Buat dan bagikan di menu Distribusi Tugas.</p>' : "";
         const flt = { todo: pend, all, done: all.filter((x) => x.done), bin: all.filter((x) => x.kind === "bin"), AG: all.filter((x) => x.kind === "AG"), DC: all.filter((x) => x.kind === "DC") };
         if (!all.length) tskF = "todo";
         $("tskChips").innerHTML = all.length
@@ -92,11 +92,11 @@
       }
       $("tskChips").onclick = (e) => { const b = e.target.closest("[data-k]"); if (b) { tskF = b.dataset.k; renderTsk(); } };
       $("tskUser").onchange = () => { tskU = $("tskUser").value; renderTsk(); };
-      $("tskSum").onclick = (e) => {
+      $("v-dist").onclick = (e) => {
         if (!e.target.closest("#tskJump")) return;
         $("dgKind").value = "bin"; $("dgArea").value = ""; $("dgUser").value = "auto"; $("dgShow").value = "";
         renderDg();
-        if ($("dgGo").disabled) { toast($("dgInfo").textContent); return $("tskAdminH").scrollIntoView({ behavior: "smooth", block: "start" }); }
+        if ($("dgGo").disabled) { toast($("dgInfo").textContent); return $("tkDlg").scrollIntoView({ behavior: "smooth", block: "start" }); }
         $("dgGo").click();
       };
       $("tskList").onkeydown = (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.matches(".card.tsk")) { e.preventDefault(); e.target.click(); } };

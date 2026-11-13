@@ -15,7 +15,7 @@ await page.addInitScript(({ m, u }) => { localStorage.setItem("warehouse_so_mast
 await page.goto(url);
 await page.waitForFunction(() => document.getElementById("pgT")?.textContent.trim());
 if (await page.locator("#lsLater").isVisible()) await page.click("#lsLater");
-await page.evaluate(() => window.go("task")); await page.waitForTimeout(300);
+await page.evaluate(() => window.go("dist")); await page.waitForTimeout(300);
 ok(!(await page.locator("#dgGo").isDisabled()), "tombol Buat tugas aktif walau belum ada petugas");
 await page.click("#dgGo"); await page.waitForTimeout(300);
 await page.getByRole("button", { name: "Buat tugas" }).last().click(); await page.waitForTimeout(600);
@@ -23,7 +23,7 @@ const t = (await page.innerText("#tkStats")).replace(/\s+/g, " ");
 ok(/Total tugas [1-9]/.test(t), "tugas bin dibuat otomatis dari data master: " + t);
 ok((await page.locator("#tkUn [data-tk=auto]").count()) === 1, "tombol Bagikan sesuai area tersedia");
 // ulang: tugas yang masih berjalan tidak ditimpa, tombol cepat tidak menambah lagi
-await page.evaluate(() => window.go("task")); await page.waitForTimeout(300);
+await page.evaluate(() => window.go("dist")); await page.waitForTimeout(300);
 await page.click("#tskJump").catch(() => {}); await page.waitForTimeout(400);
 ok(((await page.innerText("#tkStats")).replace(/\s+/g, " ")).includes("Total tugas 36"), "ulang tidak menggandakan tugas");
 ok(errors.length === 0, "tanpa error JavaScript " + errors.join(";"));

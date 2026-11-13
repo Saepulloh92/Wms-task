@@ -15,6 +15,7 @@ import dc from "./markup/views/dc.html?raw";
 import check from "./markup/views/check.html?raw";
 import adj from "./markup/views/adj.html?raw";
 import task from "./markup/views/task.html?raw";
+import dist from "./markup/views/dist.html?raw";
 import kes from "./markup/views/kes.html?raw";
 import muat from "./markup/views/muat.html?raw";
 import usr from "./markup/views/usr.html?raw";
@@ -31,7 +32,7 @@ import lgsetup from "./markup/dialogs/lgsetup.html?raw";
 import padSheet from "./markup/dialogs/padSheet.html?raw";
 
 // Urutan elemen = urutan di halaman asli (CSS bergantung padanya). Menu pertama (so) tampil, lainnya hidden.
-const LEGACY_VIEWS = [["so", so], ["dc", dc], ["check", check], ["adj", adj], ["task", task], ["kes", kes], ["muat", muat], ["usr", usr], ["clr", clr]];
+const LEGACY_VIEWS = [["so", so], ["dc", dc], ["check", check], ["adj", adj], ["task", task], ["dist", dist], ["kes", kes], ["muat", muat], ["usr", usr], ["clr", clr]];
 const LEGACY_VIEWS_AFTER_REACT = [["tg", tg], ["mon", mon], ["data", data]];
 
 export default function App() {

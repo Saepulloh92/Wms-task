@@ -249,7 +249,7 @@
         const v = curViewId;
         if (v === "dc") renderDc();
         else if (v === "check") renderCheck();
-        else if (v === "task") renderTask();
+        else if (v === "task" || v === "dist") renderTask();
         else if (v === "kpi" || v === "agi" || v === "rpt") WMS.emit(); // KpiView (React) menggambar ulang
         else if (v === "clr" && typeof renderClr === "function") renderClr();
         else if (v === "usr") renderUsr();

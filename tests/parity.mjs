@@ -5,7 +5,8 @@
 import { createRequire } from "node:module";
 import fs from "node:fs";
 const { chromium } = createRequire(import.meta.url)("playwright");
-const VIEWS = ["so", "dc", "check", "adj", "task", "kes", "muat", "usr", "clr", "kpi", "tg", "mon", "data"];
+// task dan dist sengaja berbeda dari aplikasi asli (menu dipisah), diuji lewat tests/tugas*.mjs dan task-menu.mjs
+const VIEWS = ["so", "dc", "check", "adj", "kes", "muat", "usr", "clr", "kpi", "tg", "mon", "data"];
 const SNAP = new URL("./snapshots/views.json", import.meta.url);
 const update = process.argv.includes("--update");
 const url = update ? "file://" + process.env.ORIGINAL : process.env.APP_URL || "http://localhost:4173/";

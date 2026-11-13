@@ -17,13 +17,13 @@
       let meId = "";
       try { meId = sessionStorage.getItem(K_ME) || ""; } catch (e) {}
       /* ---- v13: hak akses menu per user ---- */
-      const MENU_DEF = { so: "Periksa Bin", dc: "DC Harian", task: "Task", check: "Review Supervisor", kes: "Cek Kesesuaian", adj: "File Adjust", clr: "Clearing", mon: "Beranda", muat: "Laporan Muat", kpi: "KPI Area", agi: "Aging Stock", rpt: "Laporan", tg: "Telegram", data: "Data WMS" };
+      const MENU_DEF = { so: "Periksa Bin", dc: "DC Harian", task: "Task", dist: "Distribusi Tugas", check: "Review Supervisor", kes: "Cek Kesesuaian", adj: "File Adjust", clr: "Clearing", mon: "Beranda", muat: "Laporan Muat", kpi: "KPI Area", agi: "Aging Stock", rpt: "Laporan", tg: "Telegram", data: "Data WMS" };
       const ALL_VIEWS = [...Object.keys(MENU_DEF), "usr"];
       /* Peran: admin (semua menu), spv (review + laporan semua area), petugas dan penerimaan (menu standar, hanya area yang diberikan).
          staff = true berarti terikat area: muncul di daftar petugas, dapat tugas, dan hanya melihat area miliknya. */
       const ROLES = {
         admin: { label: "Admin", staff: false, menus: null },
-        spv: { label: "SPV", staff: false, menus: ["so", "dc", "task", "check", "kes", "adj", "clr", "mon", "muat", "kpi", "agi", "rpt"] },
+        spv: { label: "SPV", staff: false, menus: ["so", "dc", "task", "dist", "check", "kes", "adj", "clr", "mon", "muat", "kpi", "agi", "rpt"] },
         petugas: { label: "Petugas", staff: true, menus: ["mon", "so", "dc", "task"] },
         penerimaan: { label: "Penerimaan", staff: true, menus: ["mon", "so", "clr"] },
       };
@@ -41,7 +41,7 @@
       let uMenus = [...PRESETS.petugas];
       /* ---- v17: menu yang tampil di navigasi bawah (per perangkat) ---- */
       const K_NAV = "warehouse_so_nav_v1";
-      const NAV_ORDER = ["mon", "so", "dc", "check", "task", "kes", "adj", "clr", "muat", "kpi", "agi", "rpt", "usr", "tg", "data"];
+      const NAV_ORDER = ["mon", "so", "dc", "check", "task", "dist", "kes", "adj", "clr", "muat", "kpi", "agi", "rpt", "usr", "tg", "data"];
       const NAV_DEFAULT = ["mon", "so", "dc", "check", "adj"];
       const NAV_MAX = 5;
       const NAV_NAME = Object.assign({}, MENU_DEF, { usr: "User & Area" });
@@ -106,7 +106,7 @@
         });
         $("tMenu").classList.toggle("on", ![...document.querySelectorAll("#tabs [data-v]")].some((b) => !b.hidden && b.dataset.v === curViewId));
         // jika layar yang sedang terbuka tidak diizinkan, pindah ke menu pertama yang boleh
-        const curV = ["so", "dc", "check", "task", "kes", "adj", "clr", "muat", "usr", "kpi", "agi", "rpt", "tg", "mon", "data"].find((k) => $("v-" + k) && !$("v-" + k).hidden);
+        const curV = ["so", "dc", "check", "task", "dist", "kes", "adj", "clr", "muat", "usr", "kpi", "agi", "rpt", "tg", "mon", "data"].find((k) => $("v-" + k) && !$("v-" + k).hidden);
         if (curV && !allowedView(curV)) {
           const first = ["so", "dc", "task", "check", "kes", "adj", "mon", "muat", "kpi"].find(allowedView);
           if (first) go(first);

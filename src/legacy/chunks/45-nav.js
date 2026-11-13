@@ -2,7 +2,7 @@
    asal: index-fixd.html baris 3393-3569 */
       /* ---------- navigasi ---------- */
       function go(v) {
-        ["so", "dc", "check", "task", "kes", "adj", "clr", "muat", "usr", "kpi", "tg", "mon", "data", "agi", "rpt"].forEach((k) => ($("v-" + k).hidden = k !== v));
+        ["so", "dc", "check", "task", "dist", "kes", "adj", "clr", "muat", "usr", "kpi", "tg", "mon", "data", "agi", "rpt"].forEach((k) => ($("v-" + k).hidden = k !== v));
         document.querySelectorAll(".mi").forEach((b) => b.classList.toggle("on", b.dataset.v === v));
         document.querySelectorAll("#tabs [data-v]").forEach((b) => {
           b.classList.toggle("on", b.dataset.v === v);
@@ -41,6 +41,7 @@
           mon: "Beranda",
           data: "Data WMS",
           task: "Task",
+          dist: "Distribusi Tugas",
         }[v];
         const soView = v === "so" || v === "check";
         document.querySelector("header .prog").hidden = !soView;
@@ -60,6 +61,7 @@
             mon: "Posisi mobil per wilayah",
             data: "Impor data WMS",
             task: "Tugas dari admin",
+            dist: "Buat dan bagikan tugas ke petugas",
           }[v];
         if (v === "check") renderCheck();
         if (v === "kes") renderKes();
@@ -67,7 +69,7 @@
         if (v === "clr") { renderClr(); if (clr.url && (!clrCnt || Date.now() - clrCnt.at > 120000)) clrFetch(false); clrEnter(); }
         else clrLeave();
         if (v === "usr") { renderUsr(); cfgUi(); }
-        if (v === "task") renderTask();
+        if (v === "task" || v === "dist") renderTask();
         if (v === "tg") tgUi();
         if (v === "mon") monEnter();
         else monLeave();
