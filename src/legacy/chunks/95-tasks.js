@@ -38,7 +38,7 @@
         const me = curUser(),
           mine = tkMine(),
           pend = mine.filter(isTaskPend).length,
-          un = me ? [] : mine.filter((x) => !tkOwned(tasks[x.bin]));
+          un = me ? [] : Object.keys(tasks).filter((k) => !tkOwned(tasks[k]));
         $("tkStats").innerHTML = [
           ["Total tugas", mine.length, ""],
           ["Selesai", mine.length - pend, "var(--green)"],
@@ -182,14 +182,14 @@
         if (!(await leadAuth())) return;
         const rr = {};
         let n = 0;
-        DATA.forEach((x) => {
-          const t = tasks[x.bin];
-          if (t && !tkOwned(t)) {
-            const u = tkPick(x.area, rr);
-            if (u) {
-              t.u = u;
-              n++;
-            }
+        Object.keys(tasks).forEach((k) => {
+          const t = tasks[k];
+          if (!t || tkOwned(t)) return;
+          const id = k.replace(/^(AG|DC)\|/, ""), x = DATA.find((d) => (k.startsWith("DC|") ? d.item === id : d.bin === id));
+          const u = x ? tkPick(x.area, rr) : "";
+          if (u) {
+            t.u = u;
+            n++;
           }
         });
         sv(K_T, tasks);

@@ -66,7 +66,7 @@
         $("tskChips").innerHTML = all.length
           ? chipsHtml(tskF, [["todo", "Belum", pend.length], ["bin", "Bin", flt.bin.length], ["AG", "Aging", flt.AG.length], ["DC", "DC", flt.DC.length], ["done", "Selesai", flt.done.length], ["all", "Semua", all.length]])
           : "";
-        const list = flt[tskF] || pend, uname = (id) => (users.find((u) => u.id === id) || {}).name || "?";
+        const list = flt[tskF] || pend, uname = (id) => (users.find((u) => u.id === id) || {}).name || "Belum ada petugas";
         $("tskList").innerHTML = !all.length
           ? `<div class="empty">${admin ? "Belum ada tugas. Buat di bagian Kelola tugas di bawah." : "Belum ada tugas untuk Anda. Tugas dari admin akan muncul di sini."}</div>`
           : list.length

@@ -46,9 +46,9 @@
         $("dgInfo").innerHTML = g.kind === "DC" && !Object.keys(dcPick).length
           ? "Belum ada item DC terpilih. Pilih dulu lewat DC Harian, tombol Pilih item DC."
           : plan.length
-          ? `<b>${fmt(plan.length)}</b> tugas akan dibuat${no ? `, <b>${fmt(no)}</b> belum punya petugas (area belum ada pemiliknya)` : ""}.`
+          ? `<b>${fmt(plan.length)}</b> tugas akan dibuat${no ? `, <b>${fmt(no)}</b> belum punya petugas (nanti dibagikan sesuai area lewat tombol Bagikan)` : ""}.`
           : "Tidak ada yang perlu ditugaskan dengan pilihan ini.";
-        $("dgGo").disabled = !plan.length || no === plan.length;
+        $("dgGo").disabled = !plan.length;
       }
       function dgFill() {
         const ca = $("dgArea").value;
@@ -61,15 +61,15 @@
       ["dgKind", "dgArea", "dgSig", "dgUser", "dgScope", "dgShow"].forEach((i) => ($(i).onchange = renderDg));
       $("dgGo").onclick = async () => {
         if (!(await leadAuth())) return;
-        const plan = dgPlan().filter((p) => p.u);
+        const plan = dgPlan();
         if (!plan.length) return;
         const per = {};
-        plan.forEach((p) => { const u = users.find((z) => z.id === p.u); per[u ? u.name : "?"] = (per[u ? u.name : "?"] || 0) + 1; });
+        plan.forEach((p) => { const u = users.find((z) => z.id === p.u); const nm = u ? u.name : "(belum ada petugas)"; per[nm] = (per[nm] || 0) + 1; });
         const lbl = { bin: "tugas bin", AG: "tugas aging", DC: "tugas DC" }[$("dgKind").value];
         if (!(await ask("Buat " + plan.length + " " + lbl + "?", Object.entries(per).map(([n, c]) => n + ": " + c).join(", ") + ". Tugas yang sudah ada untuk item yang sama diperbarui.", "Buat tugas"))) return;
         const at = nowIso();
         plan.forEach((p) => {
-          const rec = { u: p.u, by: curName() || "Admin", at };
+          const rec = { u: p.u || "", by: curName() || "Admin", at };
           if (p.show !== undefined) rec.show = p.show;
           tasks[p.key] = rec;
         });
