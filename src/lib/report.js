@@ -107,13 +107,14 @@ function build(period, start, today, { events, muat, clr }) {
     bump(e.by, e.mod);
     inRange.push(e);
   }
+  const muatIn = [], clrIn = [];
   Object.assign(m.muat, { spm: 0, mobil: 0, cp: 0, days: 0 });
   for (const h of muat) {
     const i = idx.get(bucketOf(period, toKey(h.tgl)));
     if (i == null) continue;
     m.muat.perB[i]++; m.muat.n++; m.muat.days++;
     m.muat.spm += Number(h.dp) || 0; m.muat.mobil += Number(h.total) || 0; m.muat.cp += Number(h.cpS) || 0;
-    bump(h.by, "muat");
+    bump(h.by, "muat"); muatIn.push(h);
   }
   Object.assign(m.clr, { vouchers: 0, days: 0 });
   for (const h of clr) {
@@ -122,13 +123,13 @@ function build(period, start, today, { events, muat, clr }) {
     const n = Number(h.n) || 0;
     m.clr.perB[i] += n; m.clr.n++; m.clr.days++;
     m.clr.vouchers += n; m.clr.ok += Number(h.ok) || 0; m.clr.bad += Number(h.bad) || 0;
-    bump(h.by, "clr");
+    bump(h.by, "clr"); clrIn.push(h);
   }
   for (const k of ["bin", "dc", "aging"]) m[k].acc = accOf(m[k].ok, m[k].n);
   m.clr.acc = accOf(m.clr.ok, m.clr.vouchers);
   m.bin.accQty = accOf(m.bin.qtyOk, m.bin.n);
   m.bin.accItem = accOf(m.bin.itemOk, m.bin.n);
-  return { m, who, bk, inRange };
+  return { m, who, bk, inRange, muatIn, clrIn };
 }
 
 const lastDay = (period, start) => (period === "year" ? new Date(start.getFullYear(), 11, 31) : period === "month" ? new Date(start.getFullYear(), start.getMonth() + 1, 0) : addDays(start, 6));
@@ -179,6 +180,14 @@ export function buildReport({ period = "week", start, today = new Date(), events
   });
   const areas = Object.values(areaMap).filter((a) => !fArea || a.area === fArea).sort((a, b) => b.bad - a.bad || a.area.localeCompare(b.area));
   const bins = [...binEv].sort((a, b) => (b.at > a.at ? 1 : -1));
+  const recent = (a, b) => (b.at > a.at ? 1 : -1);
+  const badFirst = (a, b) => (a.ok === b.ok ? recent(a, b) : a.ok ? 1 : -1);
+  const byTgl = (a, b) => (String(b.tgl) > String(a.tgl) ? 1 : -1);
+  const lists = {
+    dc: cur.inRange.filter((e) => e.mod === "dc").sort(badFirst),
+    aging: cur.inRange.filter((e) => e.mod === "aging").sort(badFirst),
+    muat: [...cur.muatIn].sort(byTgl), clr: [...cur.clrIn].sort(byTgl),
+  };
   const agingBad = cur.inRange.filter((e) => e.mod === "aging" && !e.ok).sort((a, b) => Math.abs(Number(b.diff) || 0) - Math.abs(Number(a.diff) || 0) || (b.at > a.at ? 1 : -1)).slice(0, 8);
   const topBad = binEv.filter((e) => !e.ok).sort((a, b) => Math.abs(Number(b.diff) || 0) - Math.abs(Number(a.diff) || 0)).slice(0, 8);
 
@@ -216,7 +225,7 @@ export function buildReport({ period = "week", start, today = new Date(), events
     period, start, end, label: periodLabel(period, start), prevLabel: periodLabel(period, prevStart),
     buckets: cur.bk, elapsed, totalDays, elapsedDays,
     mods: M, mains, prevMains, delta: { ...Object.fromEntries(MODS.map((x) => [x.id, mains[x.id] - prevMains[x.id]])), kes: M.bin.itemBad - prev.m.bin.itemBad },
-    total, prevTotal, people, flags, areas, bins, topBad, agingBad, missing: missing.length,
+    total, prevTotal, people, flags, areas, bins, topBad, agingBad, lists, missing: missing.length,
     coverage: { muatSince, clrSince, muatCut: !!muatSince && muatSince > dayKey(start), clrCut: !!clrSince && clrSince > dayKey(start) },
   };
 }

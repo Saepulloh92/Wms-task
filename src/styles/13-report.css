@@ -111,3 +111,15 @@
 .rpt-dl.inv.dn { color: #15803d; }
 .rpt-pl { display: inline-flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
 .rpt-arh span { line-height: 1.15; }
+
+/* Baris ringkasan bisa diketuk -> rincian per catatan */
+.rpt-grp + .rpt-grp, .rpt-hd + .rpt-grp { border-top: 1px solid var(--line, #e2e8f0); }
+.rpt-grp > .rpt-row { border-top: 0; cursor: pointer; border-radius: 10px; position: relative; padding-right: 2px; }
+.rpt-grp > .rpt-row:hover { background: rgba(20, 86, 160, 0.05); }
+.rpt-grp > .rpt-row:focus-visible { outline: 3px solid #75b7ed; outline-offset: 0; }
+.rpt-grp.open > .rpt-row { background: rgba(20, 86, 160, 0.07); }
+.rpt-grp.open > .rpt-row .rpt-nm b::after { content: " ▴"; color: var(--mc); }
+.rpt-grp:not(.open) > .rpt-row .rpt-nm b::after { content: " ▾"; color: var(--muted, #6b7a89); }
+.rpt-dtl { margin: 2px 0 10px; padding: 2px 12px 10px; border-left: 4px solid var(--mc, #1456a0); background: #f7f9fb; border-radius: 0 10px 10px 0; }
+.rpt-dtl .btn { width: 100%; margin-top: 8px; }
+.rpt-dtl .hint { margin: 10px 0 0; }

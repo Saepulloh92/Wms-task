@@ -33,6 +33,8 @@ export default function ReportView() {
   const [by, setBy] = useState("");
   const [bf, setBf] = useState("bad"); // daftar bin: bad (selisih qty) | item (item beda) | ok | all
   const [lim, setLim] = useState(10);
+  const [open, setOpen] = useState(""); // modul yang rinciannya dibuka (ketuk barisnya)
+  const [dlim, setDlim] = useState(15);
   if (wms.view !== "rpt" || !wms.DATA) return <section id="v-rpt" hidden />;
 
   const { DATA, counts, stat, aging } = wms;
@@ -96,6 +98,21 @@ export default function ReportView() {
   const list = r.bins.filter((e) => bf === "all" || (bf === "bad" ? !stOf(e).qtyOk : bf === "item" ? !stOf(e).itemOk : e.ok));
   const cnt = { bad: r.bins.filter((e) => !stOf(e).qtyOk).length, item: r.bins.filter((e) => !stOf(e).itemOk).length, ok: r.bins.filter((e) => e.ok).length, all: r.bins.length };
 
+  const tgl = (k) => { const d = new Date(String(k).slice(0, 10) + "T00:00:00"); return isNaN(d) ? String(k || "") : d.getDate() + " " + BULAN[d.getMonth()] + " " + d.getFullYear(); };
+  /** Rincian satu modul: daftar catatan pada periode ini (ikut filter area/petugas). */
+  const detailOf = (id) => {
+    const bs = (e) => stOf(e);
+    const dq = (e) => ({ t: e.diff === 0 ? "Sesuai" : "Qty " + sgn(e.diff), c: e.diff === 0 ? "ok" : e.diff > 0 ? "pos" : "neg" });
+    if (id === "bin") return [...r.bins].sort((a, b) => (bs(a).qtyOk === bs(b).qtyOk ? 0 : bs(a).qtyOk ? 1 : -1)).map((e) => ({ k: e.key, b: bs(e).qtyOk ? "Qty sesuai" : "Qty " + sgn(e.diff), c: bs(e).qtyOk ? "ok" : e.diff > 0 ? "pos" : "neg", s: e.item + " · " + fmt(e.sys) + " → " + fmt(e.fis) + (e.by ? " · " + e.by : "") + " · " + when(e.at) }));
+    if (id === "kes") return r.bins.filter((e) => !bs(e).itemOk).map((e) => ({ k: e.key, b: "Item beda", c: "neg", s: e.item + (e.itemAct ? " → ditemukan: " + e.itemAct : "") + (e.by ? " · " + e.by : "") + " · " + when(e.at) }));
+    if (id === "dc") return r.lists.dc.map((e) => ({ k: e.key, ...(() => { const q = dq(e); return { b: q.t, c: q.c }; })(), s: "sistem " + fmt(e.sys) + " → fisik " + fmt(e.fis) + (e.by ? " · " + e.by : "") + " · " + when(e.at) }));
+    if (id === "aging") return r.lists.aging.map((e) => ({ k: e.key, b: e.ok ? "Sesuai" : e.why || "Selisih", c: e.ok ? "ok" : "neg", s: e.item + " · tumpak " + (e.tumpakSys || "–") + (e.tumpak && e.tumpak !== e.tumpakSys ? " → " + e.tumpak : "") + " · qty " + fmt(e.sys) + " → " + (e.fis == null ? "–" : fmt(e.fis)) + (e.by ? " · " + e.by : "") + " · " + when(e.at) }));
+    if (id === "muat") return r.lists.muat.map((h) => ({ k: tgl(h.tgl), b: fmt(h.dp || 0) + " SPM", c: "ok", s: fmt(h.total || 0) + " mobil" + (h.cpS ? " · SPM copy " + fmt(h.cpS) : "") + (h.by ? " · " + h.by : "") }));
+    if (id === "clr") return r.lists.clr.map((h) => ({ k: tgl(h.tgl), b: fmt(h.n || 0) + " voucher", c: Number(h.bad) ? "neg" : "ok", s: "sesuai " + fmt(h.ok || 0) + " · belum sesuai " + fmt(h.bad || 0) + (h.by ? " · " + h.by : "") }));
+    return [];
+  };
+  const toggle = (id) => { setOpen(open === id ? "" : id); setDlim(15); };
+
   const pick = (p) => { setPeriod(p); setOff(0); setLim(10); try { localStorage.setItem(K_P, p); } catch (e) {} };
   const copy = () => wms.outText(reportText(r, { area, by })).then(() => wms.toast("Tersalin. Tempel di WhatsApp."), () => wms.toast("Gagal menyalin. Izinkan akses clipboard di browser."));
   const csv = () => {
@@ -131,18 +148,33 @@ export default function ReportView() {
         </div>
         {rows.map((x) => {
           const m = x.name ? { name: x.name } : MODS.find((q) => q.id === x.id), dl = r.delta[x.id];
+          const isOpen = open === x.id, items = isOpen ? detailOf(x.id) : [];
           return (
-            <div className="rpt-row" role="row" key={x.id} style={{ "--mc": COLOR[x.id] }}>
-              <div className="rpt-nm" role="cell"><b>{m.name}</b><small>{x.sub}</small></div>
-              <div className="rpt-mid" role="cell"><span className="rpt-big">{x.main}</span><Spark vals={x.perB || M[x.id].perB} bk={r.buckets} color={COLOR[x.id]} /></div>
-              <div className="rpt-rt" role="cell">
-                <span className={"rpt-dl " + (x.inv ? "inv " : "") + (dl > 0 ? "up" : dl < 0 ? "dn" : "")} aria-label={dl > 0 ? "naik " + dl : dl < 0 ? "turun " + -dl : "sama"}>{dl > 0 ? "▲" + fmt(dl) : dl < 0 ? "▼" + fmt(-dl) : "＝"}</span>
-                <span className={"rpt-tag t-" + x.tn}>{x.tag}</span>
+            <div className={"rpt-grp" + (isOpen ? " open" : "")} key={x.id}>
+              <div className="rpt-row" role="row" style={{ "--mc": COLOR[x.id] }} tabIndex={0} aria-expanded={isOpen} aria-controls={"rptd-" + x.id}
+                onClick={() => toggle(x.id)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(x.id); } }}>
+                <div className="rpt-nm" role="cell"><b>{m.name}</b><small>{x.sub}</small></div>
+                <div className="rpt-mid" role="cell"><span className="rpt-big">{x.main}</span><Spark vals={x.perB || M[x.id].perB} bk={r.buckets} color={COLOR[x.id]} /></div>
+                <div className="rpt-rt" role="cell">
+                  <span className={"rpt-dl " + (x.inv ? "inv " : "") + (dl > 0 ? "up" : dl < 0 ? "dn" : "")} aria-label={dl > 0 ? "naik " + dl : dl < 0 ? "turun " + -dl : "sama"}>{dl > 0 ? "▲" + fmt(dl) : dl < 0 ? "▼" + fmt(-dl) : "＝"}</span>
+                  <span className={"rpt-tag t-" + x.tn}>{x.tag}</span>
+                </div>
               </div>
+              {isOpen && (
+                <div className="rpt-dtl" id={"rptd-" + x.id} style={{ "--mc": COLOR[x.id] }}>
+                  {items.length ? items.slice(0, dlim).map((e, i) => (
+                    <div className="rpt-b" key={e.k + i}>
+                      <div className="rpt-bt"><b>{e.k}</b><span className={"rpt-df " + e.c}>{e.b}</span></div>
+                      <small>{e.s}</small>
+                    </div>
+                  )) : <p className="hint">Belum ada catatan pada periode ini.</p>}
+                  {items.length > dlim && <button className="btn sm" onClick={() => setDlim(dlim + 20)}>Tampilkan lebih ({items.length - dlim} lagi)</button>}
+                </div>
+              )}
             </div>
           );
         })}
-        <p className="rpt-foot">{period === "week" ? "Batang = Sen–Min" : period === "month" ? "Batang = tiap tanggal" : "Batang = Jan–Des"}, garis = {period === "year" ? "bulan" : "hari"} ini. “vs lalu” dibanding {r.prevLabel}{isNow ? " pada titik waktu yang sama" : ""}. Label: hijau ≥95%, kuning ≥85%, merah di bawahnya.</p>
+        <p className="rpt-foot">Ketuk baris untuk melihat rincian. {period === "week" ? "Batang = Sen–Min" : period === "month" ? "Batang = tiap tanggal" : "Batang = Jan–Des"}, garis = {period === "year" ? "bulan" : "hari"} ini. “vs lalu” dibanding {r.prevLabel}{isNow ? " pada titik waktu yang sama" : ""}. Label: hijau ≥95%, kuning ≥85%, merah di bawahnya.</p>
       </div>
 
       <h3 className="rpt-h">Perlu perhatian</h3>
