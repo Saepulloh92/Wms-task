@@ -133,3 +133,22 @@
 .rpt-dt .card.rpt-dc.open { grid-column: 1 / -1; }
 .rpt-dc .rpt-dtl { margin: 8px 0 0; }
 @media print { .rpt-dc .rpt-dtl { display: none; } }
+
+/* Catatan/area/petugas bisa diketuk -> jendela detail */
+.rpt-b.click, .rpt-art.click, .rpt-p.click { cursor: pointer; }
+.rpt-b.click:hover, .rpt-art.click:hover, .rpt-p.click:hover { background: rgba(20, 86, 160, 0.05); }
+.rpt-b.click:focus-visible, .rpt-art.click:focus-visible, .rpt-p.click:focus-visible { outline: 3px solid #75b7ed; outline-offset: 0; }
+.rpt-ag.open > .rpt-art b::after, .rpt-pg.open > .rpt-p .rpt-pt b::after { content: " ▴"; }
+.rpt-ag:not(.open) > .rpt-art b::after, .rpt-pg:not(.open) > .rpt-p .rpt-pt b::after { content: " ▾"; color: var(--muted, #6b7a89); }
+.rpt-ag, .rpt-pg { border-top: 1px solid var(--line, #e2e8f0); }
+.rpt-ag:first-of-type, .rpt-arh + .rpt-ag { border-top: 0; }
+.rpt-ag > .rpt-art { border-top: 0; }
+.rpt-ov { position: fixed; inset: 0; z-index: 1000; background: rgba(15, 23, 42, .55); display: flex; align-items: flex-end; justify-content: center; padding: 12px; }
+.rpt-md { width: 100%; max-width: 480px; max-height: 85vh; overflow: auto; padding: 14px 16px; margin: 0; }
+.rpt-md dl { margin: 8px 0 12px; }
+.rpt-md dl > div { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line, #e2e8f0); font-size: 14px; }
+.rpt-md dt { color: var(--muted, #6b7a89); }
+.rpt-md dd { margin: 0; font-weight: 700; text-align: right; overflow-wrap: anywhere; }
+.rpt-md .btn { width: 100%; min-height: 48px; }
+@media (min-width: 700px) { .rpt-ov { align-items: center; } }
+@media print { .rpt-ov { display: none; } }

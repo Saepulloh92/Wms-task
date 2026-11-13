@@ -35,6 +35,9 @@ export default function ReportView() {
   const [lim, setLim] = useState(10);
   const [open, setOpen] = useState(""); // modul yang rinciannya dibuka (ketuk barisnya)
   const [dlim, setDlim] = useState(15);
+  const [sel, setSel] = useState(null); // catatan yang detailnya sedang dibuka (jendela)
+  const [openA, setOpenA] = useState(""); // area yang dibuka
+  const [openP, setOpenP] = useState(""); // petugas yang dibuka
   const [openR, setOpenR] = useState(""); // kartu "Rincian per modul" yang dibuka
   const [rlim, setRlim] = useState(15);
   if (wms.view !== "rpt" || !wms.DATA) return <section id="v-rpt" hidden />;
@@ -101,18 +104,43 @@ export default function ReportView() {
   const cnt = { bad: r.bins.filter((e) => !stOf(e).qtyOk).length, item: r.bins.filter((e) => !stOf(e).itemOk).length, ok: r.bins.filter((e) => e.ok).length, all: r.bins.length };
 
   const tgl = (k) => { const d = new Date(String(k).slice(0, 10) + "T00:00:00"); return isNaN(d) ? String(k || "") : d.getDate() + " " + BULAN[d.getMonth()] + " " + d.getFullYear(); };
+  const rowsOf = (kv) => kv.filter(([, v]) => v !== "" && v != null && v !== "–");
+  const dq = (e) => ({ t: e.diff === 0 ? "Sesuai" : "Qty " + sgn(e.diff), c: e.diff === 0 ? "ok" : e.diff > 0 ? "pos" : "neg" });
+  /** Satu catatan -> baris daftar (k judul, b label, c warna, s ringkas) + d rincian lengkap untuk jendela detail. */
+  const mkItem = (id, e) => {
+    if (id === "bin") { const q = stOf(e); return { k: e.key, b: q.qtyOk ? "Qty sesuai" : "Qty " + sgn(e.diff), c: q.qtyOk ? "ok" : e.diff > 0 ? "pos" : "neg", s: e.item + (e.itemAct ? " → ditemukan: " + e.itemAct : "") + " · " + fmt(e.sys) + " → " + fmt(e.fis) + (e.by ? " · " + e.by : "") + " · " + when(e.at), d: rowsOf([["Bin", e.key], ["Area", e.area], ["Item sistem", e.item], ["Stok sistem", fmt(e.sys)], ["Qty fisik", fmt(e.fis)], ["Selisih qty", e.diff === 0 ? "Sesuai" : sgn(e.diff)], ["Kesesuaian item", q.itemOk ? "Sama" : "Tidak sama"], ["Item ditemukan", e.itemAct], ["Petugas", e.by], ["Waktu", when(e.at)]]) }; }
+    if (id === "kes") return { k: e.key, b: "Item beda", c: "neg", s: e.item + (e.itemAct ? " → ditemukan: " + e.itemAct : "") + (e.by ? " · " + e.by : "") + " · " + when(e.at), d: mkItem("bin", e).d };
+    if (id === "dc") { const q = dq(e); return { k: e.key, b: q.t, c: q.c, s: "sistem " + fmt(e.sys) + " → fisik " + fmt(e.fis) + (e.by ? " · " + e.by : "") + " · " + when(e.at), d: rowsOf([["Item DC", e.key], ["Stok sistem", fmt(e.sys)], ["Qty fisik", fmt(e.fis)], ["Selisih", e.diff === 0 ? "Sesuai" : sgn(e.diff)], ["Petugas", e.by], ["Waktu", when(e.at)]]) }; }
+    if (id === "aging") return { k: e.key, b: e.ok ? "Sesuai" : e.why || "Selisih", c: e.ok ? "ok" : "neg", s: e.item + " · tumpak " + (e.tumpakSys || "–") + (e.tumpak && e.tumpak !== e.tumpakSys ? " → " + e.tumpak : "") + " · qty " + fmt(e.sys) + " → " + (e.fis == null ? "–" : fmt(e.fis)) + (e.by ? " · " + e.by : "") + " · " + when(e.at), d: rowsOf([["Rak", e.key], ["Area", e.area], ["Item", e.item], ["Tumpak sistem", e.tumpakSys], ["Tumpak fisik", e.tumpak], ["Qty sistem", fmt(e.sys)], ["Qty fisik", e.fis == null ? "" : fmt(e.fis)], ["Hasil", e.ok ? "Sesuai" : e.why || "Selisih"], ["Petugas", e.by], ["Waktu", when(e.at)]]) };
+    if (id === "muat") return { k: tgl(e.tgl), b: fmt(e.dp || 0) + " SPM", c: "ok", s: fmt(e.total || 0) + " mobil" + (e.cpS ? " · SPM copy " + fmt(e.cpS) : "") + (e.by ? " · " + e.by : ""), d: rowsOf([["Tanggal", tgl(e.tgl)], ["SPM", fmt(e.dp || 0)], ["Mobil", fmt(e.total || 0)], ["SPM copy rekomendasi", e.cpS ? fmt(e.cpS) : ""], ["Petugas", e.by]]) };
+    if (id === "clr") return { k: tgl(e.tgl), b: fmt(e.n || 0) + " voucher", c: Number(e.bad) ? "neg" : "ok", s: "sesuai " + fmt(e.ok || 0) + " · belum sesuai " + fmt(e.bad || 0) + (e.by ? " · " + e.by : ""), d: rowsOf([["Tanggal", tgl(e.tgl)], ["Voucher", fmt(e.n || 0)], ["Sesuai", fmt(e.ok || 0)], ["Belum sesuai", fmt(e.bad || 0)], ["Petugas", e.by]]) };
+    return null;
+  };
   /** Rincian satu modul: daftar catatan pada periode ini (ikut filter area/petugas). */
   const detailOf = (id) => {
-    const bs = (e) => stOf(e);
-    const dq = (e) => ({ t: e.diff === 0 ? "Sesuai" : "Qty " + sgn(e.diff), c: e.diff === 0 ? "ok" : e.diff > 0 ? "pos" : "neg" });
-    if (id === "bin") return [...r.bins].sort((a, b) => (bs(a).qtyOk === bs(b).qtyOk ? 0 : bs(a).qtyOk ? 1 : -1)).map((e) => ({ k: e.key, b: bs(e).qtyOk ? "Qty sesuai" : "Qty " + sgn(e.diff), c: bs(e).qtyOk ? "ok" : e.diff > 0 ? "pos" : "neg", s: e.item + " · " + fmt(e.sys) + " → " + fmt(e.fis) + (e.by ? " · " + e.by : "") + " · " + when(e.at) }));
-    if (id === "kes") return r.bins.filter((e) => !bs(e).itemOk).map((e) => ({ k: e.key, b: "Item beda", c: "neg", s: e.item + (e.itemAct ? " → ditemukan: " + e.itemAct : "") + (e.by ? " · " + e.by : "") + " · " + when(e.at) }));
-    if (id === "dc") return r.lists.dc.map((e) => ({ k: e.key, ...(() => { const q = dq(e); return { b: q.t, c: q.c }; })(), s: "sistem " + fmt(e.sys) + " → fisik " + fmt(e.fis) + (e.by ? " · " + e.by : "") + " · " + when(e.at) }));
-    if (id === "aging") return r.lists.aging.map((e) => ({ k: e.key, b: e.ok ? "Sesuai" : e.why || "Selisih", c: e.ok ? "ok" : "neg", s: e.item + " · tumpak " + (e.tumpakSys || "–") + (e.tumpak && e.tumpak !== e.tumpakSys ? " → " + e.tumpak : "") + " · qty " + fmt(e.sys) + " → " + (e.fis == null ? "–" : fmt(e.fis)) + (e.by ? " · " + e.by : "") + " · " + when(e.at) }));
-    if (id === "muat") return r.lists.muat.map((h) => ({ k: tgl(h.tgl), b: fmt(h.dp || 0) + " SPM", c: "ok", s: fmt(h.total || 0) + " mobil" + (h.cpS ? " · SPM copy " + fmt(h.cpS) : "") + (h.by ? " · " + h.by : "") }));
-    if (id === "clr") return r.lists.clr.map((h) => ({ k: tgl(h.tgl), b: fmt(h.n || 0) + " voucher", c: Number(h.bad) ? "neg" : "ok", s: "sesuai " + fmt(h.ok || 0) + " · belum sesuai " + fmt(h.bad || 0) + (h.by ? " · " + h.by : "") }));
+    if (id === "bin") return [...r.bins].sort((a, b) => (stOf(a).qtyOk === stOf(b).qtyOk ? 0 : stOf(a).qtyOk ? 1 : -1)).map((e) => mkItem("bin", e));
+    if (id === "kes") return r.bins.filter((e) => !stOf(e).itemOk).map((e) => mkItem("kes", e));
+    if (["dc", "aging", "muat", "clr"].includes(id)) return r.lists[id].map((e) => mkItem(id, e));
     return [];
   };
+  const byOf = (e) => e.by || "Tanpa petugas";
+  /** Semua catatan satu petugas pada periode ini (diberi nama modul di label). */
+  const personItems = (name) => [].concat(
+    r.bins.filter((e) => byOf(e) === name).map((e) => ({ ...mkItem("bin", e), m: "Bin" })),
+    r.lists.dc.filter((e) => byOf(e) === name).map((e) => ({ ...mkItem("dc", e), m: "DC" })),
+    r.lists.aging.filter((e) => byOf(e) === name).map((e) => ({ ...mkItem("aging", e), m: "Aging" })),
+    r.lists.muat.filter((h) => byOf(h) === name).map((h) => ({ ...mkItem("muat", h), m: "Muat" })),
+    r.lists.clr.filter((h) => byOf(h) === name).map((h) => ({ ...mkItem("clr", h), m: "Clearing" })),
+  );
+  /** Satu baris catatan yang bisa diketuk -> jendela detail. */
+  const rb = (e, i, pre) => (
+    <div className="rpt-b click" key={pre + e.k + i} role="button" tabIndex={0} onClick={() => setSel(e)}
+      onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); setSel(e); } }}>
+      <div className="rpt-bt"><b>{e.m ? e.m + " · " : ""}{e.k}</b><span className={"rpt-df " + e.c}>{e.b}</span></div>
+      <small>{e.s}</small>
+    </div>
+  );
+  const kbd = (fn) => (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); fn(); } };
   const toggle = (id) => { setOpen(open === id ? "" : id); setDlim(15); };
   const toggleR = (id) => { setOpenR(openR === id ? "" : id); setRlim(15); };
 
@@ -165,12 +193,7 @@ export default function ReportView() {
               </div>
               {isOpen && (
                 <div className="rpt-dtl" id={"rptd-" + x.id} style={{ "--mc": COLOR[x.id] }}>
-                  {items.length ? items.slice(0, dlim).map((e, i) => (
-                    <div className="rpt-b" key={e.k + i}>
-                      <div className="rpt-bt"><b>{e.k}</b><span className={"rpt-df " + e.c}>{e.b}</span></div>
-                      <small>{e.s}</small>
-                    </div>
-                  )) : <p className="hint">Belum ada catatan pada periode ini.</p>}
+                  {items.length ? items.slice(0, dlim).map((e, i) => rb(e, i, "s")) : <p className="hint">Belum ada catatan pada periode ini.</p>}
                   {items.length > dlim && <button className="btn sm" onClick={() => setDlim(dlim + 20)}>Tampilkan lebih ({items.length - dlim} lagi)</button>}
                 </div>
               )}
@@ -200,12 +223,7 @@ export default function ReportView() {
               </div>
               {isOpen && (
                 <div className="rpt-dtl" id={"rptr-" + id}>
-                  {items.length ? items.slice(0, rlim).map((e, i) => (
-                    <div className="rpt-b" key={e.k + i}>
-                      <div className="rpt-bt"><b>{e.k}</b><span className={"rpt-df " + e.c}>{e.b}</span></div>
-                      <small>{e.s}</small>
-                    </div>
-                  )) : <p className="hint">Belum ada catatan pada periode ini.</p>}
+                  {items.length ? items.slice(0, rlim).map((e, i) => rb(e, i, "r")) : <p className="hint">Belum ada catatan pada periode ini.</p>}
                   {items.length > rlim && <button className="btn sm" onClick={() => setRlim(rlim + 20)}>Tampilkan lebih ({items.length - rlim} lagi)</button>}
                 </div>
               )}
@@ -217,38 +235,34 @@ export default function ReportView() {
       <h3 className="rpt-h">Per Bin: stok &amp; kesesuaian rak <small>{fmt(M.bin.n)} diperiksa · qty {pct(M.bin.accQty)} · item {pct(M.bin.accItem)}</small></h3>
       <div className="card rpt-ar">
         <div className="rpt-art rpt-arh"><span>Area</span><span>Periksa</span><span>Selisih qty</span><span>Item beda</span><span>Qty OK</span></div>
-        {r.areas.length ? r.areas.map((a) => (
-          <div className="rpt-art" key={a.area}>
-            <b>{a.area}</b>
-            <span>{fmt(a.n)}<small> / {fmt(a.total)}</small></span>
-            <span className={a.qtyBad ? "bad" : ""}>{fmt(a.qtyBad || 0)}</span>
-            <span className={a.itemBad ? "bad" : ""}>{fmt(a.itemBad || 0)}</span>
-            <span className={"rpt-tag t-" + tone(a.n ? (a.n - (a.qtyBad || 0)) / a.n : null)}>{a.n ? pct((a.n - (a.qtyBad || 0)) / a.n) : "–"}</span>
-          </div>
-        )) : <p className="hint">Tidak ada data area.</p>}
+        {r.areas.length ? r.areas.map((a) => {
+          const isOpen = openA === a.area, its = isOpen ? r.bins.filter((e) => e.area === a.area).map((e) => mkItem("bin", e)) : [];
+          return (
+            <div className={"rpt-ag" + (isOpen ? " open" : "")} key={a.area}>
+              <div className="rpt-art click" role="button" tabIndex={0} aria-expanded={isOpen} onClick={() => setOpenA(isOpen ? "" : a.area)} onKeyDown={kbd(() => setOpenA(isOpen ? "" : a.area))}>
+                <b>{a.area}</b>
+                <span>{fmt(a.n)}<small> / {fmt(a.total)}</small></span>
+                <span className={a.qtyBad ? "bad" : ""}>{fmt(a.qtyBad || 0)}</span>
+                <span className={a.itemBad ? "bad" : ""}>{fmt(a.itemBad || 0)}</span>
+                <span className={"rpt-tag t-" + tone(a.n ? (a.n - (a.qtyBad || 0)) / a.n : null)}>{a.n ? pct((a.n - (a.qtyBad || 0)) / a.n) : "–"}</span>
+              </div>
+              {isOpen && <div className="rpt-dtl">{its.length ? its.slice(0, 30).map((e, i) => rb(e, i, "a")) : <p className="hint">Belum ada bin diperiksa di area ini.</p>}{its.length > 30 && <p className="hint">Menampilkan 30 dari {its.length}. Gunakan filter Area di atas untuk daftar lengkap.</p>}</div>}
+            </div>
+          );
+        }        ) : <p className="hint">Tidak ada data area.</p>}
       </div>
 
       {r.topBad.length > 0 && <>
         <h3 className="rpt-h">Selisih terbesar</h3>
         <div className="card rpt-tb">
-          {r.topBad.map((e, i) => (
-            <div className="rpt-b" key={e.key + i}>
-              <div className="rpt-bt"><b>{e.key}</b><span className={"rpt-df " + (e.diff > 0 ? "pos" : "neg")}>{sgn(e.diff)}</span></div>
-              <small>{e.item} · sistem {fmt(e.sys)} → fisik {fmt(e.fis)}{e.by ? " · " + e.by : ""} · {when(e.at)}</small>
-            </div>
-          ))}
+          {r.topBad.map((e, i) => { const it = mkItem("bin", e); return rb({ ...it, b: sgn(e.diff), c: e.diff > 0 ? "pos" : "neg" }, i, "t"); })}
         </div>
       </>}
 
       {r.agingBad.length > 0 && <>
         <h3 className="rpt-h">Rak Aging selisih <small>{r.mods.aging.bad} rak</small></h3>
         <div className="card rpt-tb">
-          {r.agingBad.map((e, i) => (
-            <div className="rpt-b" key={e.key + i}>
-              <div className="rpt-bt"><b>{e.key}</b><span className="rpt-df neg">{e.why || "Selisih"}</span></div>
-              <small>{e.item} · tumpak {e.tumpakSys || "–"}{e.tumpak && e.tumpak !== e.tumpakSys ? " → " + e.tumpak : ""} · qty {fmt(e.sys)} → {e.fis == null ? "–" : fmt(e.fis)}{e.by ? " · " + e.by : ""} · {when(e.at)}</small>
-            </div>
-          ))}
+          {r.agingBad.map((e, i) => rb(mkItem("aging", e), i, "g"))}
         </div>
       </>}
 
@@ -257,26 +271,27 @@ export default function ReportView() {
         {[["bad", "Selisih qty"], ["item", "Item beda"], ["ok", "Sesuai"], ["all", "Semua"]].map(([k, l]) => <button key={k} className={"chip" + (bf === k ? " on" : "")} aria-pressed={bf === k} onClick={() => { setBf(k); setLim(10); }}>{l} <b>{cnt[k]}</b></button>)}
       </div>
       <div className="card rpt-tb">
-        {list.length ? list.slice(0, lim).map((e, i) => (
-          <div className="rpt-b" key={e.key + i}>
-            <div className="rpt-bt"><b>{e.key}</b><span className="rpt-pl">{!stOf(e).itemOk && <span className="rpt-df neg">Item beda</span>}<span className={"rpt-df " + (stOf(e).qtyOk ? "ok" : e.diff > 0 ? "pos" : "neg")}>{stOf(e).qtyOk ? "Qty sesuai" : "Qty " + sgn(e.diff)}</span></span></div>
-            <small>{e.item}{e.itemAct ? " → ditemukan: " + e.itemAct : ""} · {fmt(e.sys)} → {fmt(e.fis)}{e.by ? " · " + e.by : ""} · {when(e.at)}</small>
-          </div>
-        )) : <p className="hint">Tidak ada bin pada filter ini.</p>}
+        {list.length ? list.slice(0, lim).map((e, i) => { const it = mkItem("bin", e); return rb({ ...it, b: it.b + (!stOf(e).itemOk ? " · Item beda" : "") }, i, "l"); }        ) : <p className="hint">Tidak ada bin pada filter ini.</p>}
         {list.length > lim && <button className="btn" onClick={() => setLim(lim + 20)}>Tampilkan lebih ({list.length - lim} lagi)</button>}
       </div>
 
       <h3 className="rpt-h">Aktivitas per petugas <small>{fmt(r.total)} aktivitas{r.prevTotal ? " (sebelumnya " + fmt(r.prevTotal) + ")" : ""}</small></h3>
       <div className="card rpt-pp">
-        {r.people.length ? r.people.slice(0, 10).map((p) => (
-          <div className="rpt-p" key={p.name}>
-            <div className="rpt-pt"><b>{p.name}</b><span>{p.total}</span></div>
-            <div className="rpt-pb" aria-hidden="true" style={{ width: Math.max(6, (p.total / maxP) * 100) + "%" }}>
-              {MODS.map((m) => p[m.id] ? <i key={m.id} style={{ flex: p[m.id], background: COLOR[m.id] }} /> : null)}
+        {r.people.length ? r.people.slice(0, 10).map((p) => {
+          const isOpen = openP === p.name, its = isOpen ? personItems(p.name) : [];
+          return (
+            <div className={"rpt-pg" + (isOpen ? " open" : "")} key={p.name}>
+              <div className="rpt-p click" role="button" tabIndex={0} aria-expanded={isOpen} onClick={() => setOpenP(isOpen ? "" : p.name)} onKeyDown={kbd(() => setOpenP(isOpen ? "" : p.name))}>
+                <div className="rpt-pt"><b>{p.name}</b><span>{p.total}</span></div>
+                <div className="rpt-pb" aria-hidden="true" style={{ width: Math.max(6, (p.total / maxP) * 100) + "%" }}>
+                  {MODS.map((m) => p[m.id] ? <i key={m.id} style={{ flex: p[m.id], background: COLOR[m.id] }} /> : null)}
+                </div>
+                <small>{MODS.filter((m) => p[m.id]).map((m) => m.name + " " + p[m.id]).join(" · ")}</small>
+              </div>
+              {isOpen && <div className="rpt-dtl">{its.length ? its.slice(0, 30).map((e, i) => rb(e, i, "p")) : <p className="hint">Tidak ada catatan.</p>}{its.length > 30 && <p className="hint">Menampilkan 30 dari {its.length}.</p>}</div>}
             </div>
-            <small>{MODS.filter((m) => p[m.id]).map((m) => m.name + " " + p[m.id]).join(" · ")}</small>
-          </div>
-        )) : <p className="hint">Belum ada aktivitas pada periode ini.</p>}
+          );
+        }        ) : <p className="hint">Belum ada aktivitas pada periode ini.</p>}
       </div>
 
       <div className="rpt-act">
@@ -290,6 +305,15 @@ export default function ReportView() {
         {r.coverage.clrCut && " Riwayat Clearing tersedia sejak " + r.coverage.clrSince + "."}
         {" "}Riwayat Muat dan Clearing hanya menyimpan 60 hari terakhir, jadi laporan tahunan untuk dua modul itu terbatas pada rentang tersebut.
       </p>
+      {sel && (
+        <div className="rpt-ov" onClick={() => setSel(null)} onKeyDown={(ev) => { if (ev.key === "Escape") setSel(null); }}>
+          <div className="rpt-md card" role="dialog" aria-modal="true" aria-label={"Detail " + sel.k} onClick={(ev) => ev.stopPropagation()}>
+            <div className="rpt-bt"><b>{sel.m ? sel.m + " · " : ""}{sel.k}</b><span className={"rpt-df " + sel.c}>{sel.b}</span></div>
+            <dl>{(sel.d || []).map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
+            <button className="btn pri" autoFocus onClick={() => setSel(null)}>Tutup</button>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

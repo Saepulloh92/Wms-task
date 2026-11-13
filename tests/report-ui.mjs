@@ -51,6 +51,22 @@ ok(fl.includes("3 bin selisih qty") && fl.includes("1 rak item tidak sama") && f
 ok(((await tc(".rpt-p"))[0] || "").startsWith("Sari"), "petugas teraktif = Sari");
 ok((await tc(".rpt-art b"))[0] === "B1", "tabel per area memuat B1");
 ok(((await tc(".rpt-b"))[0] || "").includes("B1-"), "selisih terbesar menampilkan bin");
+// --- Ketuk -> detail
+await p.locator(".rpt-tb .rpt-b.click").first().click(); await p.waitForTimeout(150);
+const md = ((await tc(".rpt-md"))[0]) || "";
+ok(md.includes("Stok sistem") && md.includes("Qty fisik") && md.includes("Petugas") && md.includes("Waktu"), "ketuk catatan selisih terbesar -> jendela detail lengkap");
+await p.locator(".rpt-md .btn").click(); await p.waitForTimeout(100);
+ok((await p.locator(".rpt-md").count()) === 0, "tombol Tutup menutup jendela detail");
+await p.locator(".rpt-art.click").first().click(); await p.waitForTimeout(150);
+ok((await p.locator(".rpt-ag.open .rpt-b").count()) > 0, "ketuk baris area -> daftar bin di area itu");
+await p.locator(".rpt-ag.open .rpt-art.click").first().click(); await p.waitForTimeout(100);
+await p.locator(".rpt-p.click").first().click(); await p.waitForTimeout(150);
+ok((await p.locator(".rpt-pg.open .rpt-b").count()) > 0, "ketuk petugas -> daftar aktivitasnya");
+await p.locator(".rpt-pg.open .rpt-b").first().click(); await p.waitForTimeout(100);
+ok((await p.locator(".rpt-md").count()) === 1, "ketuk aktivitas petugas -> jendela detail");
+await p.keyboard.press("Escape"); await p.locator(".rpt-md").waitFor({ state: "detached", timeout: 1500 }).catch(() => {});
+if (await p.locator(".rpt-md").count()) await p.locator(".rpt-md .btn").click();
+await p.locator(".rpt-p.click").first().click(); await p.waitForTimeout(100);
 const ag = (await tc(".rpt-tb")).join("\n");
 ok(ag.includes("tumpak beda") && ag.includes("qty -1") && ag.includes("AK999"), "daftar Rak Aging selisih: alasan 'tumpak beda' & 'qty -1', tumpak AK3→AK999 tampil");
 ok(!(await tc(".rpt-tb")).join("").includes(master[20].bin + "tumpak beda"), "rak 'Semua sama dengan sistem' tidak masuk daftar selisih");
