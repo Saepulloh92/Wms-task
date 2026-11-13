@@ -26,6 +26,10 @@
       const mb = (n) => (n / 1e6).toLocaleString("id-ID", { maximumFractionDigits: 1 });
       const dtF = (iso) => (iso ? new Date(iso).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "");
       let gdSnooze = 0;
+      // data sudah/akan otomatis masuk ke server (Google Sheets tersambung, sinkron otomatis, tanpa galat): peringatan cadangan tidak perlu
+      function bkOnServer() {
+        try { return !!(syReady() && SY.auto && !syErr && (bk.sy || SY.lastAt)); } catch (_) { return false; }
+      }
       function guardUi(force) {
         const s = stCheck(force),
           pct = Math.min(100, Math.round((s.used / ST_CAP) * 100)),
@@ -36,15 +40,15 @@
           h.push(`<div class="gd err" role="alert"><b>Perubahan belum tersimpan di perangkat</b>Penyimpanan penuh atau diblokir browser. Hasil terbaru hanya ada di layar dan akan hilang jika halaman ditutup.<div class="ga">${bkBtn}</div></div>`);
         else if (full)
           h.push(`<div class="gd warn"><b>Penyimpanan hampir penuh${s.ok ? " (" + pct + "%)" : ""}</b>Sisa ruang di perangkat ini tinggal sedikit. Unduh cadangan, lalu hapus hasil lama atau data yang tidak dipakai.<div class="ga">${bkBtn}</div></div>`);
-        else if (bk.n >= 20 && bk.n >= gdSnooze)
-          h.push(`<div class="gd info"><b>${bk.n} perubahan belum dicadangkan</b>${bk.at ? "Cadangan terakhir: " + dtF(bk.at) + "." : "Belum pernah dicadangkan."} Cadangan melindungi data jika browser dibersihkan atau HP bermasalah.<div class="ga">${bkBtn.replace("Unduh cadangan sekarang", "Cadangkan")}<button class="s" data-g="later">Nanti</button></div></div>`);
+        else if (bk.n >= 20 && bk.n >= gdSnooze && !bkOnServer())
+          h.push(`<div class="gd info"><b>${bk.n} perubahan belum dicadangkan</b>${bk.at ? "Cadangan terakhir: " + dtF(bk.at) + "." : bk.sy ? "Tersinkron ke server: " + dtF(bk.sy) + "." : "Belum pernah dicadangkan."} Cadangan melindungi data jika browser dibersihkan atau HP bermasalah.<div class="ga">${bkBtn.replace("Unduh cadangan sekarang", "Cadangkan")}<button class="s" data-g="later">Nanti</button></div></div>`);
         if (isDemoData())
           h.push(`<div class="gd warn"><b>Ini DATA CONTOH, bukan data gudang Anda</b>Hasil periksa, rekap, dan pesan Telegram dari data ini tidak berlaku. Impor data WMS asli dulu.<div class="ga"><button class="p" data-g="imp">Impor data WMS</button></div></div>`);
         if (corrupt.length)
           h.push(`<div class="gd warn"><b>Sebagian data tersimpan tidak terbaca</b>Dilewati: ${corrupt.map(esc).join(", ")}. Salinan mentahnya disimpan di perangkat dengan akhiran __rusak.</div>`);
         $("guard").innerHTML = h.join("");
         // panel di menu Data WMS
-        $("bkInfo").textContent = (bk.at ? "Cadangan terakhir: " + dtF(bk.at) + "." : "Belum pernah dicadangkan.") + (bk.n ? ` ${bk.n} perubahan sejak itu.` : "");
+        $("bkInfo").textContent = (bk.at ? "Cadangan terakhir: " + dtF(bk.at) + "." : bk.sy ? "Data tersinkron ke server: " + dtF(bk.sy) + "." : "Belum pernah dicadangkan.") + (bk.n ? ` ${bk.n} perubahan sejak itu.` : "");
         $("bkMeter").className = "meter" + (!s.ok || pct >= 95 ? " full" : pct >= 80 ? " hi" : "");
         $("bkMeter").firstElementChild.style.width = Math.max(2, pct) + "%";
         $("bkSt").textContent = `Penyimpanan terpakai ± ${mb(s.used)} MB dari ± ${mb(ST_CAP)} MB (perkiraan).` + (s.ok ? "" : " Ruang kosong hampir habis.");

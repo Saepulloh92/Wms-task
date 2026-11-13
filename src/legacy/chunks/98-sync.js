@@ -229,6 +229,10 @@
         SY.mrev = resp.mrev;
         SY.lastAt = new Date().toISOString();
         sySave();
+        // data sudah aman di server (tidak ada perubahan baru selama sinkron): peringatan "belum dicadangkan" dihapus
+        if (!SY.dirty && bk.n) { bk = { ...bk, n: 0, sy: SY.lastAt }; saveBk(); gdSnooze = 0; guardUi(); }
+        else if (!SY.dirty && !bk.sy) { bk = { ...bk, sy: SY.lastAt }; saveBk(); guardUi(); }
+        else guardUi();
         if (changed) syRefresh();
         if (typeof hlRun === "function") hlRun();
       }
