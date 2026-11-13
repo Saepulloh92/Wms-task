@@ -45,6 +45,9 @@
       function renderTsk() {
         if (!$("tskList")) return;
         const me = curUser(), admin = !me;
+        const host = admin ? $("dstMon") : $("tskHome");
+        if ($("tskBox").parentNode !== host) host.appendChild($("tskBox"));
+        $("tskAdminNote").hidden = !admin;
         $("tskWhoW").hidden = !admin;
         $("tskAdminH").hidden = !admin && !!me && false;
         if (admin) {
@@ -68,7 +71,7 @@
           : "";
         const list = flt[tskF] || pend, uname = (id) => (users.find((u) => u.id === id) || {}).name || "Belum ada petugas";
         $("tskList").innerHTML = !all.length
-          ? `<div class="empty">${admin ? "Belum ada tugas. Buat di bagian Kelola tugas di bawah." : "Belum ada tugas untuk Anda. Tugas dari admin akan muncul di sini."}</div>`
+          ? `<div class="empty">${admin ? "Belum ada tugas. Ketuk Buat tugas otomatis di atas." : "Belum ada tugas untuk Anda. Tugas dari admin akan muncul di sini."}</div>`
           : list.length
           ? list.map((x) => {
               const sg = x.kind === "AG" ? ((/merah/i.test(x.sub) && "merah") || (/kuning/i.test(x.sub) && "kuning") || "") : "";

@@ -1,4 +1,4 @@
-// Uji menu Task: daftar tugas dari admin, ganti petugas, hapus, dan tautan langsung ke bin / aging / DC; sisi petugas.
+// Uji pemantauan tugas admin di menu Distribusi (ganti petugas, hapus, tautan ke bin / aging / DC) dan sisi petugas di menu Task.
 import { createRequire } from "node:module"; import fs from "node:fs";
 const { chromium } = createRequire(import.meta.url)("playwright");
 const fx=n=>JSON.parse(fs.readFileSync(new URL("./fixtures/"+n, import.meta.url),"utf8"));
@@ -12,7 +12,7 @@ await p.addInitScript(f=>{ if(!localStorage.getItem("seeded")){localStorage.setI
 await p.goto("http://localhost:4173/"); await p.waitForFunction(()=>document.getElementById("pgT")?.textContent.trim());
 const L=(k,v)=>console.log(k.padEnd(28),v); const T=s=>p.evaluate(s=>document.querySelector(s)?.innerText.replace(/\s+/g," ").trim().slice(0,170),s);
 const view=()=>p.evaluate(()=>[...document.querySelectorAll("main > section")].filter(s=>!s.hidden).map(s=>s.id).join());
-await p.evaluate(()=>go("task")); await p.waitForTimeout(400);
+await p.evaluate(()=>go("dist")); await p.waitForTimeout(400);
 L("judul",await p.evaluate(()=>document.getElementById("pgT").textContent));
 L("ringkasan (admin)",await T("#tskSum"));
 L("chips",await T("#tskChips"));
@@ -29,17 +29,17 @@ L("filter Budi: kartu",await p.evaluate(()=>document.querySelectorAll("#tskList 
 await p.click('#tskList .card.tsk[data-key="B1-01-A"] .tk-title'); await p.waitForTimeout(500);
 L("kerjakan bin -> view",await view()+" | sheet terbuka:"+await p.evaluate(()=>{const e=document.getElementById("sheet");const r=e.getBoundingClientRect();return r.height>50&&r.top<innerHeight})+" | bin:"+await T("#shBin, #shT, #sheet b"));
 await p.reload(); await p.waitForFunction(()=>document.getElementById("pgT")?.textContent.trim());
-await p.evaluate(()=>go("task")); await p.waitForTimeout(300);
+await p.evaluate(()=>go("dist")); await p.waitForTimeout(300);
 // kerjakan aging
 await p.click('#tskList .card.tsk[data-key="AG|B1-02-A"] [data-tsk=go]'); await p.waitForTimeout(900);
 L("kerjakan aging -> view",await view()+" | kartu terbuka:"+await p.evaluate(()=>document.querySelector('[data-rak="B1-02-A"]')?.open));
 // kerjakan DC
-await p.evaluate(()=>go("task")); await p.waitForTimeout(300);
+await p.evaluate(()=>go("dist")); await p.waitForTimeout(300);
 await p.click('#tskList .card.tsk[data-key^="DC|"] [data-tsk=go]'); await p.waitForTimeout(600);
 L("kerjakan DC -> view",await view()+" | dialog DC terbuka:"+await p.evaluate(()=>{const e=document.getElementById("dcSheet");const r=e.getBoundingClientRect();return r.height>50&&r.top<innerHeight}));
 await p.keyboard.press("Escape"); await p.waitForTimeout(400);
 // hapus
-await p.evaluate(()=>go("task")); await p.waitForTimeout(300);
+await p.evaluate(()=>go("dist")); await p.waitForTimeout(300);
 await p.click('#tskList .card.tsk[data-key^="DC|"] .tk-more summary'); await p.click('#tskList .card.tsk[data-key^="DC|"] [data-tsk=del]'); await p.waitForTimeout(300); await (await p.$("#dOk"))?.click(); await p.waitForTimeout(400);
 L("setelah hapus DC: tersisa",await p.evaluate(()=>Object.keys(JSON.parse(localStorage.getItem("warehouse_so_tasks_v1"))).length)+" (harus 3)");
 
@@ -51,4 +51,5 @@ L("petugas: kartu",await p.evaluate(()=>document.querySelectorAll("#tskList .car
 L("petugas: tanpa aksi admin",await p.evaluate(()=>!document.querySelector("#tskList [data-tsk=del]")&&!document.querySelector("#tskList select")));
 L("petugas: pemilih petugas",await p.evaluate(()=>document.getElementById("tskWhoW").hidden)+" (harus true)");
 
+L("petugas: menu Task/Distribusi",await p.evaluate(()=>{const v=k=>{const b=document.querySelector('.mi[data-v="'+k+'"]');return !!b&&!b.hidden&&getComputedStyle(b).display!=="none"};return "task="+v("task")+" dist="+v("dist")+" (harus task=true dist=false)"}));
 L("ERRORS",errs.length?errs:"none"); await b.close(); process.exit(errs.length?1:0);

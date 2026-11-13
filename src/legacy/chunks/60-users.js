@@ -23,7 +23,7 @@
          staff = true berarti terikat area: muncul di daftar petugas, dapat tugas, dan hanya melihat area miliknya. */
       const ROLES = {
         admin: { label: "Admin", staff: false, menus: null },
-        spv: { label: "SPV", staff: false, menus: ["so", "dc", "task", "dist", "check", "kes", "adj", "clr", "mon", "muat", "kpi", "agi", "rpt"] },
+        spv: { label: "SPV", staff: false, menus: ["so", "dc", "dist", "check", "kes", "adj", "clr", "mon", "muat", "kpi", "agi", "rpt"] },
         petugas: { label: "Petugas", staff: true, menus: ["mon", "so", "dc", "task"] },
         penerimaan: { label: "Penerimaan", staff: true, menus: ["mon", "so", "clr"] },
       };
@@ -72,7 +72,9 @@
       const isAdmin = () => !authOn() || !!(meUser() && meUser().role === "admin");
       // admin dan SPV boleh melihat semua area dan semua petugas; petugas/penerimaan hanya area miliknya
       const isSup = () => isAdmin() || !!(meUser() && meUser().role === "spv");
-      const allowedView = (v) => !authOn() || isAdmin() || (!!meUser() && menusOf(meUser()).includes(v));
+      const allowedView0 = (v) => !authOn() || isAdmin() || (!!meUser() && menusOf(meUser()).includes(v));
+      /* menu tidak dicampur: Task = kerja petugas, Distribusi = admin/SPV (buat, bagi, pantau) */
+      const allowedView = (v) => (v === "task" ? !!curUser() : v === "dist" ? !curUser() : true) && allowedView0(v);
       const curUser = () => users.find((u) => u.id === curU && isStaff(u)) || null;
       const curName = () => (curUser() ? curUser().name : meUser() ? meUser().name : "");
       function applySession() {
