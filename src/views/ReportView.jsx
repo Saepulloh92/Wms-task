@@ -236,14 +236,14 @@ export default function ReportView() {
           const isOpen = openR === id, items = isOpen ? rowItems(id, rfl) : [];
           return (
             <div className={"card rpt-dc" + (isOpen ? " open" : "")} key={id} style={{ "--mc": COLOR[id] }}>
-              <div className="rpt-dh">
+              <div className="rpt-dh" onClick={() => toggleR(id)}>
                 <b role="button" tabIndex={0} aria-expanded={isOpen && !rfl} aria-controls={"rptr-" + id}
-                  onClick={() => toggleR(id)} onKeyDown={kbd(() => toggleR(id))}>{title || MODS.find((m) => m.id === id).name}</b>
+                  onKeyDown={kbd(() => toggleR(id))}>{title || MODS.find((m) => m.id === id).name}</b>
                 <dl>{kv.map(([k]) => {
                   const v = kv.find(([kk]) => kk === k)[1], tap = rowFilter(id, k) !== undefined, on = isOpen && rfl === k;
                   return tap
                     ? <div key={k} className={"rpt-kr click" + (on ? " on" : "")} role="button" tabIndex={0} aria-pressed={on} aria-controls={"rptr-" + id}
-                        onClick={() => pickR(id, k)} onKeyDown={kbd(() => pickR(id, k))}><dt>{k}</dt><dd>{v}</dd></div>
+                        onClick={(ev) => { ev.stopPropagation(); pickR(id, k); }} onKeyDown={kbd(() => pickR(id, k))}><dt>{k}</dt><dd>{v}</dd></div>
                     : <div key={k} className="rpt-kr"><dt>{k}</dt><dd>{v}</dd></div>;
                 })}</dl>
               </div>

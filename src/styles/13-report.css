@@ -170,3 +170,5 @@
 .rpt-md > .rpt-bt b { font-size: 20px; }
 .rpt-md dl > div { font-size: 15px; }
 @media print { .rpt-tip { display: none; } }
+
+.rpt-dc .rpt-dh { cursor: pointer; }
