@@ -35,6 +35,8 @@ export default function ReportView() {
   const [lim, setLim] = useState(10);
   const [open, setOpen] = useState(""); // modul yang rinciannya dibuka (ketuk barisnya)
   const [dlim, setDlim] = useState(15);
+  const [openR, setOpenR] = useState(""); // kartu "Rincian per modul" yang dibuka
+  const [rlim, setRlim] = useState(15);
   if (wms.view !== "rpt" || !wms.DATA) return <section id="v-rpt" hidden />;
 
   const { DATA, counts, stat, aging } = wms;
@@ -112,6 +114,7 @@ export default function ReportView() {
     return [];
   };
   const toggle = (id) => { setOpen(open === id ? "" : id); setDlim(15); };
+  const toggleR = (id) => { setOpenR(openR === id ? "" : id); setRlim(15); };
 
   const pick = (p) => { setPeriod(p); setOff(0); setLim(10); try { localStorage.setItem(K_P, p); } catch (e) {} };
   const copy = () => wms.outText(reportText(r, { area, by })).then(() => wms.toast("Tersalin. Tempel di WhatsApp."), () => wms.toast("Gagal menyalin. Izinkan akses clipboard di browser."));
@@ -186,12 +189,29 @@ export default function ReportView() {
 
       <h3 className="rpt-h">Rincian per modul</h3>
       <div className="rpt-dt">
-        {det.map(([id, kv, title]) => (
-          <div className="card" key={id} style={{ "--mc": COLOR[id] }}>
-            <b>{title || MODS.find((m) => m.id === id).name}</b>
-            <dl>{kv.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
-          </div>
-        ))}
+        {det.map(([id, kv, title]) => {
+          const isOpen = openR === id, items = isOpen ? detailOf(id) : [];
+          return (
+            <div className={"card rpt-dc" + (isOpen ? " open" : "")} key={id} style={{ "--mc": COLOR[id] }}>
+              <div className="rpt-dh" role="button" tabIndex={0} aria-expanded={isOpen} aria-controls={"rptr-" + id}
+                onClick={() => toggleR(id)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleR(id); } }}>
+                <b>{title || MODS.find((m) => m.id === id).name}</b>
+                <dl>{kv.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
+              </div>
+              {isOpen && (
+                <div className="rpt-dtl" id={"rptr-" + id}>
+                  {items.length ? items.slice(0, rlim).map((e, i) => (
+                    <div className="rpt-b" key={e.k + i}>
+                      <div className="rpt-bt"><b>{e.k}</b><span className={"rpt-df " + e.c}>{e.b}</span></div>
+                      <small>{e.s}</small>
+                    </div>
+                  )) : <p className="hint">Belum ada catatan pada periode ini.</p>}
+                  {items.length > rlim && <button className="btn sm" onClick={() => setRlim(rlim + 20)}>Tampilkan lebih ({items.length - rlim} lagi)</button>}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       <h3 className="rpt-h">Per Bin: stok &amp; kesesuaian rak <small>{fmt(M.bin.n)} diperiksa · qty {pct(M.bin.accQty)} · item {pct(M.bin.accItem)}</small></h3>

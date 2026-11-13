@@ -123,3 +123,13 @@
 .rpt-dtl { margin: 2px 0 10px; padding: 2px 12px 10px; border-left: 4px solid var(--mc, #1456a0); background: #f7f9fb; border-radius: 0 10px 10px 0; }
 .rpt-dtl .btn { width: 100%; margin-top: 8px; }
 .rpt-dtl .hint { margin: 10px 0 0; }
+
+/* Kartu "Rincian per modul" bisa diketuk -> daftar catatan */
+.rpt-dc .rpt-dh { cursor: pointer; border-radius: 8px; }
+.rpt-dc .rpt-dh:hover { background: rgba(20, 86, 160, 0.05); }
+.rpt-dc .rpt-dh:focus-visible { outline: 3px solid #75b7ed; outline-offset: 2px; }
+.rpt-dc .rpt-dh > b::after { content: " ▾"; color: var(--muted, #6b7a89); }
+.rpt-dc.open .rpt-dh > b::after { content: " ▴"; color: var(--mc); }
+.rpt-dt .card.rpt-dc.open { grid-column: 1 / -1; }
+.rpt-dc .rpt-dtl { margin: 8px 0 0; }
+@media print { .rpt-dc .rpt-dtl { display: none; } }
