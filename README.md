@@ -19,6 +19,11 @@ Lalu jalankan `setup()` sekali (token dibuat otomatis, lihat Execution log / Scr
 `Deploy → New deployment → Web app (Execute as: Me, Access: Anyone)`, salin URL `/exec`,
 dan isi URL + token di aplikasi (menu Data → Sinkron) atau di `.env.local`.
 
+### Pengingat Telegram (opsional, jalan walau aplikasi ditutup)
+Di editor Apps Script jalankan sekali: `setTelegram('TOKEN_BOT', 'CHAT_ID')` (disimpan di Script Properties, tidak di kode),
+lalu `setupReminder(15)` (tiap hari jam 15:00, Senin–Sabtu; zona waktu `Asia/Jakarta`). Uji dengan `remindUnchecked()`; matikan dengan `stopReminder()`.
+Pertama kali dijalankan Google meminta izin akses eksternal (kirim ke Telegram).
+
 ## Deploy ke GitHub Pages
 Repo → Settings → Pages → Source: **GitHub Actions**. Opsional: Settings → Secrets → Actions untuk `VITE_SYNC_URL`, `VITE_SYNC_TOKEN`
 (ingat: nilai ini terbaca di bundel publik; untuk repo/hosting publik lebih baik dikosongkan dan diisi dari aplikasi).
