@@ -1,0 +1,13 @@
+/* Sentuhan HP: area ketuk minimal 44px, input tidak memicu zoom iOS, aman dari notch/bilah bawah */
+button, [role="button"], select, summary, label { touch-action: manipulation; }
+#hlB.netb { min-height: 44px; min-width: 44px; }
+.rpt-dc .rpt-dh > b { min-height: 44px; display: flex; align-items: center; }
+label:has(> input[type="checkbox"]), label:has(> input[type="radio"]) { min-height: 44px; display: flex; align-items: center; gap: 10px; }
+input[type="checkbox"], input[type="radio"] { min-width: 28px; min-height: 28px; }
+input, select, textarea { font-size: max(16px, 1em); }
+input[type="file"] { font-size: 16px; }
+@media (max-width: 480px) {
+  body { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+  .toast, #toast { bottom: calc(16px + env(safe-area-inset-bottom)); }
+  .tabs { padding-bottom: env(safe-area-inset-bottom); }
+}
