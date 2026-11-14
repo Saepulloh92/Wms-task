@@ -63,13 +63,16 @@
         const hdr = rows[hi].map((h) => String(h ?? "").trim().toLowerCase());
         const f = (n) => hdr.indexOf(n);
         const iv = f("no voucher"), iq = f("qty"), ik = f("kode item"), inm = f("nama item"), ir = f("rak");
-        const fx = (re) => hdr.findIndex((h) => re.test(h)), il = fx(/lori|nopol|no\.? ?kendaraan|plat/), ish = fx(/shift/), itm = fx(/jam|waktu|tgl|tanggal|time/), ip = fx(/pic|timbang/), ig = fx(/^group|^grup/);
+        const fx = (re) => hdr.findIndex((h) => re.test(h)), il = fx(/lori|nopol|no\.? ?kendaraan|plat/), ish = fx(/shift/), itm = fx(/jam|waktu|tgl|tanggal|time/), ip = fx(/pic|timbang/), ig = fx(/^group|^grup/),
+          imc = fx(/mesin|machine|^mc$|^line$/), inw = fx(/berat ?bersih|netto?\b|net ?w|^nw$/), igw = fx(/berat ?kotor|brutto?|bruto|gross|^gw$/), ijn = fx(/jenis|tipe|type|kategori|afkir|grade/);
         if (iq < 0) throw new Error("Kolom \"Qty\" tidak ditemukan di laporan.");
         const out = [];
         rows.slice(hi + 1).forEach((r) => {
           const v = String(r[iv] ?? "").trim();
           if (!v) return;
-          out.push({ v, q: monNum(String(r[iq] ?? "")), k: ik >= 0 ? String(r[ik] ?? "").trim() : "", n: inm >= 0 ? String(r[inm] ?? "").trim() : "", r: ir >= 0 ? String(r[ir] ?? "").trim() : "", lr: il >= 0 ? String(r[il] ?? "").trim() : "", pic: ip >= 0 ? String(r[ip] ?? "").trim() : "", grp: ig >= 0 ? String(r[ig] ?? "").trim() : "", sh: ish >= 0 ? clrShiftNorm(r[ish]) : itm >= 0 ? clrShiftOf(r[itm]) : "" });
+          out.push({ v, q: monNum(String(r[iq] ?? "")), k: ik >= 0 ? String(r[ik] ?? "").trim() : "", n: inm >= 0 ? String(r[inm] ?? "").trim() : "", r: ir >= 0 ? String(r[ir] ?? "").trim() : "", lr: il >= 0 ? String(r[il] ?? "").trim() : "", pic: ip >= 0 ? String(r[ip] ?? "").trim() : "", grp: ig >= 0 ? String(r[ig] ?? "").trim() : "", sh: ish >= 0 ? clrShiftNorm(r[ish]) : itm >= 0 ? clrShiftOf(r[itm]) : "",
+            mc: imc >= 0 ? String(r[imc] ?? "").trim() : "", nw: inw >= 0 ? monNum(String(r[inw] ?? "")) : null, gw: igw >= 0 ? monNum(String(r[igw] ?? "")) : null,
+            afk: /afkir|reject/i.test((ijn >= 0 ? String(r[ijn] ?? "") : "") + " " + (inm >= 0 ? String(r[inm] ?? "") : "")) });
         });
         return out;
       }
@@ -284,6 +287,7 @@
         const all = clrBuild(), n = (s) => all.filter((x) => x.st === s).length;
         const nTot = all.length, nOk = n("ok"), nBad = n("qty") + n("dup"), nBel = n("belum") + n("nq");
         clrDiag(all);
+        if (typeof clrAnomRender === "function") clrAnomRender();
         { // pertama kali data termuat: langsung tampilkan yang perlu dicek (bila ada); pilihan manual setelahnya tidak ditimpa
           if (!all.length) clrAutoF = false;
           else if (!clrAutoF) { clrAutoF = true; if (all.some((x) => x.st !== "ok" && !clrIsDone(x))) clrF = "bad"; }

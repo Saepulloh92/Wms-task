@@ -20,7 +20,8 @@
     "test:tugas-otomatis": "node tests/tugas-otomatis.mjs",
     "test:clr-voucher": "node tests/clearing-voucher.mjs",
     "test:scan": "node tests/scan.mjs",
-    "test:remind": "node tests/remind.mjs"
+    "test:remind": "node tests/remind.mjs",
+    "test:clr-anomali": "node tests/clearing-anomali.mjs"
   },
   "dependencies": {
     "react": "18.3.1",

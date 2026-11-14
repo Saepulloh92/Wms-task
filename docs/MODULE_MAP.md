@@ -20,6 +20,7 @@ Cari fitur di sini, buka **hanya satu file**. Semua chunk `NN-*.js` dijalankan b
 | `75-nav-dialog.js` | 48 | Dialog atur navigasi bawah | navRender, navOpen | – |
 | `80-clearing.js` | 488 | Clearing (Voucher vs counting) | clrAct, clrIdx, clrShiftOf, clrParseRep, clrParseCnt, clrBuild, renderClr, clrFetch, clrReadFile, clrRekap … | warehouse_so_clr_cnt_v1<br>warehouse_so_clr_done_v1<br>warehouse_so_clr_hist_v1<br>warehouse_so_clr_rep_v1<br>warehouse_so_clr_v1 |
 | `85-a11y-bin-nav.js` | 174 | Aksesibilitas + navigasi bin + input | navTo, holdStep | – |
+| `81-clearing-anomali.js` | 150 | Peringatan dini voucher di Clearing: mesin berganti item (selang-seling), berat bersih/kotor per Qty menyimpang dari median mesin+item (hanya dari Laporan Voucher; indikasi statistik) | clrAnomaly, clrAnomRender | warehouse_so_clr_anom_v1 |
 | `88-backup.js` | 175 | Cadangan & peringatan penyimpanan | stCheck, guardUi, doBackup, bkCheck, applyRestore | warehouse_so_dest_v1 |
 | `90-telegram.js` | 252 | Telegram | outText, tgRun, tgChunks, tgSend, tgApi, tgPost, tgNote, tgFlush, tgBin, tgArea … | warehouse_so_tg_v1<br>warehouse_so_tgq_v1 |
 | `92-monitoring.js` | 584 | Monitoring Kiriman / Beranda (dashboard KPI, tren, status, daftar wilayah) | monCSV, monBuild, monSumOf, monSnap, monDash, monTrendSvg, monDetail, monRender, monLoad … | warehouse_so_mon_v1<br>warehouse_so_monc_v1<br>warehouse_so_mong_v1<br>warehouse_so_monh_v1 |
