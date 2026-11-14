@@ -192,8 +192,8 @@ export default function ReportView() {
       </div>
       {area && <p className="rpt-fn">Filter area berlaku untuk Per Bin dan Aging. DC, Muat, dan Clearing tidak dibagi per area.</p>}
 
-      <div className="card rpt-sum" role="table" aria-label="Ringkasan aktivitas">
-        <div className="rpt-hd" role="row">
+      <div className="card rpt-sum" role="group" aria-label="Ringkasan aktivitas">
+        <div className="rpt-hd" aria-hidden="true">
           <span>Aktivitas</span>
           <span><span className={"rpt-days" + (r.buckets.length > 7 ? " dense" : "")} style={{ gridTemplateColumns: "repeat(" + r.buckets.length + ",1fr)" }} aria-hidden="true">{r.buckets.map((b, i) => <i key={b.key} className={b.isToday ? "now" : ""}>{hdr(b, i)}</i>)}</span></span>
           <span>vs lalu</span>
@@ -203,11 +203,11 @@ export default function ReportView() {
           const isOpen = open === x.id, items = isOpen ? detailOf(x.id) : [];
           return (
             <div className={"rpt-grp" + (isOpen ? " open" : "")} key={x.id}>
-              <div className="rpt-row" role="row" style={{ "--mc": COLOR[x.id] }} tabIndex={0} aria-expanded={isOpen} aria-controls={"rptd-" + x.id}
+              <div className="rpt-row" role="button" style={{ "--mc": COLOR[x.id] }} tabIndex={0} aria-expanded={isOpen} aria-controls={isOpen ? "rptd-" + x.id : undefined}
                 onClick={() => toggle(x.id)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(x.id); } }}>
-                <div className="rpt-nm" role="cell"><b>{m.name}</b><small>{x.sub}</small></div>
-                <div className="rpt-mid" role="cell"><span className="rpt-big">{x.main}</span><Spark vals={x.perB || M[x.id].perB} bk={r.buckets} color={COLOR[x.id]} /></div>
-                <div className="rpt-rt" role="cell">
+                <div className="rpt-nm"><b>{m.name}</b><small>{x.sub}</small></div>
+                <div className="rpt-mid"><span className="rpt-big">{x.main}</span><Spark vals={x.perB || M[x.id].perB} bk={r.buckets} color={COLOR[x.id]} /></div>
+                <div className="rpt-rt">
                   <span className={"rpt-dl " + (x.inv ? "inv " : "") + (dl > 0 ? "up" : dl < 0 ? "dn" : "")} aria-label={dl > 0 ? "naik " + dl : dl < 0 ? "turun " + -dl : "sama"}>{dl > 0 ? "▲" + fmt(dl) : dl < 0 ? "▼" + fmt(-dl) : "＝"}</span>
                   <span className={"rpt-tag t-" + x.tn}>{x.tag}</span>
                 </div>
@@ -224,29 +224,29 @@ export default function ReportView() {
         <p className="rpt-foot">Ketuk baris untuk melihat rincian. {period === "week" ? "Batang = Sen–Min" : period === "month" ? "Batang = tiap tanggal" : "Batang = Jan–Des"}, garis = {period === "year" ? "bulan" : "hari"} ini. “vs lalu” dibanding {r.prevLabel}{isNow ? " pada titik waktu yang sama" : ""}. Label: hijau ≥95%, kuning ≥85%, merah di bawahnya.</p>
       </div>
 
-      <h3 className="rpt-h">Perlu perhatian</h3>
+      <h2 className="rpt-h">Perlu perhatian</h2>
       <div className="card rpt-fl">
         {r.flags.length ? r.flags.map((f, i) => (
           <div key={i} className={"rpt-f f-" + f.lvl}><i aria-hidden="true">{f.lvl === "r" ? "!" : f.lvl === "a" ? "•" : "i"}</i><span>{f.t}</span></div>
         )) : <div className="rpt-f f-g"><i aria-hidden="true">✓</i><span>Tidak ada yang perlu ditindaklanjuti.</span></div>}
       </div>
 
-      <h3 className="rpt-h">Rincian per modul</h3>
+      <h2 className="rpt-h">Rincian per modul</h2>
       <div className="rpt-dt">
         {det.map(([id, kv, title]) => {
           const isOpen = openR === id, items = isOpen ? rowItems(id, rfl) : [];
           return (
             <div className={"card rpt-dc" + (isOpen ? " open" : "")} key={id} style={{ "--mc": COLOR[id] }}>
               <div className="rpt-dh" onClick={() => toggleR(id)}>
-                <b role="button" tabIndex={0} aria-expanded={isOpen && !rfl} aria-controls={"rptr-" + id}
+                <b role="button" tabIndex={0} aria-expanded={isOpen && !rfl} aria-controls={isOpen ? "rptr-" + id : undefined}
                   onKeyDown={kbd(() => toggleR(id))}>{title || MODS.find((m) => m.id === id).name}</b>
-                <dl>{kv.map(([k]) => {
+                <div className="rpt-kl" role="group" aria-label={"Rincian " + (title || MODS.find((m) => m.id === id).name)}>{kv.map(([k]) => {
                   const v = kv.find(([kk]) => kk === k)[1], tap = rowFilter(id, k) !== undefined, on = isOpen && rfl === k;
                   return tap
-                    ? <div key={k} className={"rpt-kr click" + (on ? " on" : "")} role="button" tabIndex={0} aria-pressed={on} aria-controls={"rptr-" + id}
-                        onClick={(ev) => { ev.stopPropagation(); pickR(id, k); }} onKeyDown={kbd(() => pickR(id, k))}><dt>{k}</dt><dd>{v}</dd></div>
-                    : <div key={k} className="rpt-kr"><dt>{k}</dt><dd>{v}</dd></div>;
-                })}</dl>
+                    ? <button type="button" key={k} className={"rpt-kr click" + (on ? " on" : "")} aria-pressed={on} aria-controls={isOpen ? "rptr-" + id : undefined}
+                        onClick={(ev) => { ev.stopPropagation(); pickR(id, k); }}><span className="rpt-k">{k}</span><span className="rpt-v">{v}</span></button>
+                    : <div key={k} className="rpt-kr"><span className="rpt-k">{k}</span><span className="rpt-v">{v}</span></div>;
+                })}</div>
               </div>
               {isOpen && (
                 <div className="rpt-dtl" id={"rptr-" + id}>
@@ -259,7 +259,7 @@ export default function ReportView() {
         })}
       </div>
 
-      <h3 className="rpt-h">Per Bin: stok &amp; kesesuaian rak <small>{fmt(M.bin.n)} diperiksa · qty {pct(M.bin.accQty)} · item {pct(M.bin.accItem)}</small></h3>
+      <h2 className="rpt-h">Per Bin: stok &amp; kesesuaian rak <small>{fmt(M.bin.n)} diperiksa · qty {pct(M.bin.accQty)} · item {pct(M.bin.accItem)}</small></h2>
       <div className="card rpt-ar">
         <div className="rpt-art rpt-arh"><span>Area</span><span>Periksa</span><span>Selisih qty</span><span>Item beda</span><span>Qty OK</span></div>
         {r.areas.length ? r.areas.map((a) => {
@@ -280,20 +280,20 @@ export default function ReportView() {
       </div>
 
       {r.topBad.length > 0 && <>
-        <h3 className="rpt-h">Selisih terbesar</h3>
+        <h2 className="rpt-h">Selisih terbesar</h2>
         <div className="card rpt-tb">
           {r.topBad.map((e, i) => { const it = mkItem("bin", e); return rb({ ...it, b: sgn(e.diff), c: e.diff > 0 ? "pos" : "neg" }, i, "t"); })}
         </div>
       </>}
 
       {r.agingBad.length > 0 && <>
-        <h3 className="rpt-h">Rak Aging selisih <small>{r.mods.aging.bad} rak</small></h3>
+        <h2 className="rpt-h">Rak Aging selisih <small>{r.mods.aging.bad} rak</small></h2>
         <div className="card rpt-tb">
           {r.agingBad.map((e, i) => rb(mkItem("aging", e), i, "g"))}
         </div>
       </>}
 
-      <h3 className="rpt-h">Daftar bin diperiksa</h3>
+      <h2 className="rpt-h">Daftar bin diperiksa</h2>
       <div className="chips rpt-bf" role="group" aria-label="Filter daftar bin">
         {[["bad", "Selisih qty"], ["item", "Item beda"], ["ok", "Sesuai"], ["all", "Semua"]].map(([k, l]) => <button key={k} className={"chip" + (bf === k ? " on" : "")} aria-pressed={bf === k} onClick={() => { setBf(k); setLim(10); }}>{l} <b>{cnt[k]}</b></button>)}
       </div>
@@ -302,7 +302,7 @@ export default function ReportView() {
         {list.length > lim && <button className="btn" onClick={() => setLim(lim + 20)}>Tampilkan lebih ({list.length - lim} lagi)</button>}
       </div>
 
-      <h3 className="rpt-h">Aktivitas per petugas <small>{fmt(r.total)} aktivitas{r.prevTotal ? " (sebelumnya " + fmt(r.prevTotal) + ")" : ""}</small></h3>
+      <h2 className="rpt-h">Aktivitas per petugas <small>{fmt(r.total)} aktivitas{r.prevTotal ? " (sebelumnya " + fmt(r.prevTotal) + ")" : ""}</small></h2>
       <div className="card rpt-pp">
         {r.people.length ? r.people.slice(0, 10).map((p) => {
           const isOpen = openP === p.name, its = isOpen ? personItems(p.name) : [];

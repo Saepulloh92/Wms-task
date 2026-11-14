@@ -181,3 +181,14 @@
 .rpt-big { font-size: 22px; min-width: 30px; }
 .rpt-grp > .rpt-row { min-height: 56px; }
 @media (max-width: 359px) { .rpt-hd, .rpt-row { grid-template-columns: minmax(0, 1fr) 100px 50px; } .rpt-spark, .rpt-days { width: 58px; } }
+
+/* A11y: baris rincian jadi tombol sungguhan (bukan dl/role=button campur) */
+.rpt-kl { margin: 0; }
+.rpt-kl > .rpt-kr { display: flex; justify-content: space-between; align-items: center; gap: 6px; width: 100%; margin: 0; padding: 4px 0; border: 0; border-top: 1px solid var(--line, #e2e8f0); background: transparent; color: inherit; font: inherit; font-size: 13px; line-height: 1.25; text-align: left; }
+.rpt-kr .rpt-k { color: var(--muted, #6b7a89); min-width: 0; }
+.rpt-kr .rpt-v { font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; flex: none; }
+.rpt-kl > button.rpt-kr.click { min-height: 44px; padding: 6px 8px; border-radius: 8px; }
+.rpt-kl > .rpt-kr.click::after { float: none; margin-left: 4px; flex: none; }
+.rpt-dc .rpt-dh > b { display: flex; align-items: center; min-height: 44px; }
+.rpt-hd { font-size: 12px; }
+.rpt-days:not(.dense) i { font-size: 12px; }

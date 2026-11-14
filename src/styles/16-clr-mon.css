@@ -1,7 +1,7 @@
 /* Kartu Clearing di menu Monitoring */
 .cm { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-bottom: 12px; }
 .cm-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-.cm-h h3 { margin: 0; font-size: 17px; }
+.cm-h h3, .cm-h h2 { margin: 0; font-size: 17px; }
 .cm-sub { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
 .cm-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 12px 0 10px; }
 @media (min-width: 640px) { .cm-grid { grid-template-columns: repeat(4, 1fr); } }

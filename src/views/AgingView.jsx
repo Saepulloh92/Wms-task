@@ -226,7 +226,7 @@ function RakCard({ x, a, pools, kelas, onClass, onSave, onClear, tugas, blind })
   return (
     <details data-rak={x.bin} className={"card agi-rak" + (a ? " done" : "") + (sig === "Merah" ? " red" : "")}>
       <summary>
-        <span className="agi-sg" style={{ background: SIGNAL_COLOR[sig] || "#ccc", color: sig === "Kuning 3" || sig === "Hijau 2" || sig === "Merah" ? "#fff" : "#222" }}>{sig || "?"}</span>
+        <span className="agi-sg" style={{ background: SIGNAL_COLOR[sig] || "#ccc", color: sig === "Kuning 3" || sig === "Merah" ? "#fff" : "#222" }}>{sig || "?"}</span>
         <span className="agi-bn"><b>{x.bin}<i className={lvl(kelas)}>{kelas || "?"}</i></b><span className="agi-it">{x.item}</span><small>{tugas ? "TUGAS · " : ""}Tumpak <strong>{x.tumpak || "–"}</strong> · {x.aging} hari{blind ? "" : " · stok " + fmt(x.onhand)}{a ? " · cek " + fmt(a.qty ?? 0) + (a.sesuai ? " (sesuai)" : "") : ""}</small></span>
         <span className={"agi-ck" + (a ? " on" : "")} aria-label={a ? "Sudah dicek" : "Belum dicek"}>{a ? "✓" : ""}</span>
       </summary>

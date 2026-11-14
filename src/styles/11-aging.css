@@ -75,7 +75,7 @@
 .agi-kb { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 6px; font-style: normal; font-size: 12px; font-weight: 800; background: #9aa5b8; color: #fff; vertical-align: 1px; }
 .agi-kb.agi-kA { background: #0a5bd3; } .agi-kb.agi-kB { background: #1b9aaa; } .agi-kb.agi-kC { background: #6b7a89; }
 .agi-rak.red { border-left: 6px solid #d32f2f; background: #fff7f7; }
-.agi-rak.done { opacity: .72; }
+.agi-rak.done { opacity: 1; background: rgba(23, 107, 69, .06); }
 .agi-bn small strong { color: var(--ink, #1c2a36); }
 .agi-sys { padding: 8px 10px; border-radius: 10px; background: #eef2f6; font-size: 14px; }
 .agi-all { width: 100%; min-height: 52px; font-size: 16px; }
