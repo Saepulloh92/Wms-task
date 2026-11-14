@@ -172,3 +172,12 @@
 @media print { .rpt-tip { display: none; } }
 
 .rpt-dc .rpt-dh { cursor: pointer; }
+
+/* Poles: nama modul tidak terpotong, kolom lebih lega di HP */
+.rpt-hd, .rpt-row { grid-template-columns: minmax(0, 1fr) 118px 56px; gap: 6px; }
+.rpt-spark, .rpt-days { width: 76px; }
+.rpt-nm b { font-size: 14px; }
+.rpt-nm b::after { white-space: nowrap; }
+.rpt-big { font-size: 22px; min-width: 30px; }
+.rpt-grp > .rpt-row { min-height: 56px; }
+@media (max-width: 359px) { .rpt-hd, .rpt-row { grid-template-columns: minmax(0, 1fr) 100px 50px; } .rpt-spark, .rpt-days { width: 58px; } }

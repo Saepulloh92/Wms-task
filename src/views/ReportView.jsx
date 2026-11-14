@@ -126,7 +126,7 @@ export default function ReportView() {
   };
   /** Penyaring daftar untuk satu baris kartu Rincian (id modul + label baris). undefined = baris tidak bisa diketuk; null = semua. */
   const rowFilter = (id, lb) => {
-    const all = ["Diperiksa", "Item selesai", "Rak dicek", "Hari lapor", "SPM", "Mobil", "SPM copy rekom.", "Hari clearing", "Voucher"];
+    const all = ["Diperiksa", "Item selesai", "Rak dicek", "Hari lapor", "SPM", "Mobil", "SPM copy rekom.", "Hari clearing", "Voucher", "Kuning/Merah belum dicek"];
     if (all.includes(lb)) return null;
     if (id === "bin") return { "Qty sesuai": (e) => stOf(e).qtyOk, "Selisih qty": (e) => !stOf(e).qtyOk, "Qty lebih / kurang": (e) => !stOf(e).qtyOk }[lb];
     if (id === "kes") return { "Item sama": (e) => stOf(e).itemOk, "Item tidak sama": (e) => !stOf(e).itemOk, "Sesuai penuh": (e) => !!e.ok }[lb];
@@ -136,6 +136,7 @@ export default function ReportView() {
     return undefined;
   };
   const rowItems = (id, lb) => {
+    if (id === "aging" && lb === "Kuning/Merah belum dicek") return DATA.filter((x) => inArea(x) && isFilled(x) && needsWatch(normSignal(x.sinyal)) && !(aging || {})[x.bin]).map((x) => ({ k: x.bin, b: "Belum dicek", c: "pos", s: x.item + (x.sinyal ? " · sinyal " + x.sinyal : ""), t: "Rak ini berstatus Kuning/Merah dan belum dicek fisik.", d: [["Rak", x.bin], ["Area", x.area], ["Item", x.item], ["Sinyal aging", x.sinyal], ["Status", "Belum dicek"]].filter(([, v]) => v) }));
     const f = rowFilter(id, lb);
     if (!f) return detailOf(id);
     if (id === "bin" || id === "kes") return r.bins.filter(f).map((e) => mkItem(id, e));
