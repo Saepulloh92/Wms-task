@@ -129,3 +129,9 @@ header { box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); }
 
 /* Judul yang sama dengan judul header disembunyikan secara visual (tetap terbaca pembaca layar), juga bila dibungkus div */
 main h2.dup { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* Poles: tiga pilihan posisi rak sebaris; kotak pilih file tidak menempel ke tepi kartu */
+#chipsR { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+#chipsR .chip { padding-left: 4px; padding-right: 4px; }
+input[type="file"] { box-sizing: border-box; max-width: 100%; }
+#chipsR .chip:last-child:nth-child(odd) { grid-column: auto; }
