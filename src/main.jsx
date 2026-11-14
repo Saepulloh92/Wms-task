@@ -35,6 +35,18 @@ try {
 // Tanpa StrictMode: kode legacy hanya boleh di-boot satu kali.
 createRoot(document.getElementById("root")).render(<App />);
 
+// Pintasan ikon aplikasi (?go=so|rpt|dc|kes|…): buka menu itu begitu aplikasi siap.
+try {
+  const g = new URLSearchParams(location.search).get("go");
+  if (g && /^[a-z]{2,6}$/.test(g)) {
+    let n = 0;
+    const t = setInterval(() => {
+      if (typeof window.go === "function" && document.getElementById("pgT")?.textContent.trim()) { clearInterval(t); try { window.go(g); } catch (e) {} }
+      else if (++n > 100) clearInterval(t);
+    }, 100);
+  }
+} catch (e) {}
+
 // Aplikasi bisa dibuka tanpa sinyal setelah dimuat sekali (hanya di build produksi).
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
