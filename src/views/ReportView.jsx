@@ -73,11 +73,12 @@ export default function ReportView() {
   const binTodo = DATA.filter((x) => inArea(x) && !counts[x.bin]).length;
   const areaTotals = {};
   DATA.forEach((x) => { areaTotals[x.area] = (areaTotals[x.area] || 0) + 1; });
-  const staffNames = [...new Set([...wms.staff().map((u) => u.name), ...events.map((e) => e.by).filter(Boolean)])].sort();
+  const activeStaff = wms.staff().filter((u) => u.active !== false).map((u) => u.name); // user nonaktif tidak dianggap "belum aktif"
+  const staffNames = [...new Set([...activeStaff, ...events.map((e) => e.by).filter(Boolean)])].sort();
 
   const r = buildReport({
     period, start, today: now, events, muat: wms.muatHist || [], clr: wms.clrHist || [],
-    staff: wms.staff().map((u) => u.name), agingTodo, binTodo, areaTotals, filters: { area, by },
+    staff: activeStaff, agingTodo, binTodo, areaTotals, filters: { area, by },
   });
   const M = r.mods, maxP = Math.max(1, ...r.people.map((p) => p.total));
   const nm = { week: "minggu", month: "bulan", year: "tahun" }[period];

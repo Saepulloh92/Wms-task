@@ -107,12 +107,12 @@ function build(period, start, today, { events, muat, clr }) {
     bump(e.by, e.mod);
     inRange.push(e);
   }
-  const muatIn = [], clrIn = [];
+  const muatIn = [], clrIn = [], muatDays = new Set(), clrDays = new Set();
   Object.assign(m.muat, { spm: 0, mobil: 0, cp: 0, days: 0 });
   for (const h of muat) {
     const i = idx.get(bucketOf(period, toKey(h.tgl)));
     if (i == null) continue;
-    m.muat.perB[i]++; m.muat.n++; m.muat.days++;
+    m.muat.perB[i]++; m.muat.n++; muatDays.add(toKey(h.tgl));
     m.muat.spm += Number(h.dp) || 0; m.muat.mobil += Number(h.total) || 0; m.muat.cp += Number(h.cpS) || 0;
     bump(h.by, "muat"); muatIn.push(h);
   }
@@ -121,10 +121,11 @@ function build(period, start, today, { events, muat, clr }) {
     const i = idx.get(bucketOf(period, toKey(h.tgl)));
     if (i == null) continue;
     const n = Number(h.n) || 0;
-    m.clr.perB[i] += n; m.clr.n++; m.clr.days++;
+    m.clr.perB[i] += n; m.clr.n++; clrDays.add(toKey(h.tgl));
     m.clr.vouchers += n; m.clr.ok += Number(h.ok) || 0; m.clr.bad += Number(h.bad) || 0;
     bump(h.by, "clr"); clrIn.push(h);
   }
+  m.muat.days = muatDays.size; m.clr.days = clrDays.size;
   for (const k of ["bin", "dc", "aging"]) m[k].acc = accOf(m[k].ok, m[k].n);
   m.clr.acc = accOf(m.clr.ok, m.clr.vouchers);
   m.bin.accQty = accOf(m.bin.qtyOk, m.bin.n);
@@ -224,7 +225,7 @@ export function buildReport({ period = "week", start, today = new Date(), events
   return {
     period, start, end, label: periodLabel(period, start), prevLabel: periodLabel(period, prevStart),
     buckets: cur.bk, elapsed, totalDays, elapsedDays,
-    mods: M, mains, prevMains, delta: { ...Object.fromEntries(MODS.map((x) => [x.id, mains[x.id] - prevMains[x.id]])), kes: M.bin.itemBad - prev.m.bin.itemBad },
+    mods: M, mains, prevMains, delta: { ...Object.fromEntries(MODS.map((x) => [x.id, mains[x.id] - prevMains[x.id]])), kes: M.bin.itemBad - sum(P.bin.perItemBad.slice(0, elapsed)) },
     total, prevTotal, people, flags, areas, bins, topBad, agingBad, lists, missing: missing.length,
     coverage: { muatSince, clrSince, muatCut: !!muatSince && muatSince > dayKey(start), clrCut: !!clrSince && clrSince > dayKey(start) },
   };

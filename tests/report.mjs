@@ -105,4 +105,15 @@ const tk = reportText(rk);
 ok(tk.includes("Stok per Bin: 4 diperiksa, qty sesuai 50%, selisih qty 2") && tk.includes("Kesesuaian Rak: item sama 50%, item tidak sama 2"), "teks WhatsApp memuat dua laporan");
 const ck = reportCsv(rk, kv).replace("\ufeff", "").split("\r\n").slice(1).map((l) => l.split('","')[9].replace(/"/g, ""));
 eq(ck, ["Sesuai", "Selisih qty", "Item beda", "Item beda + selisih qty"], "CSV: kolom Status memuat 4 jenis status bin");
+
+// ---- Logika "cara kerja manusia": banding pada titik waktu yang sama & hari lapor unik
+{
+  const bi = (d) => ({ mod: "bin", at: t(11, d), by: "A", ok: false, itemOk: false, qtyOk: true, diff: 0, key: "B1-" + d, area: "B1" });
+  const evs = [{ ...bi(2), at: t(10, 26) }, { ...bi(2), at: t(10, 30) }, { ...bi(2), at: t(11, 1) }, bi(2)]; // minggu lalu: 3 item beda; minggu ini (Sen): 1
+  const rt = buildReport({ period: "week", start: periodStart("week", D(11, 4)), today: D(11, 4), events: evs });
+  eq(rt.delta.kes, 0, "vs lalu Kesesuaian dibanding titik waktu sama (Sen–Rab lalu = 1, bukan seluruh minggu = 3)");
+  const dup = [{ tgl: "2026-11-02", by: "A", dp: 1, total: 1 }, { tgl: "2026-11-02", by: "A", dp: 2, total: 2 }];
+  const rd = buildReport({ period: "week", start: periodStart("week", D(11, 4)), today: D(11, 4), muat: dup, clr: [{ tgl: "2026-11-02", by: "A", n: 3, ok: 3, bad: 0 }, { tgl: "2026-11-02", by: "A", n: 1, ok: 1, bad: 0 }] });
+  eq([rd.mods.muat.days, rd.mods.clr.days], [1, 1], "hari lapor Muat/Clearing dihitung per hari, bukan per catatan");
+}
 process.exit(bad ? 1 : 0);
