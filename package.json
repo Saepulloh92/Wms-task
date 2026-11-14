@@ -18,7 +18,9 @@
     "test:supabase-layer": "node tests/supabase-layer.mjs",
     "test:login-smooth": "node tests/login-smooth.mjs",
     "test:tugas-otomatis": "node tests/tugas-otomatis.mjs",
-    "test:clr-voucher": "node tests/clearing-voucher.mjs"
+    "test:clr-voucher": "node tests/clearing-voucher.mjs",
+    "test:scan": "node tests/scan.mjs",
+    "test:remind": "node tests/remind.mjs"
   },
   "dependencies": {
     "react": "18.3.1",

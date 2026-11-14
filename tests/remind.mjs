@@ -1,0 +1,23 @@
+import { createRequire } from "node:module";
+import fs from "node:fs";
+const { chromium } = createRequire("/home/claude/Wms-task/")("playwright");
+const FX = (n) => JSON.parse(fs.readFileSync("/home/claude/Wms-task/tests/fixtures/" + n, "utf8"));
+const master = FX("master.json"), users = FX("users.json");
+const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+let bad = 0; const ok = (c, m) => { console.log((c ? "OK   " : "GAGAL ") + m); if (!c) bad++; };
+const errs = []; p.on("pageerror", (e) => errs.push(e.message));
+await p.route(/^https?:\/\/(?!localhost)/, (r) => r.abort());
+await p.addInitScript((s) => { localStorage.setItem("warehouse_so_master_v2", JSON.stringify(s.master)); localStorage.setItem("warehouse_so_users_v1", JSON.stringify(s.users)); localStorage.setItem("warehouse_so_lgsetup_v1", "1");
+  const R = Date, off = new R(2026, 10, 14, 16, 0).getTime() - R.now(); // 16:00
+  window.Date = class extends R { constructor(...a) { if (a.length) super(...a); else super(R.now() + off); } static now() { return R.now() + off; } }; }, { master, users });
+await p.goto("http://localhost:4173/"); await p.waitForFunction(() => document.getElementById("pgT")?.textContent.trim());
+await p.evaluate(() => window.go("data")); await p.waitForTimeout(300);
+ok(await p.locator("#rmPanel").isVisible(), "panel pengingat tampil di menu Data");
+await p.locator("#rmOn").evaluate((e) => { e.checked = true; e.dispatchEvent(new Event("change")); }); await p.waitForTimeout(300);
+ok(/\d+ bin belum diperiksa/.test(await p.locator("#rmInfo").textContent()), "info jumlah bin belum diperiksa: " + (await p.locator("#rmInfo").textContent()));
+await p.evaluate(() => { document.getElementById("toast").textContent = ""; window.__rmCheck(); }); await p.waitForTimeout(200);
+ok((await p.locator("#toast").textContent()).includes("belum diperiksa hari ini"), "jam 16:00 ≥ 15:00 -> pengingat muncul");
+await p.evaluate(() => { document.getElementById("toast").textContent = ""; window.__rmCheck(); }); await p.waitForTimeout(200);
+ok(!(await p.locator("#toast").textContent()).includes("belum diperiksa"), "tidak muncul lagi di hari yang sama");
+ok(errs.length === 0, "tanpa error JavaScript " + errs.join("|"));
+await b.close(); process.exit(bad ? 1 : 0);

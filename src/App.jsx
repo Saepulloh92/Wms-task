@@ -30,6 +30,7 @@ import navSet from "./markup/dialogs/navSet.html?raw";
 import login from "./markup/dialogs/login.html?raw";
 import lgsetup from "./markup/dialogs/lgsetup.html?raw";
 import padSheet from "./markup/dialogs/padSheet.html?raw";
+import scanSheet from "./markup/dialogs/scanSheet.html?raw";
 
 // Urutan elemen = urutan di halaman asli (CSS bergantung padanya). Menu pertama (so) tampil, lainnya hidden.
 const LEGACY_VIEWS = [["so", so], ["dc", dc], ["check", check], ["adj", adj], ["task", task], ["dist", dist], ["kes", kes], ["muat", muat], ["usr", usr], ["clr", clr]];
@@ -65,6 +66,7 @@ export default function App() {
       <Raw className="dlg" id="login" style={{ zIndex: 100 }} hidden html={login} />
       <Raw className="dlg" id="lgSetup" style={{ zIndex: 100 }} hidden html={lgsetup} />
       <Raw className="sheet" id="padSheet" role="dialog" aria-modal="true" aria-label="Cari bin" hidden html={padSheet} />
+      <Raw className="sheet" id="scanSheet" role="dialog" aria-modal="true" aria-label="Scan label rak" hidden html={scanSheet} />
       <div id="toast" className="off" role="status" aria-live="polite" aria-atomic="true" />
     </>
   );
