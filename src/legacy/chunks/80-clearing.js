@@ -249,7 +249,7 @@
           return { x, k, h, why };
         });
         const txt = [`Diagnosa Clearing · aturan ${CLR_MATCH_V}`, head, "Nama counting pertama: " + first.join(" | "), "Nama counting terakhir: " + last.join(" | "), ...items.map((i) => `${i.x.v} (kunci ${i.k}, qty laporan ${i.x.qR ?? "-"}) ${i.why}${i.h.length ? ": " + i.h.map((c) => `${c.v} [qty ${c.q}]`).join(" | ") : ""}`), bel.length > 10 ? `… dan ${bel.length - 10} lainnya` : ""].filter(Boolean).join("\n");
-        el.innerHTML = `<details class="clr-diag" open><summary>Diagnosa pencocokan · aturan ${CLR_MATCH_V} · ${fmt(bel.length)} belum cocok</summary><p class="fine">${esc(head)}.</p><p class="fine">Nama counting pertama: ${first.map(esc).join(" · ") || "-"}<br>Nama counting terakhir: ${last.map(esc).join(" · ") || "-"}</p>` +
+        el.innerHTML = `<details class="clr-diag"><summary>Diagnosa pencocokan · aturan ${CLR_MATCH_V} · ${fmt(bel.length)} belum cocok</summary><p class="fine">${esc(head)}.</p><p class="fine">Nama counting pertama: ${first.map(esc).join(" · ") || "-"}<br>Nama counting terakhir: ${last.map(esc).join(" · ") || "-"}</p>` +
           items.map((i) => `<div class="fine"><b>${esc(i.x.v)}</b> (kunci ${esc(i.k)}) ${i.why}${i.h.length ? ": " + i.h.map(row).join(" · ") : ""}</div>`).join("") +
           (bel.length > 10 ? `<p class="fine">… dan ${fmt(bel.length - 10)} lainnya.</p>` : "") +
           `<button class="btn sec" id="clrDiagCopy" type="button">Salin diagnosa</button></details>`;
@@ -269,6 +269,12 @@
         $("clrRepInfo").textContent = clrRep ? `${clrRep.name || "Laporan"}: ${fmt(clrRep.rows.length)} voucher, dimuat ${new Date(clrRep.at).toLocaleString("id-ID")}.` : "Belum ada laporan. Pilih file Laporan Voucher.";
         $("clrCntInfo").textContent = clrErr ? clrErr : clrCnt ? `Counting dari ${clrCnt.src === "url" ? "spreadsheet" : "file"}: ${fmt(clrCnt.rows.length)} baris, dimuat ${new Date(clrCnt.at).toLocaleString("id-ID")}.` : clr.url ? "Counting belum dimuat." : "Link spreadsheet counting belum diatur (Pengaturan di bawah), atau muat dari file.";
         $("clrCntInfo").style.color = clrErr ? "var(--red)" : "";
+        { // panel sumber data: ringkas & terlipat bila laporan + counting sudah termuat
+          const d = $("clrSrc"), ready = !!(clrRep && clrCnt);
+          $("clrSrcSum").innerHTML = ready ? `<span class="cs-t"><b>Sumber data</b><em>${fmt(clrRep.rows.length)} voucher · ${fmt(clrCnt.rows.length)} baris counting</em></span>` : clrRep ? '<span class="cs-t"><b>Langkah 2</b><em>Muat hasil counting</em></span>' : '<span class="cs-t"><b>Mulai di sini</b><em>Muat laporan voucher, lalu counting</em></span>';
+          const st = ready ? "1" : "0";
+          if (d.dataset.st !== st) { d.dataset.st = st; d.open = !ready; }
+        }
         if (typeof monClrRender === "function") monClrRender();
         $("clrLoad").disabled = clrBusy;
         $("clrRefresh").disabled = clrBusy;
@@ -310,7 +316,7 @@
         $("clrList").innerHTML = (vis.length ? vis.slice(0, 300).map((x) => {
           const [lb, cl] = CLR_ST[x.st];
           const d = x.diff == null ? "" : x.diff === 0 ? "0" : (x.diff > 0 ? "+" : "") + fmt(x.diff);
-          return `<div class="card vc s-${x.st}"><div class="r"><b class="id">${esc(x.v)}</b><span class="pill ${cl}">${lb}</span>${clrIsDone(x) ? ' <span class="pill green">Selesai</span>' : ""}</div>${x.n ? `<div class="nm">${esc(x.n)}${x.r ? ", rak " + esc(x.r) : ""}</div>` : ""}<dl class="kv k3"><div><dt>Shift</dt><dd>${esc(x.shift || "-")}${x.tm ? "<small>" + esc((String(x.tm).match(/\d{1,2}:\d{2}/) || [""])[0]) + "</small>" : ""}</dd></div><div><dt>No Lori</dt><dd class="id">${esc(x.lori || "-")}</dd></div><div><dt>Selisih</dt><dd class="${x.diff ? "neg" : ""}">${d || "-"}</dd></div><div><dt>Qty WMS</dt><dd>${x.qR == null ? "-" : fmt(x.qR)}</dd></div><div><dt>Qty count</dt><dd>${x.qC == null ? "-" : fmt(x.qC)}${x.ik ? ` <small>(${fmt(x.ik)}×${CLR_IKAT})</small>` : ""}</dd></div></dl>${x.st !== "ok" && x.ik ? `<div class="m">Counting ${fmt(x.ik)} ikat × ${CLR_IKAT} = ${fmt(x.qC)}.</div>` : ""}${x.cv ? `<div class="m">Dicocokkan lewat awalan angka dengan nama foto ${esc(x.cv)}.</div>` : ""}${x.st !== "ok" && x.rc > 1 ? `<div class="m">${x.rc} foto counting untuk voucher ini, dipakai yang terbaru.</div>` : ""}${clrAct(x)}</div>`;
+          return `<div class="card vc s-${x.st}"><div class="r"><b class="id">${esc(x.v)}</b><span class="pill ${cl}">${lb}</span>${clrIsDone(x) ? ' <span class="pill green">Selesai</span>' : ""}</div>${x.n ? `<div class="nm">${esc(x.n)}${x.r ? ", rak " + esc(x.r) : ""}</div>` : ""}<div class="vq"><div class="vq-n"><span>WMS <b>${x.qR == null ? "-" : fmt(x.qR)}</b></span><i aria-hidden="true">→</i><span>Hitung <b>${x.qC == null ? "-" : fmt(x.qC)}</b>${x.ik ? ` <small>(${fmt(x.ik)}×${CLR_IKAT})</small>` : ""}</span></div><div class="vq-d ${x.st === "ok" ? "ok" : x.diff ? "neg" : "wip"}">${x.st === "ok" ? "✓ Cocok" : d ? "Selisih " + d : "Belum"}</div></div><div class="vm">${[esc(x.shift || ""), x.tm ? esc((String(x.tm).match(/\d{1,2}:\d{2}/) || [""])[0]) : "", x.lori ? "Lori " + esc(x.lori) : ""].filter(Boolean).join(" · ") || "&nbsp;"}</div>${x.st !== "ok" && x.ik ? `<div class="m">Counting ${fmt(x.ik)} ikat × ${CLR_IKAT} = ${fmt(x.qC)}.</div>` : ""}${x.cv ? `<div class="m">Dicocokkan lewat awalan angka dengan nama foto ${esc(x.cv)}.</div>` : ""}${x.st !== "ok" && x.rc > 1 ? `<div class="m">${x.rc} foto counting untuk voucher ini, dipakai yang terbaru.</div>` : ""}${clrAct(x)}</div>`;
         }).join("") + (vis.length > 300 ? `<p class="fine">Menampilkan 300 dari ${fmt(vis.length)}. Pakai pencarian atau filter.</p>` : "") : `<div class="empty">${all.length ? "Tidak ada voucher di filter ini." : "Muat Laporan Voucher dan counting dulu."}</div>`);
       }
       async function clrFetch(manual) {

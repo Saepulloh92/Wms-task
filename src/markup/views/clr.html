@@ -3,7 +3,8 @@
             <span class="sync" id="clrAt" role="status"></span>
           </div>
           <details class="hint-more"><summary>Cara kerja</summary><p class="fine">Hanya voucher dari laporan yang Anda impor yang dicocokkan; baris counting lain diabaikan. Jika satu voucher punya beberapa foto, dipakai counting terbaru. Counting dalam ikatan dibaca otomatis (qty × 25 sama dengan qty laporan dianggap cocok).</p></details>
-          <div class="panel">
+          <details class="panel clr-src" id="clrSrc" open>
+            <summary id="clrSrcSum"><span class="cs-t"><b>Mulai di sini</b><em>Muat laporan voucher, lalu counting</em></span></summary>
             <label for="clrRepFile"><span class="stepno">1</span>Laporan Voucher (.xlsx / .csv)</label>
             <input id="clrRepFile" type="file" accept=".csv,.xls,.xlsx,text/csv" />
             <p class="fine" id="clrRepInfo"></p>
@@ -13,14 +14,13 @@
             <div class="row-act"><button class="btn pri" id="clrLoad" type="button">Muat counting dari spreadsheet</button><button class="btn sec" id="clrRefresh" type="button" title="Ambil ulang counting terbaru dan bersihkan hasil lama">↻ Refresh</button></div>
             <div class="ximp"><label for="clrCntFile">Atau muat counting dari file</label>
             <input id="clrCntFile" type="file" accept=".csv,.xls,.xlsx,text/csv" /></div>
-          </div>
+          </details>
           <div class="kcs mt" id="clrStats"></div>
           <div id="clrRekap"></div>
           <div class="panel mt">
-            <div class="chips" id="clrChips"></div>
-            <div class="chips" id="clrShChips"></div>
-            <label for="clrQ">Cari voucher / item</label>
-            <input id="clrQ" type="search" placeholder="Contoh: 4043814" autocomplete="off" />
+            <input id="clrQ" type="search" placeholder="Cari voucher / item, contoh: 4043814" aria-label="Cari voucher atau item" autocomplete="off" />
+            <div class="chips clr-chips" id="clrChips"></div>
+            <div class="chips clr-chips" id="clrShChips"></div>
             <div id="clrList" class="bin-list"></div>
           </div>
           <button class="btn pri mt ximp" id="clrCsv" type="button">Unduh hasil clearing (CSV)</button>

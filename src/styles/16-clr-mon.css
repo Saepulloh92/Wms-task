@@ -31,3 +31,25 @@
 .cm-act { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 body.tv .cm-act { display: none !important; }
 #monClr:empty { display: none; }
+
+/* Clearing: ramah HP — sumber data terlipat, filter sekali geser, kartu ringkas */
+#v-clr .clr-src > summary { list-style: none; cursor: pointer; min-height: 48px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; }
+#v-clr .clr-src > summary::-webkit-details-marker { display: none; }
+#v-clr .clr-src .cs-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+#v-clr .clr-src .cs-t em { font-style: normal; font-size: 13px; color: var(--muted); }
+#v-clr .clr-src .cs-t b { font-size: 16px; }
+#v-clr .clr-src[open] > summary { margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+#v-clr .clr-diag:not([open]) > summary { font-size: 13px; }
+#v-clr .clr-chips { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px; margin: 10px -4px 0; padding: 2px 4px 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+#v-clr .clr-chips::-webkit-scrollbar { display: none; }
+#v-clr .clr-chips .chip { flex: none; white-space: nowrap; width: auto; }
+#v-clr #clrQ { margin: 0; }
+#v-clr .vc .vq { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 4px; }
+#v-clr .vc .vq-n { display: flex; align-items: baseline; flex-wrap: nowrap; flex: 1; min-width: 0; gap: 4px 6px; font-size: 13px; color: var(--muted); white-space: nowrap; }
+#v-clr .vc .vq-n b { font-size: 18px; color: var(--ink, inherit); font-variant-numeric: tabular-nums; }
+#v-clr .vc .vq-n i { font-style: normal; color: var(--muted); }
+#v-clr .vc .vq-d { flex: none; font-weight: 800; font-size: 14px; padding: 5px 9px; border-radius: 10px; background: rgba(128, 128, 128, 0.12); }
+#v-clr .vc .vq-d.ok { color: var(--green); background: rgba(31, 122, 77, 0.12); }
+#v-clr .vc .vq-d.neg { color: var(--red); background: rgba(179, 38, 30, 0.1); }
+#v-clr .vc .vq-d.wip { color: #b26a00; background: rgba(178, 106, 0, 0.12); }
+#v-clr .vc .vm { font-size: 13px; color: var(--muted); }
