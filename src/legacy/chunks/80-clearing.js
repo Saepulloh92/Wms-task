@@ -255,6 +255,7 @@
           `<button class="btn sec" id="clrDiagCopy" type="button">Salin diagnosa</button></details>`;
         $("clrDiagCopy").onclick = () => (navigator.clipboard ? navigator.clipboard.writeText(txt).then(() => toast("Diagnosa tersalin. Tempel ke chat."), () => toast("Gagal menyalin diagnosa")) : toast("Browser tidak mengizinkan salin"));
       }
+      let clrAutoF = false;
       function renderClr() {
         setTimeout(() => typeof renderClrHist === "function" && $("clrHist") && renderClrHist(), 0);
         clearTimeout(clrAT);
@@ -283,6 +284,10 @@
         const all = clrBuild(), n = (s) => all.filter((x) => x.st === s).length;
         const nTot = all.length, nOk = n("ok"), nBad = n("qty") + n("dup"), nBel = n("belum") + n("nq");
         clrDiag(all);
+        { // pertama kali data termuat: langsung tampilkan yang perlu dicek (bila ada); pilihan manual setelahnya tidak ditimpa
+          if (!all.length) clrAutoF = false;
+          else if (!clrAutoF) { clrAutoF = true; if (all.some((x) => x.st !== "ok" && !clrIsDone(x))) clrF = "bad"; }
+        }
         const kc = (cls, ico, v, lb) => `<div class="kc ${cls}"><div class="kh"><span class="ki">${ico}</span><b>${fmt(v)}</b></div><div class="kl">${lb}</div><span class="dchip eq">${nTot ? Math.round((v / nTot) * 100) : 0}%</span></div>`;
         $("clrStats").innerHTML = kc("ok", monIco.ok, nOk, "Cocok") + kc("bad", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg>', nBad, "Selisih / dobel") + kc("wip", monIco.wip, nBel, "Belum dihitung");
         { // pil sinkron: waktu counting terakhir dimuat
@@ -412,7 +417,7 @@
       /* Refresh: buang hasil counting lama dari memori, reset filter, lalu ambil ulang dari spreadsheet (tanpa cache) */
       $("clrRefresh").onclick = async () => {
         if (clrBusy) return;
-        clrF = "all"; clrShF = "all"; $("clrQ").value = ""; clrErr = "";
+        clrF = "all"; clrAutoF = false; clrShF = "all"; $("clrQ").value = ""; clrErr = "";
         $("clrCntFile").value = ""; $("clrRepFile").value = "";
         if (clr.url) {
           clrCnt = null; sv(K_CLRC, null);
