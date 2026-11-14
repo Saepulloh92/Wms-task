@@ -15,6 +15,7 @@
     "test:aging-prio": "node tests/aging-prioritas.mjs",
     "test:motion": "node tests/motion.mjs",
     "test:dash": "node tests/dash-delivery.mjs",
+    "test:login-smooth": "node tests/login-smooth.mjs",
     "test:tugas-otomatis": "node tests/tugas-otomatis.mjs",
     "test:clr-voucher": "node tests/clearing-voucher.mjs"
   },

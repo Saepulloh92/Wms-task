@@ -14,8 +14,22 @@
         uEdit = null,
         uSel = [];
       const K_ME = "warehouse_so_me_v1", K_LS = "warehouse_so_lgsetup_v1";
-      let meId = "";
-      try { meId = sessionStorage.getItem(K_ME) || ""; } catch (e) {}
+      const K_SES = "warehouse_so_session_v2", K_LU = "warehouse_so_lastuser_v1", SES_TTL = 12 * 3600 * 1000;
+      /* sesi login: tetap ada setelah reload/tutup tab (12 jam, diperpanjang saat dipakai); tidak ikut sinkron/cadangan */
+      function meLoad() {
+        try { const r = JSON.parse(localStorage.getItem(K_SES) || "null"); if (r && r.id && r.exp > Date.now()) return r.id; } catch (e) {}
+        try { return sessionStorage.getItem(K_ME) || ""; } catch (e) {}
+        return "";
+      }
+      function meSave(id) {
+        try { localStorage.setItem(K_SES, JSON.stringify({ id, exp: Date.now() + SES_TTL })); } catch (e) {}
+        try { sessionStorage.setItem(K_ME, id); localStorage.setItem(K_LU, id); } catch (e) {}
+      }
+      function meClear() {
+        try { localStorage.removeItem(K_SES); } catch (e) {}
+        try { sessionStorage.removeItem(K_ME); } catch (e) {}
+      }
+      let meId = meLoad(), lgSig = "";
       /* ---- v13: hak akses menu per user ---- */
       const MENU_DEF = { so: "Periksa Bin", dc: "DC Harian", task: "Task", dist: "Distribusi Tugas", check: "Review Supervisor", kes: "Cek Kesesuaian", adj: "File Adjust", clr: "Clearing", mon: "Beranda", muat: "Laporan Muat", kpi: "KPI Area", agi: "Aging Stock", rpt: "Laporan", tg: "Telegram", data: "Data WMS" };
       const ALL_VIEWS = [...Object.keys(MENU_DEF), "usr"];
@@ -139,12 +153,22 @@
       function loginUi() {
         if (authOn() && !$("lgSetup").hidden) { $("lgSetup").hidden = true; document.body.style.overflow = ""; }
         const need = authOn() && !meUser();
+        const wasShown = !$("login").hidden;
         $("login").hidden = !need;
         document.body.style.overflow = need ? "hidden" : $("lgSetup").hidden ? "" : "hidden";
         if (!need) { setupUi(false); return; }
         const act = users.filter((u) => u.active !== false).sort((a, b) => a.name.localeCompare(b.name, "id"));
-        $("lgUser").innerHTML = act.map((u) => `<option value="${esc(u.id)}">${esc(u.name)}${u.name.trim().toLowerCase() === ROLES[roleOf(u)].label.toLowerCase() ? "" : " (" + ROLES[roleOf(u)].label + ")"}</option>`).join("");
+        const sig = act.map((u) => u.id + ":" + u.name + ":" + roleOf(u)).join("|");
+        if (wasShown && sig === lgSig) return; // sinkron latar belakang: pilihan nama & password yang sedang diketik dibiarkan
+        const keep = $("lgUser").value;
+                $("lgUser").innerHTML = act.map((u) => `<option value="${esc(u.id)}">${esc(u.name)}${u.name.trim().toLowerCase() === ROLES[roleOf(u)].label.toLowerCase() ? "" : " (" + ROLES[roleOf(u)].label + ")"}</option>`).join("");
+        lgSig = sig;
+        let last = ""; try { last = localStorage.getItem(K_LU) || ""; } catch (e) {}
+        const want = [keep, last].find((id) => id && act.some((u) => u.id === id));
+        if (want) $("lgUser").value = want;
+        if (wasShown && want === keep) return;
         lgSel();
+        setTimeout(() => { try { $("lgPin").focus(); } catch (e) {} }, 60);
       }
       function lgSel() {
         $("lgPin").value = "";
@@ -166,7 +190,11 @@
           return ($("lgErr").textContent = "Terlalu banyak salah. Tunggu beberapa detik.");
         }
         const pw = $("lgPin").value.trim();
-        if (!(await pinCheck(pw, u.pin))) {
+        if ($("lgOk").disabled) return;
+        $("lgOk").disabled = true; $("lgOk").textContent = "Memeriksa...";
+        let okPin = false;
+        try { okPin = await pinCheck(pw, u.pin); } finally { $("lgOk").disabled = false; $("lgOk").textContent = "Masuk"; }
+        if (!okPin) {
           if (++pinFails >= 5) {
             pinLock = Date.now() + 30000;
             pinFails = 0;
@@ -182,17 +210,17 @@
           try { u.pin = await pinMake(pw); sv(K_U, users); } catch (e) {}
         }
         meId = u.id;
-        try { sessionStorage.setItem(K_ME, meId); } catch (e) {}
+        meSave(meId);
         applySession();
         applyRole();
         loginUi();
         initAll();
-        go("so");
+        go(curUser() ? "task" : "so");
         toast("Masuk sebagai " + u.name);
       }
       function logout() {
         meId = "";
-        try { sessionStorage.removeItem(K_ME); } catch (e) {}
+        meClear();
         curU = "";
         applyRole();
         loginUi();
@@ -210,6 +238,15 @@
         $("lgPin").focus();
       };
       $("logoutBtn").onclick = logout;
+      // realtime antar tab: masuk/keluar di satu tab langsung diikuti tab lain
+      window.addEventListener("storage", (e) => {
+        if (e.key !== K_SES) return;
+        const id = meLoad();
+        if (id === meId) return;
+        meId = id; applySession(); applyRole(); loginUi();
+        if (id) { initAll(); go(curUser() ? "task" : "so"); }
+      });
+      document.addEventListener("visibilitychange", () => { if (!document.hidden && meId && authOn() && meUser()) meSave(meId); });
       $("lgSetupBtn").onclick = () => { side(false); setupUi(true); };
       $("lsLater").onclick = setupClose;
       $("lsOk").onclick = async () => {
@@ -228,7 +265,7 @@
         if (!adm) users.push(rec);
         sv(K_U, users);
         meId = rec.id;
-        try { sessionStorage.setItem(K_ME, meId); } catch (e) {}
+        meSave(meId);
         setupClose();
         applySession(); applyRole(); loginUi(); initAll();
         toast("Login aktif. Masuk sebagai " + name);
@@ -248,7 +285,7 @@
         users.forEach((u) => delete u.pin);
         sv(K_U, users);
         meId = "";
-        try { sessionStorage.removeItem(K_ME); } catch (e) {}
+        meClear();
         applyRole();
         loginUi();
         initAll();
@@ -508,7 +545,7 @@
         sv(K_U, users);
         if (!wasAuth && authOn()) {
           meId = rec.id;
-          try { sessionStorage.setItem(K_ME, meId); } catch (e) {}
+          meSave(meId);
           toast("Password admin diatur. Anda masuk sebagai " + name + ". Mulai sekarang semua user harus masuk dengan nama dan password.");
         } else toast("User tersimpan: " + name);
         resetUForm();
