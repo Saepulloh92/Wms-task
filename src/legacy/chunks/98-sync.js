@@ -61,6 +61,7 @@
         SY.dirty = true;
         sySave();
         sySoon();
+        if (Object.values(syKey).includes(k)) sblSoon(); // lapisan 2 (Supabase): kirim cepat, Sheets menyusul di latar
       };
       // dipanggil setelah pulihkan cadangan: semua data dianggap sumber terbaru
       window.__syncRestore = () => {
@@ -382,6 +383,7 @@
       });
       window.addEventListener("offline", netUi);
       syUi();
+      sblStart();
       if (syReady()) setTimeout(() => syRun(false), 1200);
       /* SYNC-END */
       if (curU && DATA.some(isTaskPend)) lf = "task";

@@ -7,7 +7,8 @@ import fs from "node:fs";
 const { chromium } = createRequire(import.meta.url)("playwright");
 // task dan dist sengaja berbeda dari aplikasi asli (menu dipisah), diuji lewat tests/tugas*.mjs dan task-menu.mjs
 // clr juga sengaja berbeda dari aplikasi asli (UI Clearing dirombak); diuji lewat tests/clearing-*.mjs
-const VIEWS = ["so", "dc", "check", "adj", "kes", "muat", "usr", "kpi", "tg", "mon", "data"];
+// data juga sengaja berbeda (panel Supabase ditambahkan); diuji lewat tests/supabase-layer.mjs
+const VIEWS = ["so", "dc", "check", "adj", "kes", "muat", "usr", "kpi", "tg", "mon"];
 const SNAP = new URL("./snapshots/views.json", import.meta.url);
 const update = process.argv.includes("--update");
 const url = update ? "file://" + process.env.ORIGINAL : process.env.APP_URL || "http://localhost:4173/";

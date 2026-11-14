@@ -27,6 +27,7 @@ Cari fitur di sini, buka **hanya satu file**. Semua chunk `NN-*.js` dijalankan b
 | `95-tasks.js` | 210 | Tugas Bin | taskBadges, renderTaskBar, tkPick, renderTask, tkIngest | – |
 | `97-bridge-links.js` | 9 | Jembatan: membuka state & helper legacy ke React lewat window.WMS (lihat src/legacy/bridge.js). | – | – |
 | `76-menu-groups.js` | 50 | Menu samping bertingkat (accordion) | menuSync | – |
+| `97-supabase.js` | 130 | Lapisan 2: cache cepat Supabase antara HP dan Google Sheets (push per-record, delta pull, batu nisan) | sblRun, sblPush, sblPull, sblSoon, sblStart | warehouse_so_sbl_v1 |
 | `98-sync.js` | 339 | Sinkron Google Sheets (Apps Script) + start-up aplikasi | sySoon, syBuild, syMerge, syApply, syRefresh, syCall, syRun, syPoll, netUi, syUi | warehouse_so_dest_v1<br>warehouse_so_sync_v1<br>warehouse_so_view_v1 |
 | `patch-v18-display.js` | 32 | Tampilan lapangan + scan label rak (patch IIFE, dijalankan setelah chunk utama) | – | warehouse_so_disp_v1 |
 | `patch-v19-beep-net.js` | 61 | Bip + pita status jaringan (patch IIFE, dijalankan setelah chunk utama) | – | warehouse_so_disp_v1 |

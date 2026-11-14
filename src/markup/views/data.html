@@ -29,6 +29,18 @@
               <button class="btn dng sm mt" id="syOff" type="button" hidden>Putuskan</button>
             </div>
             <div class="panel">
+              <h2 style="font-size: 18px">Supabase (cepat, opsional)</h2>
+              <p class="hint">Lapisan 2 supaya antar HP tersinkron dalam hitungan detik: HP → Supabase → Google Sheets (arsip &amp; laporan, jalan di latar). Tanpa ini aplikasi tetap jalan lewat Google Sheets.</p>
+              <label for="sblUrl">URL project Supabase</label>
+              <input id="sblUrl" placeholder="https://xxxx.supabase.co" autocomplete="off" spellcheck="false" />
+              <label for="sblKey">Kunci anon (public)</label>
+              <input id="sblKey" type="password" autocomplete="off" spellcheck="false" />
+              <label class="sw"><input type="checkbox" id="sblOn" checked /><span>Aktif di perangkat ini<small>Matikan untuk sementara kembali ke Google Sheets saja.</small></span></label>
+              <p class="fine" id="sblInfo"></p>
+              <div class="row-act"><button class="btn pri" id="sblGo" type="button">Simpan dan sambungkan</button></div>
+              <button class="btn dng sm mt" id="sblOff" type="button" hidden>Putuskan</button>
+            </div>
+            <div class="panel">
               <h2 style="font-size: 18px">Cadangan data</h2>
               <p class="hint" id="bkInfo"></p>
               <div class="meter" id="bkMeter"><i style="width: 0"></i></div>
