@@ -112,8 +112,43 @@
       function sblUi() {
         if (!$("sblInfo")) return;
         const t = SBL.last ? new Date(SBL.last).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "";
-        $("sblInfo").textContent = !SBL.url || !SBL.key ? "Belum tersambung. Opsional: mempercepat sinkron antar HP (dalam hitungan detik)." : SBL.on === false ? "Dimatikan di perangkat ini." : SBL.err ? "Gagal: " + SBL.err + " (data aman di HP & Google Sheets, dicoba lagi otomatis)" : "Tersambung" + (t ? ", terakhir " + t : "") + ".";
+        $("sblInfo").textContent = !SBL.url || !SBL.key ? "Belum tersambung. Opsional: mempercepat sinkron antar HP (dalam hitungan detik)." : SBL.on === false ? "Dimatikan di perangkat ini." : SBL.err ? "Gagal: " + SBL.err + " (data aman di HP & Google Sheets, dicoba lagi otomatis)" : "Tersambung" + (sblWsOk ? " (realtime aktif)" : "") + (t ? ", terakhir " + t : "") + ".";
         if ($("sblOff")) $("sblOff").hidden = !SBL.url;
+      }
+      /* Realtime: WebSocket Supabase hanya sebagai pemicu "ada perubahan" -> langsung tarik delta (data tetap lewat jalur yang sama).
+         Bila putus/ditolak, poll 4 dtk tetap menjaga data tetap terbarui. */
+      let sblWs = null, sblWsOk = false, sblWsFails = 0, sblWsT = 0, sblHb = 0;
+      function sblWsStop() {
+        const w = sblWs; sblWs = null; sblWsOk = false;
+        clearInterval(sblHb); clearTimeout(sblWsT);
+        if (w) { try { w.close(); } catch (e) {} }
+      }
+      function sblWsRetry() {
+        clearTimeout(sblWsT);
+        sblWsFails = Math.min(sblWsFails + 1, 6);
+        sblWsT = setTimeout(sblWsOpen, Math.min(2000 * 2 ** sblWsFails, 60000) * (0.75 + Math.random() * 0.5));
+      }
+      function sblWsOpen() {
+        if (!sblReady() || sblWs || document.hidden || !navigator.onLine || typeof WebSocket === "undefined") return;
+        let ws, ref = 0;
+        try { ws = new WebSocket(SBL.url.replace(/^http/i, "ws").replace(/\/+$/, "") + "/realtime/v1/websocket?apikey=" + encodeURIComponent(SBL.key) + "&vsn=1.0.0"); } catch (e) { return sblWsRetry(); }
+        sblWs = ws;
+        const send = (topic, event, payload) => { try { ws.send(JSON.stringify({ topic, event, payload, ref: String(++ref) })); } catch (e) {} };
+        ws.onopen = () => {
+          send("realtime:wms", "phx_join", { config: { broadcast: { self: false }, presence: { key: "" }, postgres_changes: [{ event: "*", schema: "public", table: "wms_records" }] }, access_token: SBL.key });
+          clearInterval(sblHb);
+          sblHb = setInterval(() => send("phoenix", "heartbeat", {}), 25000);
+        };
+        ws.onmessage = (e) => {
+          let m; try { m = JSON.parse(e.data); } catch (x) { return; }
+          if (m.event === "phx_reply" && m.topic === "realtime:wms") {
+            sblWsOk = !!(m.payload && m.payload.status === "ok");
+            if (sblWsOk) { sblWsFails = 0; sblSoon(100); } // kejar yang terlewat selama terputus
+            sblUi();
+          } else if (m.event === "postgres_changes") sblSoon(60);
+        };
+        const gone = () => { if (sblWs !== ws) return; sblWs = null; sblWsOk = false; clearInterval(sblHb); sblUi(); sblWsRetry(); };
+        ws.onclose = gone; ws.onerror = gone;
       }
       function sblStart() {
         if ($("sblUrl")) {
@@ -124,21 +159,22 @@
             if (!k) return toast("Isi kunci anon (anon public key).");
             if (u !== SBL.url || k !== SBL.key) { SBL.cursor = 0; SBL.known = {}; }
             SBL.url = u; SBL.key = k; SBL.on = $("sblOn").checked; SBL.err = "";
-            sblSave(); sblUi(); sblRun(); toast("Supabase disimpan");
+            sblWsStop(); sblSave(); sblUi(); sblRun(); sblWsOpen(); toast("Supabase disimpan");
           };
-          $("sblOn").onchange = () => { SBL.on = $("sblOn").checked; sblSave(); sblUi(); if (sblReady()) sblSoon(100); };
+          $("sblOn").onchange = () => { SBL.on = $("sblOn").checked; sblSave(); sblWsStop(); sblUi(); if (sblReady()) { sblSoon(100); sblWsOpen(); } };
           $("sblOff").onclick = async () => {
             if (!(await ask("Putuskan Supabase?", "Data di HP dan Google Sheets tetap ada. Sinkron kembali hanya lewat Google Sheets.", "Putuskan", true))) return;
             SBL = { url: "", key: "", on: true, cursor: 0, known: {}, last: "", err: "" };
-            sblSave(); $("sblUrl").value = ""; $("sblKey").value = ""; sblUi();
+            sblWsStop(); sblSave(); $("sblUrl").value = ""; $("sblKey").value = ""; sblUi();
           };
         }
         sblUi();
         // poll ringan (delta kecil) tiap ±4 dtk saat layar aktif; mundur bertahap bila gagal
         (function loop() {
-          setTimeout(() => { if (!document.hidden) sblRun(); loop(); }, (sblFails ? Math.min(4000 * 2 ** sblFails, 60000) : 4000) + Math.random() * 1000);
+          setTimeout(() => { if (!document.hidden) sblRun(); loop(); }, (sblFails ? Math.min(4000 * 2 ** sblFails, 60000) : sblWsOk ? 20000 : 4000) + Math.random() * 1000);
         })();
-        document.addEventListener("visibilitychange", () => { if (!document.hidden) sblSoon(200); });
-        window.addEventListener("online", () => sblSoon(500));
-        if (sblReady()) sblSoon(600);
+        document.addEventListener("visibilitychange", () => { if (document.hidden) sblWsStop(); else { sblSoon(200); sblWsOpen(); } });
+        window.addEventListener("online", () => { sblSoon(500); sblWsOpen(); });
+        window.addEventListener("offline", sblWsStop);
+        if (sblReady()) { sblSoon(600); sblWsOpen(); }
       }

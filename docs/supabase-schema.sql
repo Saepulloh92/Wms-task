@@ -48,5 +48,11 @@ end $$;
 revoke all on function wms_put_many(jsonb) from public;
 grant execute on function wms_put_many(jsonb) to anon;
 
+-- Realtime: kirim "ada perubahan" ke HP lewat WebSocket (hindari galat bila sudah terdaftar)
+do $$ begin
+  alter publication supabase_realtime add table wms_records;
+exception when duplicate_object then null;
+end $$;
+
 -- Opsional: bersihkan batu nisan > 30 hari (jalankan berkala / pg_cron)
 -- delete from wms_records where deleted and at < now() - interval '30 days';

@@ -9,7 +9,7 @@ const FX = (n) => JSON.parse(fs.readFileSync(new URL("./fixtures/" + n, import.m
 let fail = 0; const ok = (c, m) => { console.log((c ? "OK   " : "GAGAL ") + m); if (!c) fail++; };
 
 // --- Supabase tiruan (semantik sama dengan docs/supabase-schema.sql) ---
-const table = new Map(); let rev = 0, down = false, calls = 0;
+const table = new Map(); let rev = 0, down = false, calls = 0, wsOn = false; const sockets = new Set();
 const cors = { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "GET,POST,OPTIONS" };
 const handler = async (route) => {
   const req = route.request(), u = new URL(req.url());
@@ -24,6 +24,7 @@ const handler = async (route) => {
       const row = { coll: it.coll, id: it.id, value: it.deleted ? null : it.value, at: it.at, deleted: !!it.deleted, srv: ++rev };
       table.set(k, row); mx = row.srv;
     }
+    for (const w of sockets) w.send(JSON.stringify({ topic: "realtime:wms", event: "postgres_changes", payload: { data: { type: "INSERT" } }, ref: null }));
     return route.fulfill({ status: 200, headers: { ...cors, "content-type": "application/json" }, body: JSON.stringify(mx || rev) });
   }
   if (u.pathname.endsWith("/rest/v1/wms_records")) {
@@ -39,6 +40,12 @@ const errors = [];
 async function device(name) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   await ctx.route("https://sb.test/**", handler);
+  await ctx.routeWebSocket(/sb\.test\/realtime/, (ws) => {
+    if (!wsOn) return ws.close({ code: 1011 });
+    sockets.add(ws);
+    ws.onMessage((msg) => { const m = JSON.parse(String(msg)); if (m.event === "phx_join") ws.send(JSON.stringify({ topic: m.topic, event: "phx_reply", payload: { status: "ok", response: {} }, ref: m.ref })); });
+    ws.onClose(() => sockets.delete(ws));
+  });
   await ctx.route(/^https?:\/\/(?!localhost|sb\.test)/, (r) => r.abort());
   const p = await ctx.newPage(); p.on("pageerror", (e) => errors.push(name + ": " + e.message));
   await p.addInitScript(({ m, u }) => {
@@ -83,6 +90,21 @@ ok(true, "aplikasi tetap berjalan saat Supabase mati");
 down = false;
 await B.waitForFunction(() => /Total tugas\s+36/.test(document.getElementById("tkStats").innerText), null, { timeout: 30000 }).catch(() => {});
 ok(/Total tugas 36/.test(await stats(B)), "setelah Supabase pulih, HP B mengejar otomatis");
+// 4) Realtime (WebSocket): HP D menerima dalam kurang dari 2 dtk, jauh di bawah poll 4 dtk
+wsOn = true;
+const C = await device("C"), D = await device("D");
+await D.waitForFunction(() => /realtime aktif/.test(document.getElementById("sblInfo")?.textContent || ""), null, { timeout: 15000 }).catch(() => {});
+await C.evaluate(() => window.go("data")); await D.evaluate(() => window.go("data"));
+ok(/realtime aktif/.test(await D.innerText("#sblInfo")), "HP D: status Realtime aktif");
+await C.evaluate(() => window.go("dist")); await D.evaluate(() => window.go("dist")); await D.waitForTimeout(300);
+ok(/Total tugas\s+36/.test(await stats(D)), "HP D mengejar 36 tugas yang sudah ada");
+await C.evaluate(() => document.getElementById("tkClear").click()); await C.waitForTimeout(300);
+const yes2 = C.getByRole("button", { name: /Hapus/ }).last(); if (await yes2.isVisible()) await yes2.click();
+const r0 = Date.now();
+await D.waitForFunction(() => /Total tugas\s+0/.test(document.getElementById("tkStats").innerText), null, { timeout: 15000 }).catch(() => {});
+const rdt = Date.now() - r0;
+ok(/Total tugas 0/.test(await stats(D)), "perubahan tiba via Realtime (" + rdt + " ms)");
+ok(rdt < 2500, "Realtime: kurang dari 2,5 detik");
 ok(errors.length === 0, "tanpa error JavaScript " + errors.join(";"));
 console.log("permintaan ke Supabase:", calls);
 await browser.close(); process.exit(fail ? 1 : 0);
