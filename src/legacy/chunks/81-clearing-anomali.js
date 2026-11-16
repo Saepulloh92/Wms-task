@@ -118,20 +118,22 @@
       const K_ANFB = "warehouse_so_clr_anfb_v1";
       let anFb = ld(K_ANFB, {});
       if (!anFb || typeof anFb !== "object" || Array.isArray(anFb)) anFb = {};
+      // format lama (teks "salah"/"normal") -> { v, at, by } agar bisa disinkronkan per voucher (yang terbaru menang)
+      Object.keys(anFb).forEach((k) => { if (typeof anFb[k] === "string") anFb[k] = { v: anFb[k], at: "2026-01-01T00:00:00.000Z", by: "" }; });
+      const anV = (k) => (anFb[k] && anFb[k].v) || "";
       let anSt = new Map();
       const anKey = (v) => (typeof clrKey === "function" ? clrKey(v) : String(v));
       const anStLabel = { ok: ["Counting cocok", "ok"], qty: ["Counting selisih", "red"], nq: ["Qty kosong", "wip"], belum: ["Belum dihitung", "wip"], dup: ["Dobel hitung", "red"] };
       function anX(v) {
-        const k = anKey(v), st = anSt.get(k), f = anFb[k], l = st && anStLabel[st];
-        return `<div class="an-x">${l ? `<span class="pill2 ${l[1]}">${l[0]}</span> ` : ""}` +
-          (f ? `<span class="fine">Putusan: <b>${f === "salah" ? "Terbukti salah item" : "Ternyata normal"}</b></span> <button class="btn sec sm" type="button" data-anfb="${esc(k)}|">Ubah</button>`
-             : `<button class="btn sec sm" type="button" data-anfb="${esc(k)}|salah">Salah item</button> <button class="btn sec sm" type="button" data-anfb="${esc(k)}|normal">Normal</button>`) + "</div>";
+        const k = anKey(v), st = anSt.get(k), f = anV(k), l = st && anStLabel[st], by = f && anFb[k].by ? " oleh " + esc(anFb[k].by) : "";
+        const bt = (val, lb) => `<button class="btn ${f === val ? "pri" : "sec"} sm" type="button" aria-pressed="${f === val}" data-anfb="${esc(k)}|${val}">${lb}</button>`;
+        return `<div class="an-x">${l ? `<span class="pill2 ${l[1]}">${l[0]}</span> ` : ""}` + bt("salah", "Salah item") + " " + bt("normal", "Normal") + (f ? `<span class="fine">Putusan${by}</span>` : "") + "</div>";
       }
       function anAcc(R) {
         const fl = new Set([...R.machine, ...R.weight, ...R.qty].map((x) => anKey(x.v)));
         let salah = 0, normal = 0, cm = 0, cmN = 0;
         fl.forEach((k) => {
-          if (anFb[k] === "salah") salah++; else if (anFb[k] === "normal") normal++;
+          if (anV(k) === "salah") salah++; else if (anV(k) === "normal") normal++;
           const st = anSt.get(k);
           if (st && st !== "belum") { cmN++; if (st === "qty" || st === "dup") cm++; }
         });
@@ -181,7 +183,7 @@
           const fb = e.target.closest && e.target.closest("[data-anfb]");
           if (fb) {
             const [k, val] = fb.dataset.anfb.split("|");
-            if (val) anFb[k] = val; else delete anFb[k];
+            anFb[k] = { v: val, at: new Date().toISOString(), by: typeof curName === "function" ? curName() : "" };
             sv(K_ANFB, anFb);
             anOpen = true;
             clrAnomRender();

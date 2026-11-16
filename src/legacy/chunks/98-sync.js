@@ -5,10 +5,10 @@
       // Isi dua baris ini jika ingin semua perangkat langsung tersambung tanpa mengetik.
       const SYNC_DEFAULT = { url: WMS_CONFIG.syncUrl, token: WMS_CONFIG.syncToken }; // dari .env (VITE_SYNC_URL / VITE_SYNC_TOKEN), BUKAN ditulis di kode // tempel URL Web app (…/exec) di url sekali saja, semua HP otomatis tersambung
       const K_SYNC = "warehouse_so_sync_v1";
-      const SY_STAMP = { counts: "savedAt", dc: "at", tasks: "at", closed: "at", aging: "at", agcls: "at", clrdone: "at" };
-      const syKey = { counts: K_C, dc: K_D, tasks: K_T, closed: K_X, aging: K_AG, agcls: K_AGK, clrdone: K_CLRD };
-      const syGetV = { counts: () => counts, dc: () => dc, tasks: () => tasks, closed: () => closed, aging: () => aging, agcls: () => agingCls, clrdone: () => clrDone };
-      const sySetV = { counts: (v) => (counts = v), dc: (v) => (dc = v), tasks: (v) => (tasks = v), closed: (v) => (closed = v), aging: (v) => (aging = v), agcls: (v) => (agingCls = v), clrdone: (v) => (clrDone = v) };
+      const SY_STAMP = { counts: "savedAt", dc: "at", tasks: "at", closed: "at", aging: "at", agcls: "at", clrdone: "at", anfb: "at" };
+      const syKey = { counts: K_C, dc: K_D, tasks: K_T, closed: K_X, aging: K_AG, agcls: K_AGK, clrdone: K_CLRD, anfb: K_ANFB };
+      const syGetV = { counts: () => counts, dc: () => dc, tasks: () => tasks, closed: () => closed, aging: () => aging, agcls: () => agingCls, clrdone: () => clrDone, anfb: () => anFb };
+      const sySetV = { counts: (v) => (counts = v), dc: (v) => (dc = v), tasks: (v) => (tasks = v), closed: (v) => (closed = v), aging: (v) => (aging = v), agcls: (v) => (agingCls = v), clrdone: (v) => (clrDone = v), anfb: (v) => (anFb = v) };
       const syPlain = { master: K_M, users: K_U, mon: K_MON, codefix: K_F, dcPick: K_DP, dest: "warehouse_so_dest_v1", areacfg: "warehouse_so_areacfg_v1", linkcfg: K_LK, agingcfg: K_AGC, clrrep: K_CLRR, muatdata: K_MUATD, muatsum: K_MUATS };
       // riwayat laporan (Kesesuaian, Muat, Clearing): dikirim ke server per tanggal untuk dibuat sheet laporan
       const syRpt = { kesH: K_KESH, muatH: K_MUATH, clrH: K_CLRH };

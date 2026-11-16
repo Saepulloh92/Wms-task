@@ -74,6 +74,7 @@ var K = {
   aging: 'warehouse_so_aging_v1',          // cek fisik aging per rak: { bin: { tumpak, pipa, qty, by, at } }
   agcls: 'warehouse_so_agcls_v1',          // kelas pipa per kode item: { kode: { c, at } }
   clrrep: 'warehouse_so_clr_rep_v1',          // Laporan Voucher Clearing terakhir: { at, name, rows } (terbaru menang)
+  anfb: 'warehouse_so_clr_anfb_v1',           // putusan petugas atas peringatan dini voucher: { kunci: { v: 'salah'|'normal', at, by } }
   clrdone: 'warehouse_so_clr_done_v1',        // tanda selesai Clearing per voucher: { kunci: { at, by, note } }
   muatdata: 'warehouse_so_muat_data_v1',      // Laporan Muat terakhir: { at, name, tgl, recs, ... } (terbaru menang)
   muatsum: 'warehouse_so_muat_sum_v1',        // ringkasan Laporan Muat terakhir: { at, ... } (terbaru menang)

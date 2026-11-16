@@ -154,6 +154,9 @@ function makeEnv() {
   sync({ [K.clrdone]: { "4043733": { at: "2026-11-10T01:00:00Z", by: "Budi" } } });
   const r3 = sync({ [K.clrdone]: { "4043734": { at: "2026-11-10T02:00:00Z", by: "Sari" }, "4043733": { at: "2026-11-10T00:30:00Z", by: "Lama" } } });
   T("tanda selesai digabung per voucher, yang lebih baru menang", r3.data[K.clrdone]["4043733"].by === "Budi" && r3.data[K.clrdone]["4043734"].by === "Sari");
+  sync({ [K.anfb]: { "4050008": { v: "salah", at: "2026-11-10T01:00:00Z", by: "Budi" } } });
+  const r3b = sync({ [K.anfb]: { "4050008": { v: "normal", at: "2026-11-10T00:30:00Z", by: "Lama" }, "4050007": { v: "normal", at: "2026-11-10T02:00:00Z", by: "Sari" } } });
+  T("putusan peringatan voucher digabung per voucher, yang lebih baru menang", r3b.data[K.anfb]["4050008"].v === "salah" && r3b.data[K.anfb]["4050007"].by === "Sari");
   const r4 = sync({}, { del: { clrdone: ["4043734"] } });
   T("tanda selesai yang dibatalkan (dihapus) ikut terhapus di server", !r4.data[K.clrdone]["4043734"] && !!r4.data[K.clrdone]["4043733"]);
   const r5 = e.call({ token: "TOK", action: "pull" });

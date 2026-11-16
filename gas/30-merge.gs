@@ -2,7 +2,7 @@
 // asal: Code-fix.gs baris 255-378
 /* ===================== MERGE ===================== */
 
-var STAMP = { counts: 'savedAt', dc: 'at', tasks: 'at', closed: 'at', aging: 'at', agcls: 'at', clrdone: 'at', kesH: 'at', muatH: 'at', clrH: 'at' };
+var STAMP = { counts: 'savedAt', dc: 'at', tasks: 'at', closed: 'at', aging: 'at', agcls: 'at', clrdone: 'at', anfb: 'at', kesH: 'at', muatH: 'at', clrH: 'at' };
 
 function ts_(v) {
   var t = v ? new Date(v).getTime() : 0;
