@@ -71,3 +71,37 @@ body.tv .cm-act { display: none !important; }
 #v-clr .vc .vq { flex-wrap: wrap; row-gap: 6px; }
 #v-clr .vc .vq-n { flex: 1 1 auto; }
 #v-clr .vc .vq-d { margin-left: auto; }
+
+/* Operator usia 40-an: huruf besar, tombol besar, kontras jelas, tanpa geser samping */
+#v-clr { font-size: 17px; }
+#v-clr .fine, #v-clr .hint, #v-clr .vm, #v-clr .vc .m { font-size: 16px; color: #3a4650; line-height: 1.45; }
+#v-clr .btn { min-height: 56px; font-size: 18px; font-weight: 800; }
+#v-clr .btn.sm { min-height: 56px; width: 100%; margin-top: 10px; font-size: 18px; }
+#v-clr input:not([type="file"]):not([type="checkbox"]), #v-clr select { min-height: 56px; font-size: 18px; }
+#v-clr summary { font-size: 18px; min-height: 56px; }
+#v-clr .clr-src .cs-t b { font-size: 19px; }
+#v-clr .clr-src .cs-t em { font-size: 16px; color: #3a4650; }
+#v-clr .stepno { width: 30px; height: 30px; font-size: 16px; }
+/* kartu ringkasan: angka besar */
+#v-clr .kc b { font-size: 34px; }
+#v-clr .kc .kl { font-size: 16px; font-weight: 700; color: #1b2630; }
+#v-clr .kc .dchip { font-size: 14px; }
+/* filter: tidak digeser ke samping, semua pilihan terlihat sekaligus */
+#v-clr .clr-lbl { margin: 4px 0 6px; font-size: 16px; font-weight: 800; color: #1b2630; }
+#v-clr .clr-chips { flex-wrap: wrap; overflow: visible; margin: 0 0 8px; padding: 0; }
+#v-clr .clr-st { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#v-clr .clr-chips .chip { min-height: 52px; font-size: 17px; font-weight: 800; padding: 8px 12px; white-space: normal; line-height: 1.2; text-align: center; }
+#v-clr .clr-shf .chip { min-height: 48px; font-size: 16px; }
+#v-clr .clr-bar { margin-bottom: 8px; padding-bottom: 8px; }
+#v-clr .clr-tools .fine { font-size: 17px; font-weight: 800; color: #1b2630; }
+#v-clr .clr-sort { font-size: 16px; color: #1b2630; font-weight: 700; }
+#v-clr .clr-sort select { min-height: 52px; font-size: 17px; }
+/* kartu voucher: nomor dan angka besar, status jelas */
+#v-clr .vc { border-left-width: 7px; padding: 14px; }
+#v-clr .vc .id { font-size: 23px; }
+#v-clr .vc .nm { font-size: 17px; color: #1b2630; }
+#v-clr .vc .pill { font-size: 16px; padding: 6px 12px; font-weight: 800; }
+#v-clr .vc .vq-n { font-size: 17px; color: #3a4650; }
+#v-clr .vc .vq-n b { font-size: 28px; }
+#v-clr .vc .vq-d { font-size: 18px; padding: 8px 14px; border-radius: 12px; }
+@media (max-width: 380px) { #v-clr .clr-chips .chip { font-size: 16px; padding: 8px 6px; } }
