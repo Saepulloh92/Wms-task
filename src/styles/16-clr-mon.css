@@ -67,3 +67,7 @@ body.tv .cm-act { display: none !important; }
 #v-clr .kc-go:active { transform: scale(0.98); }
 #v-clr .clr-out h3 { margin: 0 0 6px; }
 #v-clr .clr-out .row-act .btn { flex: 1 1 140px; }
+/* HP kecil (320px): badge selisih pindah ke baris sendiri, tidak menimpa angka Hitung */
+#v-clr .vc .vq { flex-wrap: wrap; row-gap: 6px; }
+#v-clr .vc .vq-n { flex: 1 1 auto; }
+#v-clr .vc .vq-d { margin-left: auto; }
