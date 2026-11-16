@@ -14,3 +14,11 @@ input[type="file"] { font-size: 16px; }
 .an-x { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
 .an-x .btn.sm { min-height: 44px; padding: 6px 12px; }
 .an-acc { margin: 8px 0; }
+.cm-plan { list-style: none; margin: 6px 0 10px; padding: 0; display: grid; gap: 8px; }
+.cm-pl { border: 1px solid var(--line, #d8e0e8); border-radius: 12px; padding: 10px 12px; background: var(--card, #fff); }
+.cm-pt { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; }
+.cm-pt b { font-size: 16px; overflow-wrap: anywhere; }
+.cm-pt span { color: var(--muted, #6b7a89); font-size: 13px; }
+.cm-why { margin: 4px 0 8px; font-size: 14px; }
+.cm-pb { display: flex; gap: 8px; }
+.cm-pb .btn { flex: 1; min-height: 44px; }

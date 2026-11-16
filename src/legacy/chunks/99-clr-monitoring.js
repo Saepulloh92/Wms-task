@@ -18,12 +18,31 @@
       function cmAn() {
         try {
           const a = typeof anSummary === "function" ? anSummary() : null;
-          if (!a || !a.flag) return "";
-          const txt = a.chk
+          if (!a || !(a.flag || a.lori.length)) return "";
+          const acc = a.chk
             ? "<b>" + fmt(a.salah) + "</b> terbukti salah item · " + fmt(a.normal) + " normal · akurasi <b>" + a.pct + "%</b> dari " + fmt(a.chk) + " yang diperiksa"
             : "belum ada yang diputuskan petugas";
-          return '<div class="cm-sec">Peringatan dini voucher</div><p class="cm-det cm-an">' + fmt(a.flag) + " ditandai · " + txt + "</p>";
+          const top = a.plan.slice(0, 5), fb = (k, v, lb, cls) => '<button class="btn ' + cls + ' sm" type="button" data-anfb="' + esc(k) + "|" + v + '">' + lb + "</button>";
+          const rows = top.map((x) => '<li class="cm-pl"><div class="cm-pt"><b>' + esc(x.v) + "</b><span>" + esc([x.mc && "Mesin " + x.mc, x.lr && "Lori " + x.lr, x.item].filter(Boolean).join(" · ")) + "</span></div>" +
+            '<p class="cm-why">' + esc(x.why.join(" · ")) + "</p>" +
+            '<div class="cm-pb">' + fb(x.k, "salah", "Salah item", "pri") + fb(x.k, "normal", "Normal", "sec") + "</div></li>").join("");
+          const lori = a.lori.slice(0, 3).map((x) => '<li class="cm-pl"><div class="cm-pt"><b>Lori ' + esc(x.lr) + "</b><span>" + esc(x.item) + '</span></div><p class="cm-why">Total qty ' + fmt(x.q) + " dari " + fmt(x.nv) + " voucher, lori lain biasanya " + fmt(x.usual) + ". Cek fisik lori ini.</p></li>").join("");
+          const left = a.plan.length;
+          return '<div class="cm-sec">Cek hari ini · peringatan dini voucher</div>' +
+            '<p class="cm-det cm-an">' + fmt(a.flag) + " ditandai · " + (left ? "<b>" + fmt(left) + "</b> belum diputuskan" : "semua sudah diputuskan") + " · " + acc + "</p>" +
+            (left ? '<p class="fine">Cek fisik voucher di bawah (urut paling perlu dulu), lalu tekan hasilnya.</p>' : "") +
+            (rows ? '<ul class="cm-plan">' + rows + "</ul>" : "") +
+            (lori ? '<div class="cm-sec">Lori perlu dicek</div><ul class="cm-plan">' + lori + "</ul>" : "") +
+            '<div class="cm-pb">' + (left > top.length ? '<button class="btn sec sm" type="button" id="cmAnAll">Lihat semua (' + fmt(left) + ")</button>" : "") + '<button class="btn sec sm" type="button" id="cmAnCopy">Bagikan daftar</button></div>';
         } catch (e) { return ""; }
+      }
+      // teks daftar kerja untuk dibagikan (WhatsApp/Telegram): voucher paling perlu dicek dulu + lori
+      function cmAnText(a) {
+        const L = ["Cek hari ini · peringatan dini voucher Clearing", new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })];
+        a.plan.slice(0, 10).forEach((x, i) => L.push((i + 1) + ". " + x.v + " · " + [x.mc && "Mesin " + x.mc, x.lr && "Lori " + x.lr, x.item].filter(Boolean).join(" · ") + " — " + x.why.join("; ")));
+        a.lori.slice(0, 5).forEach((x) => L.push("Lori " + x.lr + " · " + x.item + " — total qty " + fmt(x.q) + " (median lori lain " + fmt(x.usual) + ")"));
+        L.push("Cek fisik, lalu tandai Salah item / Normal di aplikasi.");
+        return L.join("\n");
       }
       function monClrRender() {
         const el = $("monClr");
@@ -53,6 +72,17 @@
             (tr.length > 1 ? '<div class="cm-sec">Cocok per hari (' + tr.length + ' hari)</div><div class="cm-tr">' + tr.map((d) => '<div title="' + esc(d.tgl) + ": " + d.pct + '% cocok"><i class="' + (d.pct < 60 ? "cm-low" : d.pct < 90 ? "cm-mid" : "") + '" style="height:' + Math.max(d.pct, 3) + '%"></i>' + esc(d.tgl.slice(8)) + "</div>").join("") + "</div>" : "") +
             '<div class="cm-act">' + (allowedView("clr") ? '<button class="btn pri sm inl" id="cmOpen" type="button">Buka Clearing</button>' : "") +
             (clr.url && clrRep ? '<button class="btn sec sm inl" id="cmRef" type="button"' + (clrBusy ? " disabled" : "") + ">" + (clrBusy ? "Memuat…" : "Muat ulang counting") + "</button>" : "") + "</div></section>";
+          el.onclick = (e) => {
+            const b = e.target.closest && e.target.closest("[data-anfb]");
+            if (b) { const [k, v] = b.dataset.anfb.split("|"); anSetVerdict(k, v); monClrRender(); if (typeof clrAnomRender === "function") clrAnomRender(); return; }
+            if (e.target.closest && e.target.closest("#cmAnAll")) go("clr");
+            if (e.target.closest && e.target.closest("#cmAnCopy")) {
+              const a = anSummary(), t = a ? cmAnText(a) : "";
+              if (!t) return;
+              if (navigator.share) navigator.share({ text: t }).catch(() => {});
+              else if (navigator.clipboard) navigator.clipboard.writeText(t).then(() => toast("Daftar disalin"), () => toast("Gagal menyalin"));
+            }
+          };
           const o = $("cmOpen"), r = $("cmRef");
           if (o) o.onclick = () => go("clr");
           if (r) r.onclick = () => clrFetch(true);

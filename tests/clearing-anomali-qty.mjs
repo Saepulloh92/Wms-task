@@ -67,5 +67,19 @@ ok(Object.values(fbv).every((x) => x && x.at && (x.v === "salah" || x.v === "nor
 await p.evaluate(() => window.go("mon")); await p.waitForTimeout(500);
 const M = await p.locator("#monClr").innerText();
 ok(/Peringatan dini voucher/i.test(M) && /1 terbukti salah item/.test(M) && /akurasi 50%/.test(M), "Monitoring: akurasi 50%: " + (M.match(/\d+ ditandai[^\n]*/) || ["(tidak ada)"])[0]);
+// daftar kerja di Monitoring: voucher paling perlu dicek + tombol putusan langsung
+ok(/Cek hari ini/i.test(M) && /belum diputuskan/.test(M), "Monitoring: judul 'Cek hari ini' dan jumlah belum diputuskan");
+const nRows = await p.locator("#monClr .cm-pl").count();
+ok(await p.locator("#monClr .cm-plan .cm-pl").first().locator('[data-anfb$="|salah"]').count() === 1 && /Lori L7/.test(M), "Monitoring: tiap voucher punya tombol Salah item / Normal, dan Lori L7 perlu dicek");
+const firstV = (await p.locator("#monClr .cm-pl .cm-pt b").first().innerText()).trim();
+ok(/Qty/.test(await p.locator("#monClr .cm-why").first().innerText()), "Monitoring: alasan singkat tampil ('Qty ... median ...')");
+await p.locator("#monClr .cm-plan .cm-pl").first().locator('[data-anfb$="|salah"]').click(); await p.waitForTimeout(300);
+const M2 = await p.locator("#monClr").innerText();
+ok(/2 terbukti salah item/.test(M2), "Monitoring: tekan 'Salah item' langsung tercatat (2 terbukti)");
+ok(!(await p.locator("#monClr .cm-pt b").allInnerTexts()).some((t) => t.trim() === firstV), "Monitoring: voucher yang sudah diputuskan hilang dari daftar kerja (" + firstV + ")");
+ok((await p.locator("#monClr .cm-plan .cm-pl").count()) === nRows - 2 || (await p.locator("#monClr .cm-pl").count()) < nRows, "Monitoring: daftar kerja berkurang");
+ok(await p.locator("#cmAnCopy").count() === 1, "Monitoring: tombol 'Bagikan daftar' tersedia");
+const share = await p.evaluate(() => cmAnText(anSummary()));
+ok(/Cek hari ini/.test(share) && /Lori L7/.test(share) && /1\. \d{7}/.test(share) && /Salah item \/ Normal/.test(share), "teks bagikan: judul, voucher berurut, lori, dan petunjuk tindakan");
 ok(errs.length === 0, "tanpa error JavaScript " + errs.join("|"));
 await b.close(); process.exit(fail ? 1 : 0);

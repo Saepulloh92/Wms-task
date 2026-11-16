@@ -183,7 +183,32 @@
         if (!R.cols.mc && !R.cols.nw && !R.cols.gw && !R.cols.q) return null;
         const st = new Map();
         try { if (typeof clrBuild === "function" && clrCnt) clrBuild().forEach((x) => st.set(anKey(x.v), x.st)); } catch (e) {}
-        return anStats(R, st);
+        const o = anStats(R, st);
+        o.plan = anPlan(R).filter((x) => !anV(x.k));
+        o.planAll = o.plan.length + [...new Set([...R.machine, ...R.weight, ...R.qty].map((x) => anKey(x.v)))].filter((k) => anV(k)).length;
+        o.lori = R.lori;
+        return o;
+      }
+      function anSetVerdict(k, val) {
+        anFb[k] = { v: val, at: new Date().toISOString(), by: typeof curName === "function" ? curName() : "" };
+        sv(K_ANFB, anFb);
+      }
+      /* Daftar kerja: satu baris per voucher (gabungan semua sinyal), urut dari yang paling perlu dicek dulu
+         (jumlah sinyal berbeda, lalu bobot: tinggi 3 / biasa 1), lengkap dengan alasan singkat, mesin dan lori. */
+      function anPlan(R) {
+        const info = new Map();
+        (clrRep && clrRep.rows ? clrRep.rows : []).forEach((r) => { const k = anKey(r.v); if (!info.has(k)) info.set(k, r); });
+        const m = new Map();
+        const add = (v, w, why, layer) => {
+          const k = anKey(v), r = info.get(k) || {};
+          if (!m.has(k)) m.set(k, { k, v, mc: r.mc || "", lr: r.lr || "", item: anLabel(r) || "", w: 0, layers: new Set(), why: [] });
+          const o = m.get(k);
+          o.w += w; o.layers.add(layer); o.why.push(why);
+        };
+        R.machine.forEach((x) => add(x.v, x.alt ? 3 : 1, "Mesin " + x.mc + " biasanya " + x.usual + (x.alt ? ", ini selang-seling" : ""), "mesin"));
+        R.weight.forEach((x) => add(x.v, x.hi ? 3 : 1, x.bad ? x.bad : "Berat " + x.f.map((f) => f.label + " " + anPct(f.dev)).join(", "), "berat"));
+        R.qty.forEach((x) => add(x.v, x.hi ? 3 : 1, "Qty " + fmt(x.q) + " (median " + fmt(x.usual) + ")", "qty"));
+        return [...m.values()].sort((a, b) => b.layers.size - a.layers.size || b.w - a.w || Number(a.v) - Number(b.v) || String(a.v).localeCompare(String(b.v)));
       }
       function anAcc(R) {
         const o = anStats(R, anSt);
@@ -236,8 +261,7 @@
           const fb = e.target.closest && e.target.closest("[data-anfb]");
           if (fb) {
             const [k, val] = fb.dataset.anfb.split("|");
-            anFb[k] = { v: val, at: new Date().toISOString(), by: typeof curName === "function" ? curName() : "" };
-            sv(K_ANFB, anFb);
+            anSetVerdict(k, val);
             anOpen = true;
             clrAnomRender();
             return;
