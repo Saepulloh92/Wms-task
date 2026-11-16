@@ -1,0 +1,26 @@
+import { createRequire } from "node:module";
+import fs from "node:fs";
+const { chromium } = createRequire("/home/claude/Wms-task/")("playwright");
+const FX = (n) => JSON.parse(fs.readFileSync("/home/claude/Wms-task/tests/fixtures/" + n, "utf8"));
+const b = await chromium.launch(); const p = await b.newPage();
+let bad = 0; const ok = (c, m) => { console.log((c ? "OK   " : "GAGAL ") + m); if (!c) bad++; };
+const errs = []; p.on("pageerror", (e) => errs.push(e.message));
+await p.route(/^https?:\/\/(?!localhost)/, (r) => r.abort());
+await p.addInitScript((s) => { localStorage.setItem("warehouse_so_master_v2", JSON.stringify(s.master)); localStorage.setItem("warehouse_so_users_v1", JSON.stringify(s.users)); localStorage.setItem("warehouse_so_lgsetup_v1", "1"); }, { master: FX("master.json"), users: FX("users.json") });
+await p.goto("http://localhost:4173/"); await p.waitForFunction(() => document.getElementById("pgT")?.textContent.trim());
+const r = await p.evaluate(() => {
+  const rep = [["No Voucher", "Qty", "Nama Item"], ["4043814", "1,050", "X"], ["4043815", "12,345", "Y"], ["4043816", "0,250", "Z"], ["4043817", "1.050", "W"], ["A-123", "5", "K"], ["B-123", "7", "L"]];
+  const cnt = [["Nama Foto", "Total Count"], ["4043814", "1050"], ["A-123", "5"], ["B-123", "9"]];
+  const R = clrParseRep(rep), C = clrParseCnt(cnt, { start: 2, cv: "Nama Foto", cq: "Total Count", ck: "Kode Item" });
+  return { q: R.map((x) => x.q), keys: [clrKey("A-123"), clrKey("B-123"), clrKey("123"), clrKey("0123"), clrKey("IMG_4043814"), clrKey("4043742_2026-11-06-100438"), clrKey("4043814.0")], shift: ["7.30", "06.11.2026", "06.11.2026 15.30", "14:59", "15:00"].map(clrShiftOf), cc: C.map((x) => clrKey(x.v)) };
+});
+ok(r.q[0] === 1050 && r.q[1] === 12345, "qty '1,050' dan '12,345' (ribuan Inggris) dibaca 1050 dan 12345: " + r.q.slice(0, 2));
+ok(r.q[2] === 0.25 && r.q[3] === 1050, "qty '0,250' tetap desimal 0.25 dan '1.050' = 1050: " + r.q.slice(2, 4));
+ok(r.keys[0] === "A-123" && r.keys[1] === "B-123" && r.keys[0] !== r.keys[1], "kode A-123 dan B-123 tidak bertabrakan: " + r.keys.slice(0, 2));
+ok(r.keys[2] === "123" && r.keys[3] === "123", "angka murni 123 / 0123 tetap sama");
+ok(r.keys[4] === "4043814" && r.keys[5] === "4043742" && r.keys[6] === "4043814", "nama foto berisi voucher tetap cocok (IMG_4043814, ekor tanggal, .0)");
+ok(r.shift[0] === "Shift 1", "jam 7.30 (titik) -> Shift 1: " + r.shift[0]);
+ok(r.shift[1] === "" , "tanggal 06.11.2026 bukan jam: '" + r.shift[1] + "'");
+ok(r.shift[3] === "Shift 1" && r.shift[4] === "Shift 2", "jam bertitik dua tidak berubah");
+ok(errs.length === 0, "tanpa error JavaScript " + errs.join("|"));
+await b.close(); process.exit(bad ? 1 : 0);

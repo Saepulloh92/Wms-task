@@ -23,8 +23,9 @@
         let s = clrFixDigits(v).trim(); // angka lebar-penuh dan O/I yang salah ketik dibaca sebagai angka biasa
         if (/^\d+\.0+$/.test(s)) s = s.replace(/\.0+$/, ""); // "4043814.0" hasil Excel/CSV
         // nama foto "4043742_2026-11-06-100438": nomor voucher = deretan angka paling depan (>= 5 digit) sebelum tanda lain
-        const lead = s.match(/^\s*(\d{5,})(?=\D|$)/),
-          d = lead ? lead[1] : s.replace(/\D/g, "");
+        const lead = s.match(/^\s*(\d{5,})(?=\D|$)/), dg = s.replace(/\D/g, "");
+        // kode berhuruf dengan angka pendek (mis. "A-123") tetap utuh agar tidak bertabrakan dengan voucher lain; murni angka atau >= 5 digit tetap diambil angkanya
+        const d = lead ? lead[1] : /^\d+$/.test(s) || dg.length >= 5 ? dg : "";
         return d ? d.replace(/^0+/, "") || "0" : s.toUpperCase();
       };
       const sms8 = (k) => {
@@ -32,6 +33,11 @@
         if (/e\+/i.test(s)) return "";
         const d = s.replace(/\D/g, "");
         return d.length >= 8 ? d.slice(0, 8) : "";
+      };
+      // qty barang: "1,050" / "12,345" (koma = pemisah ribuan format Inggris) dibaca 1050 / 12345; selain itu aturan monNum (koma = desimal)
+      const clrQty = (v) => {
+        const t = String(v ?? "").trim().replace(/\s/g, "");
+        return /^[1-9]\d{0,2}(,\d{3})+$/.test(t) ? Number(t.replace(/,/g, "")) : monNum(t);
       };
       function clrIdx(spec, hdr) {
         spec = String(spec || "").trim();
@@ -46,7 +52,7 @@
       }
       let clrShF = "all";
       function clrShiftOf(t) {
-        const m = String(t || "").match(/(\d{1,2}):(\d{2})/);
+        const m = String(t || "").match(/(\d{1,2}):(\d{2})/) || String(t || "").match(/(?<![\d.])(\d{1,2})\.(\d{2})(?![\d.])/); // 7.30 (titik) diterima; tanggal 06.11.2026 tidak
         if (!m) return "";
         const h = Number(m[1]), a = 7, b = 15, c = 23; // Shift 1 mulai 07.00, Shift 2 15.00, Shift 3 23.00
         return "Shift " + (h >= c || h < a ? 3 : h >= b ? 2 : 1);
@@ -70,7 +76,7 @@
         rows.slice(hi + 1).forEach((r) => {
           const v = String(r[iv] ?? "").trim();
           if (!v) return;
-          out.push({ v, q: monNum(String(r[iq] ?? "")), k: ik >= 0 ? String(r[ik] ?? "").trim() : "", n: inm >= 0 ? String(r[inm] ?? "").trim() : "", r: ir >= 0 ? String(r[ir] ?? "").trim() : "", lr: il >= 0 ? String(r[il] ?? "").trim() : "", pic: ip >= 0 ? String(r[ip] ?? "").trim() : "", grp: ig >= 0 ? String(r[ig] ?? "").trim() : "", sh: ish >= 0 ? clrShiftNorm(r[ish]) : itm >= 0 ? clrShiftOf(r[itm]) : "",
+          out.push({ v, q: clrQty(r[iq]), k: ik >= 0 ? String(r[ik] ?? "").trim() : "", n: inm >= 0 ? String(r[inm] ?? "").trim() : "", r: ir >= 0 ? String(r[ir] ?? "").trim() : "", lr: il >= 0 ? String(r[il] ?? "").trim() : "", pic: ip >= 0 ? String(r[ip] ?? "").trim() : "", grp: ig >= 0 ? String(r[ig] ?? "").trim() : "", sh: ish >= 0 ? clrShiftNorm(r[ish]) : itm >= 0 ? clrShiftOf(r[itm]) : "",
             mc: imc >= 0 ? String(r[imc] ?? "").trim() : "", nw: inw >= 0 ? monNum(String(r[inw] ?? "")) : null, gw: igw >= 0 ? monNum(String(r[igw] ?? "")) : null,
             afk: /afkir|reject/i.test((ijn >= 0 ? String(r[ijn] ?? "") : "") + " " + (inm >= 0 ? String(r[inm] ?? "") : "")) });
         });
@@ -95,9 +101,9 @@
           const sfx = /\(\d+\)\s*(\.\w{2,4})?$/.test(v);
           v = v.replace(/\.(jpe?g|png|heic|webp)$/i, "").replace(/\s*\(\d+\)\s*$/, "").trim();
           if (!v) return;
-          out.push({ v, q: monNum(String(r[iq] ?? "")), k: ik >= 0 ? String(r[ik] ?? "").trim() : "", sfx, t: it >= 0 ? String(r[it] ?? "").trim() : "", lr: il >= 0 ? String(r[il] ?? "").trim() : "" });
+          out.push({ v, q: clrQty(r[iq]), k: ik >= 0 ? String(r[ik] ?? "").trim() : "", sfx, t: it >= 0 ? String(r[it] ?? "").trim() : "", lr: il >= 0 ? String(r[il] ?? "").trim() : "" });
         });
-        // foto dobel (akhiran "(1)") dengan qty sama = satu hitungan; qty beda tetap ditandai Dobel hitung
+        // foto dobel (akhiran "(1)") dengan qty sama = satu hitungan; qty beda: dipakai foto TERBARU (lihat clrLatest). Status "Dobel hitung" hanya muncul dari riwayat lama
         const grp = new Map();
         out.forEach((o) => { const k = clrKey(o.v); if (!grp.has(k)) grp.set(k, []); grp.get(k).push(o); });
         const res = [];
