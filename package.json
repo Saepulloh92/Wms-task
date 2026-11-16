@@ -21,7 +21,8 @@
     "test:clr-voucher": "node tests/clearing-voucher.mjs",
     "test:scan": "node tests/scan.mjs",
     "test:remind": "node tests/remind.mjs",
-    "test:clr-anomali": "node tests/clearing-anomali.mjs"
+    "test:clr-anomali": "node tests/clearing-anomali.mjs",
+    "test:csv": "node tests/csv-safe.mjs"
   },
   "dependencies": {
     "react": "18.3.1",

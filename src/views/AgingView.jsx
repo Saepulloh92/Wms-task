@@ -1,3 +1,4 @@
+import { csvSafe } from "../lib/csv.js";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useWms } from "../legacy/bridge.js";
 import { fmt } from "../lib/format.js";
@@ -71,7 +72,7 @@ export default function AgingView() {
       () => wms.toast("Gagal menyalin. Izinkan akses clipboard di browser."),
     );
   const csv = () => {
-    const q = (v) => '"' + String(v ?? "").replace(/"/g, '""') + '"';
+    const q = (v) => '"' + csvSafe(v).replace(/"/g, '""') + '"';
     const head = ["Area", "Rak", "Sinyal", "Aging", "Nama Item", "Kelas Pipa", "Tumpak Sistem", "Stok Sistem", "Actual Tumpak", "Actual Pipa", "Actual Qty", "Selisih", "Status"];
     const body = list.map((x) => { const t = actualOf(x, act[x.bin]); return [x.area, x.bin, normSignal(x.sinyal), x.aging, x.item, cls[x.kode] || "", x.tumpak || "", x.onhand, t ? t.tumpak : "", t ? t.item : "", t && t.qty != null ? t.qty : "", t && t.qty != null ? t.diff : "", t ? (t.ok ? "Sesuai" : "Selisih: " + t.reasons.join(", ")) : "Belum dicek"].map(q).join(","); });
     const url = URL.createObjectURL(new Blob(["\ufeff" + [head.map(q).join(","), ...body].join("\r\n")], { type: "text/csv" }));

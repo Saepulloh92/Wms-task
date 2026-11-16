@@ -36,9 +36,14 @@
               .join("")
           : '<div class="empty">Tidak ada data untuk filter ini.</div>';
       }
+      // teks yang diawali = + @ (atau - diikuti bukan angka) dibaca Excel sebagai rumus: diberi awalan ' agar tetap teks
+      function csvSafe(v) {
+        const t = String(v ?? "");
+        return typeof v === "string" && /^[\t\r=+@]|^-(?![\d.,]+$)/.test(t) ? "'" + t : t;
+      }
       function csvOut(rows, name) {
         const csv = rows
-          .map((r) => r.map((v) => '"' + String(v ?? "").replace(/"/g, '""') + '"').join(","))
+          .map((r) => r.map((v) => '"' + csvSafe(v).replace(/"/g, '""') + '"').join(","))
           .join("\r\n");
         const b = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" }),
           u = URL.createObjectURL(b),

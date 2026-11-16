@@ -1,3 +1,4 @@
+import { csvSafe } from "./csv.js";
 // Laporan SPV: ringkas aktivitas Per Bin, DC, Aging, Muat, dan Clearing per minggu / bulan / tahun.
 // Fungsi murni (tanpa DOM/state) agar bisa diuji di Node: lihat tests/report.mjs.
 
@@ -271,7 +272,7 @@ export function reportText(r, { area = "", by = "" } = {}) {
 
 /** Semua aktivitas bin/DC/Aging pada periode sebagai CSV (dibuka di Excel). */
 export function reportCsv(r, events) {
-  const q = (v) => '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"';
+  const q = (v) => '"' + csvSafe(v).replace(/"/g, '""') + '"';
   const rows = [["Modul", "Waktu", "Petugas", "Bin/Item", "Area", "Item", "Sistem", "Fisik", "Selisih", "Status", "Tumpak Sistem", "Tumpak Aktual", "Item Aktual", "Keterangan"]];
   const lbl = { bin: "Per Bin", dc: "DC Harian", aging: "Aging" };
   const a = dayKey(r.start), b = dayKey(r.end);
