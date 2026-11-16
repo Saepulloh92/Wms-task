@@ -52,5 +52,9 @@ ok(!(await p.evaluate(() => document.getElementById("clrSrc").contains(document.
 const fbv = await p.evaluate(() => JSON.parse(localStorage.getItem("warehouse_so_clr_anfb_v1")));
 ok(Object.values(fbv).every((x) => x && x.at && (x.v === "salah" || x.v === "normal")), "putusan tersimpan sebagai {v, at, by} agar bisa disinkronkan");
 ok(/Dari 2 voucher yang sudah diperiksa/.test(await p.locator("#clrAnom").innerText()), "putusan tersimpan setelah muat ulang");
+// kartu Clearing di Monitoring memuat ringkasan akurasi
+await p.evaluate(() => window.go("mon")); await p.waitForTimeout(500);
+const M = await p.locator("#monClr").innerText();
+ok(/Peringatan dini voucher/i.test(M) && /2 ditandai/.test(M) && /1 terbukti salah item/.test(M) && /akurasi 50%/.test(M), "Monitoring: '2 ditandai · 1 terbukti salah item · akurasi 50%': " + (M.match(/\d+ ditandai[^\n]*/) || ["(tidak ada)"])[0]);
 ok(errs.length === 0, "tanpa error JavaScript " + errs.join("|"));
 await b.close(); process.exit(fail ? 1 : 0);

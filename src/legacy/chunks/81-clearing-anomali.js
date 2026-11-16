@@ -15,7 +15,7 @@
       // urutan produksi: nomor voucher berurutan mengikuti waktu produksi
       const anOrd = (a, b) => (Number(a.v) - Number(b.v) || 0) || String(a.v).localeCompare(String(b.v));
       function clrAnomaly(rows, pct = 3) {
-        const cols = { mc: rows.some((r) => r.mc), nw: rows.some((r) => r.nw > 0), gw: rows.some((r) => r.gw > 0) };
+        const cols = { q: rows.some((r) => r.q > 0), mc: rows.some((r) => r.mc), nw: rows.some((r) => r.nw > 0), gw: rows.some((r) => r.gw > 0) };
         const std = rows.filter((r) => !r.afk);
         const out = { cols, machine: [], weight: [], qty: [], n: rows.length, afkir: rows.length - std.length };
         if (cols.mc) {
@@ -129,17 +129,32 @@
         const bt = (val, lb) => `<button class="btn ${f === val ? "pri" : "sec"} sm" type="button" aria-pressed="${f === val}" data-anfb="${esc(k)}|${val}">${lb}</button>`;
         return `<div class="an-x">${l ? `<span class="pill2 ${l[1]}">${l[0]}</span> ` : ""}` + bt("salah", "Salah item") + " " + bt("normal", "Normal") + (f ? `<span class="fine">Putusan${by}</span>` : "") + "</div>";
       }
-      function anAcc(R) {
+      /* hitung akurasi peringatan: ditandai, sudah diputuskan petugas (salah/normal), dan kecocokan dengan counting */
+      function anStats(R, st) {
         const fl = new Set([...R.machine, ...R.weight, ...R.qty].map((x) => anKey(x.v)));
-        let salah = 0, normal = 0, cm = 0, cmN = 0;
+        const o = { flag: fl.size, salah: 0, normal: 0, chk: 0, pct: 0, cmN: 0, cm: 0 };
         fl.forEach((k) => {
-          if (anV(k) === "salah") salah++; else if (anV(k) === "normal") normal++;
-          const st = anSt.get(k);
-          if (st && st !== "belum") { cmN++; if (st === "qty" || st === "dup") cm++; }
+          if (anV(k) === "salah") o.salah++; else if (anV(k) === "normal") o.normal++;
+          const s0 = st && st.get(k);
+          if (s0 && s0 !== "belum") { o.cmN++; if (s0 === "qty" || s0 === "dup") o.cm++; }
         });
-        const chk = salah + normal;
-        const a = chk ? `Dari ${fmt(chk)} voucher yang sudah diperiksa, <b>${fmt(salah)}</b> terbukti salah item (${Math.round((salah / chk) * 100)}%).` : "Belum ada putusan petugas: tekan <b>Salah item</b> atau <b>Normal</b> pada voucher yang sudah dicek fisik.";
-        const b = cmN ? ` Dari ${fmt(cmN)} voucher bertanda yang sudah dihitung counting, ${fmt(cm)} juga selisih qty.` : "";
+        o.chk = o.salah + o.normal;
+        o.pct = o.chk ? Math.round((o.salah / o.chk) * 100) : 0;
+        return o;
+      }
+      // dipakai kartu Clearing di Monitoring (data laporan + putusan yang tersinkron)
+      function anSummary() {
+        if (typeof clrRep === "undefined" || !clrRep || !clrRep.rows || !clrRep.rows.length) return null;
+        const R = clrAnomaly(clrRep.rows, anCfg.pct);
+        if (!R.cols.mc && !R.cols.nw && !R.cols.gw && !R.cols.q) return null;
+        const st = new Map();
+        try { if (typeof clrBuild === "function" && clrCnt) clrBuild().forEach((x) => st.set(anKey(x.v), x.st)); } catch (e) {}
+        return anStats(R, st);
+      }
+      function anAcc(R) {
+        const o = anStats(R, anSt);
+        const a = o.chk ? `Dari ${fmt(o.chk)} voucher yang sudah diperiksa, <b>${fmt(o.salah)}</b> terbukti salah item (${o.pct}%).` : "Belum ada putusan petugas: tekan <b>Salah item</b> atau <b>Normal</b> pada voucher yang sudah dicek fisik.";
+        const b = o.cmN ? ` Dari ${fmt(o.cmN)} voucher bertanda yang sudah dihitung counting, ${fmt(o.cm)} juga selisih qty.` : "";
         return `<p class="fine an-acc" role="status">Akurasi: ${a}${b}</p>`;
       }
       const anPct = (d) => (d > 0 ? "+" : d < 0 ? "−" : "") + Math.abs(d).toFixed(1).replace(".", ",") + "%";

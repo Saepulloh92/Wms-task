@@ -14,6 +14,17 @@
         const open = h.bad || 0;
         return { s: { total: h.n, ok: h.ok, open, qty: 0, dup: 0, nq: 0, belum: 0, done: 0, wms: null, cnt: null, sel: 0, pct: h.n ? Math.round((h.ok / h.n) * 100) : 0, byShift: [], top: [], status: open ? "cek" : "ok" }, live: false, at: Date.parse(h.at) || 0, tgl: h.tgl };
       }
+      // akurasi peringatan dini voucher: berapa yang ditandai, sudah diputuskan petugas, dan terbukti salah item
+      function cmAn() {
+        try {
+          const a = typeof anSummary === "function" ? anSummary() : null;
+          if (!a || !a.flag) return "";
+          const txt = a.chk
+            ? "<b>" + fmt(a.salah) + "</b> terbukti salah item · " + fmt(a.normal) + " normal · akurasi <b>" + a.pct + "%</b> dari " + fmt(a.chk) + " yang diperiksa"
+            : "belum ada yang diputuskan petugas";
+          return '<div class="cm-sec">Peringatan dini voucher</div><p class="cm-det cm-an">' + fmt(a.flag) + " ditandai · " + txt + "</p>";
+        } catch (e) { return ""; }
+      }
       function monClrRender() {
         const el = $("monClr");
         if (!el) return;
@@ -36,6 +47,7 @@
             '<div class="cm-bar" role="progressbar" aria-label="Progres Clearing" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + s.pct + '"><i style="width:' + s.pct + '%"></i></div>' +
             (s.wms == null ? "" : '<p class="cm-qty">Qty WMS <b>' + fmt(s.wms) + "</b> · Counting <b>" + fmt(s.cnt) + "</b> · Selisih <b" + (s.sel ? ' class="cm-neg"' : "") + ">" + (s.sel > 0 ? "+" : "") + fmt(s.sel) + "</b></p>") +
             (det ? '<p class="cm-det">' + esc(det) + "</p>" : "") +
+            cmAn() +
             (s.byShift.length ? '<div class="cm-sec">Per shift</div><div class="cm-sh"><span class="fine">Shift</span><span class="fine">Cocok</span><span class="fine">Cek</span>' + s.byShift.map((g) => "<span>" + esc(g.shift) + "</span><span>" + fmt(g.ok) + "/" + fmt(g.total) + "</span><span>" + (g.open ? "<b>" + fmt(g.open) + "</b>" : "0") + "</span>").join("") + "</div>" : "") +
             (s.top.length ? '<div class="cm-sec">Perlu ditindaklanjuti' + (s.open > s.top.length ? " (" + s.top.length + " dari " + fmt(s.open) + ")" : "") + '</div><ul class="cm-todo">' + s.top.map((x) => '<li class="' + (x.st === "belum" || x.st === "nq" ? "cm-w" : "") + '"><b>' + esc(x.v) + "</b><span>" + esc(clrKet(x)) + (x.lori ? "<small>Lori " + esc(x.lori) + "</small>" : "") + "</span><b>" + (x.diff ? (x.diff > 0 ? "+" : "") + fmt(x.diff) : "") + "</b></li>").join("") + "</ul>" : "") +
             (tr.length > 1 ? '<div class="cm-sec">Cocok per hari (' + tr.length + ' hari)</div><div class="cm-tr">' + tr.map((d) => '<div title="' + esc(d.tgl) + ": " + d.pct + '% cocok"><i class="' + (d.pct < 60 ? "cm-low" : d.pct < 90 ? "cm-mid" : "") + '" style="height:' + Math.max(d.pct, 3) + '%"></i>' + esc(d.tgl.slice(8)) + "</div>").join("") + "</div>" : "") +
