@@ -105,3 +105,21 @@ body.tv .cm-act { display: none !important; }
 #v-clr .vc .vq-n b { font-size: 28px; }
 #v-clr .vc .vq-d { font-size: 18px; padding: 8px 14px; border-radius: 12px; }
 @media (max-width: 380px) { #v-clr .clr-chips .chip { font-size: 16px; padding: 8px 6px; } }
+
+/* Serah terima shift */
+#v-clr .clr-ho h3 { margin: 0 0 4px; font-size: 21px; }
+#v-clr .ho-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+#v-clr .ho-c { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #f7f9fb; }
+#v-clr .ho-c b { display: block; font-size: 32px; line-height: 1.1; }
+#v-clr .ho-c span { font-size: 15px; font-weight: 700; color: #3a4650; }
+#v-clr .ho-c.ok b { color: var(--green); }
+#v-clr .ho-c.bad b { color: var(--red); }
+#v-clr .ho-h { margin: 12px 0 8px; font-size: 18px; }
+#v-clr .ho-ul { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 6px; }
+#v-clr .ho-ul li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-left: 7px solid var(--red); background: var(--redbg, #fdecea); border-radius: 8px; font-size: 18px; }
+#v-clr .ho-ul li span { font-weight: 800; color: var(--red); text-align: right; }
+#v-clr .ho-ok { margin: 8px 0; font-size: 19px; font-weight: 800; color: var(--green); }
+#v-clr #clrHoNote { min-height: 100px; font-size: 18px; margin-top: 4px; }
+#v-clr .clr-ho .btn { width: 100%; margin-top: 10px; }
+#v-clr #clrHoNoteInfo, #v-clr #clrHoLast { min-height: 1.45em; }
+#v-clr .clr-ho label { font-size: 17px; font-weight: 800; color: #1b2630; }

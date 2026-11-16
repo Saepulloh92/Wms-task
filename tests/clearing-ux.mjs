@@ -74,6 +74,32 @@ const pos = await p.evaluate(() => ({ bar: document.getElementById("clrBar").get
 ok(Math.abs(pos.bar - pos.hdr) <= 2, `bar filter menempel di bawah header (bar ${Math.round(pos.bar)}px, header ${Math.round(pos.hdr)}px)`);
 const noHs = await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
 ok(noHs, "tanpa geser horizontal");
+// ---- serah terima shift ----
+await p.click('#clrChips [data-k="all"]'); await p.waitForTimeout(200);
+await p.evaluate(() => { window.__clip = ""; navigator.clipboard.writeText = async (t) => { window.__clip = t; }; });
+const hoNums = await p.$$eval("#clrHoSum .ho-c", (a) => a.map((e) => e.querySelector("b").textContent.trim()));
+ok(JSON.stringify(hoNums) === JSON.stringify(["40", "15", "0", "25"]), "serah terima: voucher 40, cocok 15, ditindaklanjuti 0, belum beres 25 (" + hoNums + ")");
+const hoTop = await p.$eval("#clrHoList .ho-ul li b", (e) => e.textContent.trim());
+ok(hoTop === "4044017", "serah terima: yang paling bermasalah (selisih terbesar) di paling atas (" + hoTop + ")");
+ok((await p.$$eval("#clrHoList .ho-ul li", (a) => a.length)) === 5, "serah terima: hanya 5 teratas ditampilkan");
+// tandai satu voucher selesai lewat dialog catatan
+await p.click('#clrList [data-cd]'); await p.waitForSelector("#dNote");
+await p.fill("#dNote", "sudah konfirmasi ke gudang"); await p.click("#dOk"); await p.waitForTimeout(400);
+const hoNums2 = await p.$$eval("#clrHoSum .ho-c", (a) => a.map((e) => e.querySelector("b").textContent.trim()));
+ok(hoNums2[2] === "1" && hoNums2[3] === "24", "setelah 1 voucher ditandai selesai: ditindaklanjuti 1, belum beres 24 (" + hoNums2 + ")");
+await p.fill("#clrHoNote", "Lori B 1234 XY menunggu gudang"); await p.waitForTimeout(150);
+await p.click("#clrHoCopy"); await p.waitForTimeout(400);
+const clip = await p.evaluate(() => window.__clip);
+ok(clip.includes("SERAH TERIMA CLEARING") && clip.includes("BELUM BERES (24)"), "teks salinan memuat judul dan daftar belum beres");
+ok(clip.includes("SUDAH DITINDAKLANJUTI (1)") && clip.includes("sudah konfirmasi ke gudang"), "teks salinan memuat yang sudah ditindaklanjuti + catatannya");
+ok(clip.includes("CATATAN UNTUK SHIFT BERIKUTNYA") && clip.includes("Lori B 1234 XY menunggu gudang"), "teks salinan memuat catatan untuk shift berikutnya");
+const last = await p.$eval("#clrHoLast", (e) => e.textContent);
+ok(/Serah terima terakhir/.test(last) && /sisa 24/.test(last), "tercatat serah terima terakhir: " + last);
+await p.reload(); await p.waitForFunction(() => document.getElementById("pgT")?.textContent.trim());
+await p.evaluate(() => window.go("clr")); await p.waitForTimeout(600);
+ok((await p.$eval("#clrHoNote", (e) => e.value)) === "Lori B 1234 XY menunggu gudang", "catatan tetap ada setelah aplikasi dimuat ulang");
+await p.click('#clrHoList #clrHoAll'); await p.waitForTimeout(300);
+ok((await on()) === "bad", "'Lihat semua' membuka filter Perlu dicek");
 await p.keyboard.press("Escape");
 if (process.env.SHOT) { await p.evaluate(() => window.scrollTo(0, 0)); await p.screenshot({ path: process.env.SHOT + "-atas.png" }); await p.evaluate(() => window.scrollTo(0, 900)); await p.screenshot({ path: process.env.SHOT + "-scroll.png" }); }
 ok(errs.length === 0, "tanpa error JavaScript " + errs.join("|"));

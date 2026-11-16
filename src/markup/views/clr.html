@@ -40,6 +40,18 @@
             </div>
             <div id="clrList" class="bin-list"></div>
           </div>
+          <section class="panel mt clr-ho" id="clrHo" aria-label="Serah terima shift" hidden>
+            <h3>Serah terima shift</h3>
+            <p class="fine" id="clrHoFor"></p>
+            <div class="ho-grid" id="clrHoSum"></div>
+            <div id="clrHoList"></div>
+            <label for="clrHoNote">Catatan untuk shift berikutnya (boleh kosong)</label>
+            <textarea id="clrHoNote" rows="3" maxlength="400" placeholder="Contoh: Lori B 1234 XY menunggu konfirmasi gudang"></textarea>
+            <p class="fine" id="clrHoNoteInfo"></p>
+            <button class="btn pri" id="clrHoCopy" type="button">Salin ringkasan serah terima</button>
+            <button class="btn sec" id="clrHoTg" type="button">Kirim serah terima ke Telegram</button>
+            <p class="fine" id="clrHoLast"></p>
+          </section>
           <section class="panel mt clr-out" id="clrSavePanel" aria-label="Hasil dan kirim">
             <h3>Hasil &amp; kirim</h3>
             <p class="fine" id="clrSaveInfo" role="status" style="margin:0 0 10px"></p>

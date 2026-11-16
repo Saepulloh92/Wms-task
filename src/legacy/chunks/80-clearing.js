@@ -4,7 +4,9 @@
       const K_CLR = "warehouse_so_clr_v1", K_CLRR = "warehouse_so_clr_rep_v1", K_CLRC = "warehouse_so_clr_cnt_v1";
       let clr = Object.assign({ url: WMS_CONFIG.clearingUrl, start: 2, cv: "Nama Foto", cq: "Total Count", ck: "Kode Item", auto: 5 }, ld(K_CLR, {}));
       let clrRep = ld(K_CLRR, null), clrCnt = ld(K_CLRC, null), clrF = "all", clrBusy = false, clrErr = "";
-      const K_CLRD = "warehouse_so_clr_done_v1", K_CLRH = "warehouse_so_clr_hist_v1";
+      const K_CLRD = "warehouse_so_clr_done_v1", K_CLRH = "warehouse_so_clr_hist_v1", K_CLRHO = "warehouse_so_clr_ho_v1";
+      let clrHo = ld(K_CLRHO, {});
+      if (!clrHo || typeof clrHo !== "object" || Array.isArray(clrHo)) clrHo = {};
       let clrHist = ld(K_CLRH, []);
       if (!Array.isArray(clrHist)) clrHist = [];
       let clrDone = ld(K_CLRD, {});
@@ -346,6 +348,7 @@
           const d = x.diff == null ? "" : x.diff === 0 ? "0" : (x.diff > 0 ? "+" : "") + fmt(x.diff);
           return `<div class="card vc s-${x.st}"><div class="r"><b class="id">${esc(x.v)}</b><span class="pill ${cl}">${lb}</span>${clrIsDone(x) ? ' <span class="pill green">Selesai</span>' : ""}</div>${x.n ? `<div class="nm">${esc(x.n)}${x.r ? ", rak " + esc(x.r) : ""}</div>` : ""}<div class="vq"><div class="vq-n"><span>WMS <b>${x.qR == null ? "-" : fmt(x.qR)}</b></span><i aria-hidden="true">→</i><span>Hitung <b>${x.qC == null ? "-" : fmt(x.qC)}</b>${x.ik ? ` <small>(${fmt(x.ik)}×${CLR_IKAT})</small>` : ""}</span></div><div class="vq-d ${x.st === "ok" ? "ok" : x.diff ? "neg" : "wip"}">${x.st === "ok" ? "✓ Cocok" : x.diff == null ? "Belum" : x.diff < 0 ? "▼ Kurang " + fmt(-x.diff) : x.diff > 0 ? "▲ Lebih " + fmt(x.diff) : "Cek ulang"}</div></div><div class="vm">${[esc(x.shift || ""), x.tm ? esc((String(x.tm).match(/\d{1,2}:\d{2}/) || [""])[0]) : "", x.lori ? "Lori " + esc(x.lori) : ""].filter(Boolean).join(" · ") || "&nbsp;"}</div>${x.st !== "ok" && x.ik ? `<div class="m">Counting ${fmt(x.ik)} ikat × ${CLR_IKAT} = ${fmt(x.qC)}.</div>` : ""}${x.cv ? `<div class="m">Dicocokkan lewat awalan angka dengan nama foto ${esc(x.cv)}.</div>` : ""}${x.st !== "ok" && x.rc > 1 ? `<div class="m">${x.rc} foto counting untuk voucher ini, dipakai yang terbaru.</div>` : ""}${clrAct(x)}</div>`;
         }).join("") + (vis.length > 300 ? `<p class="fine">Menampilkan 300 dari ${fmt(vis.length)}. Pakai pencarian atau filter.</p>` : "") : `<div class="empty">${all.length ? "Tidak ada voucher di filter ini." : "Muat Laporan Voucher dan counting dulu."}</div>`);
+        clrHoRender(all);
       }
       async function clrFetch(manual) {
         if (clrBusy) return;
@@ -618,6 +621,81 @@
           sv(K_CLRH, clrHist);
           renderClrHist();
         }
+      };
+      /* ---- serah terima shift: sisa kerja + catatan untuk shift berikutnya (salin / kirim Telegram) ---- */
+      const clrOpenTxt = (x) => x.st === "dup" ? "Dobel hitung" : x.st === "nq" ? "Qty kosong" : x.st === "belum" ? "Belum dihitung" : x.st === "extra" ? "Tidak ada di laporan" : x.diff < 0 ? "Kurang " + fmt(-x.diff) : x.diff > 0 ? "Lebih " + fmt(x.diff) : "Cek ulang";
+      function clrHoData(all) {
+        const rows = clrShF === "all" ? all : all.filter((x) => x.shift === clrShF), R = clrRekap(rows);
+        const aD = (x) => Math.abs(x.diff || 0), rk = (x) => (x.st === "qty" || x.st === "dup" ? 0 : 1);
+        return { R, open: R.ket.slice().sort((a, b) => rk(a) - rk(b) || aD(b) - aD(a)), done: rows.filter((x) => x.st !== "ok" && clrIsDone(x)) };
+      }
+      const clrHoWhen = (iso) => new Date(iso).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+      function clrHoRender(all) {
+        const box = $("clrHo");
+        if (!box) return;
+        box.hidden = !all.length;
+        if (!all.length) return;
+        const { R, open } = clrHoData(all);
+        $("clrHoFor").textContent = "Untuk: " + (clrShF === "all" ? "semua shift" : clrShF) + " (ganti lewat filter shift di atas).";
+        const c = (cls, v, lb) => `<div class="ho-c ${cls}"><b>${fmt(v)}</b><span>${lb}</span></div>`;
+        $("clrHoSum").innerHTML = c("", R.n, "Voucher") + c("ok", R.ok, "Cocok") + c("dn", R.done, "Sudah ditindaklanjuti") + c(open.length ? "bad" : "ok", open.length, "Belum beres");
+        $("clrHoList").innerHTML = open.length
+          ? '<h4 class="ho-h">Belum beres: lanjutkan di shift berikutnya</h4><ul class="ho-ul">' + open.slice(0, 5).map((x) => `<li><b>${esc(x.v)}</b><span>${esc(clrOpenTxt(x))}</span></li>`).join("") + "</ul>" + (open.length > 5 ? `<button class="btn sec" id="clrHoAll" type="button">Lihat semua ${fmt(open.length)} voucher</button>` : "")
+          : '<p class="ho-ok">✓ Semua voucher sudah beres. Tidak ada yang perlu diserahkan.</p>';
+        const L = clrHo.last;
+        $("clrHoLast").textContent = L ? "Serah terima terakhir: " + clrHoWhen(L.at) + (L.by ? " oleh " + L.by : "") + " (" + L.shift + "), sisa " + fmt(L.open) + " voucher." : "Belum ada serah terima yang dicatat.";
+        const ta = $("clrHoNote");
+        if (document.activeElement !== ta && ta.value !== (clrHo.note || "")) ta.value = clrHo.note || "";
+        $("clrHoNoteInfo").textContent = clrHo.note && clrHo.noteAt ? "Catatan diisi " + clrHoWhen(clrHo.noteAt) + (clrHo.noteBy ? " oleh " + clrHo.noteBy : "") + "." : "";
+      }
+      function clrHoText(all, tg) {
+        const M = tg ? md : (v) => String(v ?? ""), { R, open, done } = clrHoData(all), L = [];
+        L.push("*SERAH TERIMA CLEARING*", "Tanggal : " + clrTglS(), "Jam     : " + new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }), "Shift   : " + (clrShF === "all" ? "Semua" : clrShF.replace("Shift ", "")), "Dari    : " + M(curName() || "-"), "━━━━━━━━━━━━━━━━━━━━");
+        L.push(`Voucher ${R.n} | Cocok ${R.ok} | Ditindaklanjuti ${R.done} | *Belum beres ${open.length}*`, `Qty WMS ${fmt(R.wms)} | Counting ${fmt(R.cnt)} | Selisih ${R.sel ? sg(R.sel) : "OK"}`);
+        if (open.length) {
+          L.push("", `*BELUM BERES (${open.length})*`);
+          open.slice(0, 40).forEach((x, i) => L.push(`${i + 1}. ${M(x.v)} — ${clrOpenTxt(x)}${x.qR != null ? ` (WMS ${fmt(x.qR)}${x.qC != null ? " → Hitung " + fmt(x.qC) : ""})` : ""}${x.lori ? " · Lori " + M(x.lori) : ""}${x.shift && clrShF === "all" ? " · S" + x.shift.replace("Shift ", "") : ""}`));
+          if (open.length > 40) L.push("… +" + (open.length - 40) + " lagi");
+        } else L.push("", "✓ Semua voucher sudah beres.");
+        if (done.length) {
+          L.push("", `*SUDAH DITINDAKLANJUTI (${done.length})*`);
+          done.slice(0, 20).forEach((x) => { const d = clrDone[clrKey(x.v)] || {}; L.push(`• ${M(x.v)}${d.by ? " — " + M(d.by) : ""}${d.note ? ": " + M(d.note) : ""}`); });
+          if (done.length > 20) L.push("… +" + (done.length - 20) + " lagi");
+        }
+        if (clrHo.note) L.push("", "*CATATAN UNTUK SHIFT BERIKUTNYA*", M(clrHo.note));
+        return L.join("\n");
+      }
+      function clrHoMark(all) {
+        clrHo.last = { at: new Date().toISOString(), by: curName(), shift: clrShF === "all" ? "Semua shift" : clrShF, open: clrHoData(all).open.length };
+        sv(K_CLRHO, clrHo);
+        clrHoRender(all);
+      }
+      $("clrHoNote").oninput = () => {
+        clrHo.note = $("clrHoNote").value.trim().slice(0, 400);
+        if (clrHo.note) { clrHo.noteAt = new Date().toISOString(); clrHo.noteBy = curName(); } else { delete clrHo.noteAt; delete clrHo.noteBy; }
+        sv(K_CLRHO, clrHo);
+        $("clrHoNoteInfo").textContent = clrHo.note ? "Catatan diisi " + clrHoWhen(clrHo.noteAt) + (clrHo.noteBy ? " oleh " + clrHo.noteBy : "") + "." : ""; // diperbarui saat mengetik, bukan saat fokus hilang (agar tombol di bawahnya tidak bergeser saat diketuk)
+      };
+      $("clrHoList").onclick = (e) => {
+        if (!e.target.closest("#clrHoAll")) return;
+        clrF = "bad";
+        renderClr();
+        $("clrBar").parentElement.scrollIntoView({ behavior: "smooth", block: "start" });
+      };
+      $("clrHoCopy").onclick = async () => {
+        const all = clrBuild();
+        if (!all.length) return toast("Belum ada data clearing.");
+        const t = clrHoText(all, false);
+        try { await navigator.clipboard.writeText(t); } catch (e) { const a = document.createElement("textarea"); a.value = t; document.body.appendChild(a); a.select(); document.execCommand("copy"); a.remove(); }
+        clrHoMark(all);
+        toast("Ringkasan serah terima disalin");
+      };
+      $("clrHoTg").onclick = () => {
+        const all = clrBuild();
+        if (!all.length) return toast("Belum ada data clearing.");
+        tgSend(clrHoText(all, true));
+        clrHoMark(all);
+        toast("Serah terima masuk antrean Telegram");
       };
       $("clrCopy").onclick = async () => {
         const all = clrBuild().filter((x) => x.qC != null);
