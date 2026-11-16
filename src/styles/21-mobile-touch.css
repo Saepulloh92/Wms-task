@@ -11,3 +11,6 @@ input[type="file"] { font-size: 16px; }
   .toast, #toast { bottom: calc(16px + env(safe-area-inset-bottom)); }
   .tabs { padding-bottom: env(safe-area-inset-bottom); }
 }
+.an-x { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+.an-x .btn.sm { min-height: 44px; padding: 6px 12px; }
+.an-acc { margin: 8px 0; }

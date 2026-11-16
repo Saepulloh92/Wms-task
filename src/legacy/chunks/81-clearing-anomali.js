@@ -113,12 +113,41 @@
         }
         return out;
       }
+      /* Pembuktian akurasi: tiap voucher yang ditandai dicocokkan dengan hasil counting (bila sudah dimuat) dan bisa diberi putusan petugas
+   (salah item / normal). Putusan disimpan di HP ini dan dipakai menghitung seberapa sering tanda peringatan terbukti. */
+      const K_ANFB = "warehouse_so_clr_anfb_v1";
+      let anFb = ld(K_ANFB, {});
+      if (!anFb || typeof anFb !== "object" || Array.isArray(anFb)) anFb = {};
+      let anSt = new Map();
+      const anKey = (v) => (typeof clrKey === "function" ? clrKey(v) : String(v));
+      const anStLabel = { ok: ["Counting cocok", "ok"], qty: ["Counting selisih", "red"], nq: ["Qty kosong", "wip"], belum: ["Belum dihitung", "wip"], dup: ["Dobel hitung", "red"] };
+      function anX(v) {
+        const k = anKey(v), st = anSt.get(k), f = anFb[k], l = st && anStLabel[st];
+        return `<div class="an-x">${l ? `<span class="pill2 ${l[1]}">${l[0]}</span> ` : ""}` +
+          (f ? `<span class="fine">Putusan: <b>${f === "salah" ? "Terbukti salah item" : "Ternyata normal"}</b></span> <button class="btn sec sm" type="button" data-anfb="${esc(k)}|">Ubah</button>`
+             : `<button class="btn sec sm" type="button" data-anfb="${esc(k)}|salah">Salah item</button> <button class="btn sec sm" type="button" data-anfb="${esc(k)}|normal">Normal</button>`) + "</div>";
+      }
+      function anAcc(R) {
+        const fl = new Set([...R.machine, ...R.weight, ...R.qty].map((x) => anKey(x.v)));
+        let salah = 0, normal = 0, cm = 0, cmN = 0;
+        fl.forEach((k) => {
+          if (anFb[k] === "salah") salah++; else if (anFb[k] === "normal") normal++;
+          const st = anSt.get(k);
+          if (st && st !== "belum") { cmN++; if (st === "qty" || st === "dup") cm++; }
+        });
+        const chk = salah + normal;
+        const a = chk ? `Dari ${fmt(chk)} voucher yang sudah diperiksa, <b>${fmt(salah)}</b> terbukti salah item (${Math.round((salah / chk) * 100)}%).` : "Belum ada putusan petugas: tekan <b>Salah item</b> atau <b>Normal</b> pada voucher yang sudah dicek fisik.";
+        const b = cmN ? ` Dari ${fmt(cmN)} voucher bertanda yang sudah dihitung counting, ${fmt(cm)} juga selisih qty.` : "";
+        return `<p class="fine an-acc" role="status">Akurasi: ${a}${b}</p>`;
+      }
       const anPct = (d) => (d > 0 ? "+" : d < 0 ? "−" : "") + Math.abs(d).toFixed(1).replace(".", ",") + "%";
       function clrAnomRender() {
         const el = $("clrAnom");
         if (!el) return;
         if (typeof clrRep === "undefined" || !clrRep || !clrRep.rows.length) { el.innerHTML = ""; return; }
         const R = clrAnomaly(clrRep.rows, anCfg.pct);
+        anSt = new Map();
+        try { if (typeof clrBuild === "function" && clrCnt) clrBuild().forEach((x) => anSt.set(anKey(x.v), x.st)); } catch (e) {}
         if (!R.cols.mc && !R.cols.nw && !R.cols.gw) {
           el.innerHTML = '<details class="clr-an"><summary>Peringatan dini voucher · kolom belum terbaca</summary><p class="fine">Laporan ini belum memuat kolom <b>Mesin</b>, <b>Berat bersih</b>, atau <b>Berat kotor</b> (atau diimpor sebelum fitur ini ada). Impor ulang laporan voucher yang memuat kolom itu.</p></details>';
           return;
@@ -128,18 +157,18 @@
           open = anOpen == null ? nHi > 0 : anOpen;
         const read = [R.cols.mc ? "Mesin" : "", R.cols.nw ? "Berat bersih" : "", R.cols.gw ? "Berat kotor" : ""].filter(Boolean).join(", ");
         const mach = R.machine.length
-          ? '<div class="lh">Mesin: item tidak biasa</div>' + R.machine.map((x) => `<div class="lrow"><div class="lt"><b>${esc(x.v)} · ${esc(x.mc)}</b><small>${esc(x.item)} (biasanya ${esc(x.usual)})${x.alt ? " · kembali ke item biasa di voucher berikutnya" : ""}</small></div><span class="pill2 ${x.alt ? "red" : "wip"}">${x.alt ? "Selang-seling" : "Berbeda"}</span></div>`).join("")
+          ? '<div class="lh">Mesin: item tidak biasa</div>' + R.machine.map((x) => `<div class="lrow"><div class="lt"><b>${esc(x.v)} · ${esc(x.mc)}</b><small>${esc(x.item)} (biasanya ${esc(x.usual)})${x.alt ? " · kembali ke item biasa di voucher berikutnya" : ""}</small>${anX(x.v)}</div><span class="pill2 ${x.alt ? "red" : "wip"}">${x.alt ? "Selang-seling" : "Berbeda"}</span></div>`).join("")
           : R.cols.mc ? '<p class="fine">Tidak ada mesin yang berganti item secara tidak biasa.</p>' : "";
         const wt = R.weight.length
-          ? '<div class="lh">Berat tidak normal</div>' + R.weight.map((x) => `<div class="lrow"><div class="lt"><b>${esc(x.v)}${x.mc ? " · " + esc(x.mc) : ""}</b><small>${esc(x.item)} · Qty ${esc(fmt(x.q))}${x.f.map((f) => ` · ${f.label} ${esc(fmt(f.val))} (wajar ±${esc(fmt(f.exp))})`).join("")}${x.bad ? " · " + esc(x.bad) : ""}</small></div><span class="pill2 ${x.hi ? "red" : "wip"}">${x.f.length ? esc(anPct(x.f.sort((a, b) => Math.abs(b.dev) - Math.abs(a.dev))[0].dev)) : "Data"}</span></div>`).join("")
+          ? '<div class="lh">Berat tidak normal</div>' + R.weight.map((x) => `<div class="lrow"><div class="lt"><b>${esc(x.v)}${x.mc ? " · " + esc(x.mc) : ""}</b><small>${esc(x.item)} · Qty ${esc(fmt(x.q))}${x.f.map((f) => ` · ${f.label} ${esc(fmt(f.val))} (wajar ±${esc(fmt(f.exp))})`).join("")}${x.bad ? " · " + esc(x.bad) : ""}</small>${anX(x.v)}</div><span class="pill2 ${x.hi ? "red" : "wip"}">${x.f.length ? esc(anPct(x.f.sort((a, b) => Math.abs(b.dev) - Math.abs(a.dev))[0].dev)) : "Data"}</span></div>`).join("")
           : R.cols.nw || R.cols.gw ? '<p class="fine">Tidak ada berat yang menyimpang dari pola mesin dan item.</p>' : "";
         const qt = R.qty.length
-          ? '<div class="lh">Qty tidak biasa</div>' + R.qty.map((x) => `<div class="lrow"><div class="lt"><b>${esc(x.v)}${x.mc ? " · " + esc(x.mc) : ""}</b><small>${esc(x.item)} · Qty ${esc(fmt(x.q))} (biasanya ${esc(fmt(x.usual))}, ${esc(anPct(x.dev))})</small></div><span class="pill2 ${x.hi ? "red" : "wip"}">${x.hi ? "Tinggi" : "Cek"}</span></div>`).join("")
+          ? '<div class="lh">Qty tidak biasa</div>' + R.qty.map((x) => `<div class="lrow"><div class="lt"><b>${esc(x.v)}${x.mc ? " · " + esc(x.mc) : ""}</b><small>${esc(x.item)} · Qty ${esc(fmt(x.q))} (biasanya ${esc(fmt(x.usual))}, ${esc(anPct(x.dev))})</small>${anX(x.v)}</div><span class="pill2 ${x.hi ? "red" : "wip"}">${x.hi ? "Tinggi" : "Cek"}</span></div>`).join("")
           : "";
         el.innerHTML = `<details class="clr-an" id="clrAnD"${open ? " open" : ""}><summary>Peringatan dini voucher · ${total ? esc(fmt(R.machine.length)) + " item mesin, " + esc(fmt(R.weight.length)) + " berat" + (R.qty.length ? ", " + esc(fmt(R.qty.length)) + " qty" : "") : "tidak ada indikasi"}</summary>` +
           `<p class="fine">Dibaca dari laporan: ${esc(read)} · ${esc(fmt(R.n))} voucher${R.afkir ? " (" + esc(fmt(R.afkir)) + " afkir dikecualikan)" : ""}. Ini indikasi statistik, bukan bukti salah item.</p>` +
           `<label class="fine" for="clrAnPct">Ambang berat menyimpang</label><select id="clrAnPct">${[3, 5, 8].map((p) => `<option value="${p}"${anCfg.pct === p ? " selected" : ""}>${p}%</option>`).join("")}</select>` +
-          mach + wt + qt + "</details>";
+          anAcc(R) + mach + wt + qt + "</details>";
       }
       $("clrAnom") &&
         ($("clrAnom").addEventListener("change", (e) => {
@@ -149,6 +178,15 @@
           clrAnomRender();
         }),
         $("clrAnom").addEventListener("click", (e) => {
+          const fb = e.target.closest && e.target.closest("[data-anfb]");
+          if (fb) {
+            const [k, val] = fb.dataset.anfb.split("|");
+            if (val) anFb[k] = val; else delete anFb[k];
+            sv(K_ANFB, anFb);
+            anOpen = true;
+            clrAnomRender();
+            return;
+          }
           const s = e.target.closest && e.target.closest("summary");
           if (s && s.parentElement.id === "clrAnD") anOpen = !s.parentElement.open;
         }));

@@ -18,10 +18,12 @@ const b = await chromium.launch();
 const p = await (await b.newContext({ viewport: { width: 390, height: 844 } })).newPage();
 const errs = []; p.on("pageerror", (e) => errs.push(e.message));
 await p.route(/^https?:\/\/(?!localhost)/, (r) => r.abort());
-await p.addInitScript(({ fx, rep }) => {
+const cnt = [{ v: String(v30), q: 99, k: "", t: "", lr: "" }, { v: String(v60), q: 60, k: "", t: "", lr: "" }];
+await p.addInitScript(({ fx, rep, cnt }) => {
   localStorage.setItem("warehouse_so_master_v2", JSON.stringify(fx.master)); localStorage.setItem("warehouse_so_users_v1", JSON.stringify(fx.users)); localStorage.setItem("warehouse_so_lgsetup_v1", "1");
   localStorage.setItem("warehouse_so_clr_rep_v1", JSON.stringify({ at: Date.now(), name: "laporan.xlsx", rows: rep }));
-}, { fx: { master: FX("master.json"), users: FX("users.json") }, rep: rows });
+  localStorage.setItem("warehouse_so_clr_cnt_v1", JSON.stringify({ at: Date.now(), name: "counting", rows: cnt }));
+}, { fx: { master: FX("master.json"), users: FX("users.json") }, rep: rows, cnt });
 await p.goto(url); await p.waitForFunction(() => document.getElementById("pgT")?.textContent.trim());
 const A = await p.evaluate((r) => clrAnomaly(r, 3), rows);
 const q = (v) => A.qty.find((x) => x.v === String(v));
@@ -32,9 +34,20 @@ ok(!q(vAf), "voucher afkir dikecualikan");
 ok(!A.qty.some((x) => x.mc === "PPL41"), "tanpa qty standar yang jelas (10,20,30,40,50) tidak dinilai");
 ok(!A.qty.some((x) => x.mc === "PPL42"), "pembanding kurang dari 4 tidak dinilai");
 ok(A.qty[0].v === String(v30), "urut dari penyimpangan terbesar");
-await p.evaluate(() => window.go("clr")); await p.waitForTimeout(400);
+await p.evaluate(() => { window.go("clr"); document.getElementById("clrSrc").open = true; }); await p.waitForTimeout(400);
 const T = await p.locator("#clrAnom").innerText();
 ok(/Qty tidak biasa/i.test(T) && new RegExp(String(v30)).test(T) && /biasanya 100/.test(T) && /−70,0%/.test(T), "layar: bagian 'Qty tidak biasa' tampil dengan qty biasanya dan deviasi");
 ok(/2 qty/.test(T), "layar: ringkasan memuat jumlah qty: " + (T.match(/\d+ qty/) || [""])[0]);
+// pembuktian akurasi: cocokkan dengan counting + putusan petugas
+const T2 = await p.locator("#clrAnom").innerText();
+ok(/Counting selisih/i.test(T2) && /Counting cocok/i.test(T2), "baris bertanda menampilkan hasil counting (selisih untuk " + v30 + ", cocok untuk " + v60 + ")");
+ok(/Belum ada putusan petugas/.test(T2), "akurasi: belum ada putusan");
+await p.locator('[data-anfb$="|salah"]').first().click(); await p.waitForTimeout(200);
+await p.locator('[data-anfb$="|normal"]').first().click(); await p.waitForTimeout(200);
+const T3 = await p.locator("#clrAnom").innerText();
+ok(/Dari 2 voucher yang sudah diperiksa, 1 terbukti salah item \(50%\)/.test(T3), "akurasi: 1 dari 2 diputuskan salah item = 50%: " + (T3.match(/Dari 2[^.]*\./) || [""])[0]);
+ok(/Dari 2 voucher bertanda yang sudah dihitung counting, 1 juga selisih qty/.test(T3), "akurasi: 1 dari 2 bertanda juga selisih di counting");
+await p.reload(); await p.waitForFunction(() => document.getElementById("pgT")?.textContent.trim()); await p.evaluate(() => { window.go("clr"); document.getElementById("clrSrc").open = true; }); await p.waitForTimeout(400);
+ok(/Dari 2 voucher yang sudah diperiksa/.test(await p.locator("#clrAnom").innerText()), "putusan tersimpan setelah muat ulang");
 ok(errs.length === 0, "tanpa error JavaScript " + errs.join("|"));
 await b.close(); process.exit(fail ? 1 : 0);
