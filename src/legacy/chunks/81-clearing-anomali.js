@@ -17,7 +17,7 @@
       function clrAnomaly(rows, pct = 3) {
         const cols = { q: rows.some((r) => r.q > 0), mc: rows.some((r) => r.mc), nw: rows.some((r) => r.nw > 0), gw: rows.some((r) => r.gw > 0) };
         const std = rows.filter((r) => !r.afk);
-        const out = { cols, machine: [], weight: [], qty: [], n: rows.length, afkir: rows.length - std.length };
+        const out = { cols, machine: [], weight: [], qty: [], lori: [], n: rows.length, afkir: rows.length - std.length };
         if (cols.mc) {
           const by = new Map();
           std.slice().sort(anOrd).forEach((r) => {
@@ -78,9 +78,22 @@
           });
           out.weight = [...hit.values()].map((h) => ({ ...h, dev: Math.max(0, ...h.f.map((x) => Math.abs(x.dev))), hi: !!h.bad || h.f.some((x) => Math.abs(x.dev) >= pct * 2.5) })).sort((a, b) => b.dev - a.dev);
         }
-        /* Lapisan 3: qty tidak biasa. Mesin+item (cadangan: item) yang punya qty standar (>= 60% voucher lain sama, minimal 4 pembanding);
-           voucher yang qty-nya menyimpang >= 20% dari standar ditandai (>= 50% = tinggi). Salah item sering ikut membawa qty ikatan yang lain. */
+        /* Lapisan 3: qty tidak biasa, dihitung dengan statistik baku (bukan ambang buatan):
+           skor-z termodifikasi (Iglewicz & Hoaglin) = 0,6745 x (x - median) / MAD; |z| >= 3,5 = pencilan. MAD sama dengan 0 (nilai pembanding nyaris seragam)
+           memakai pengganti (x - median) / (1,2533 x rata-rata simpangan mutlak); bila semua pembanding persis sama, nilai berbeda = pencilan (z tak hingga).
+           Pembanding minimal 4 (tanpa voucher/lori yang dinilai). "Tinggi" = |z| >= 2 x ambang (7). Dua tingkat: (a) qty per voucher terhadap mesin+item (cadangan: item),
+           (b) total qty per lori terhadap lori lain untuk item yang sama. */
         {
+          const Z_CUT = 3.5, MIN_REF = 4;
+          const anMedOf = (a) => anMed(a);
+          // { med, z } : z = Infinity bila pembanding seragam dan x berbeda
+          const rz = (ref, x) => {
+            const med = anMedOf(ref), mad = anMedOf(ref.map((v) => Math.abs(v - med)));
+            if (mad > 0) return { med, z: (0.6745 * (x - med)) / mad };
+            const mean = ref.reduce((s, v) => s + v, 0) / ref.length, md = ref.reduce((s, v) => s + Math.abs(v - mean), 0) / ref.length;
+            if (md > 0) return { med, z: (x - med) / (1.2533 * md) };
+            return { med, z: x === med ? 0 : x > med ? Infinity : -Infinity };
+          };
           const g = (kf) => {
             const m = new Map();
             std.forEach((r) => {
@@ -93,23 +106,44 @@
           };
           const qMI = g((r) => (r.mc ? r.mc + "|" + anLabel(r) : "")),
             qI = g((r) => anLabel(r));
+          // (a) per voucher
           std.forEach((r) => {
             if (!(r.q > 0)) return;
             let grp = r.mc ? qMI.get(r.mc + "|" + anLabel(r)) : null,
               basis = "mesin + item";
-            if (!grp || grp.filter((x) => x !== r).length < 4) { grp = qI.get(anLabel(r)); basis = "item"; }
+            if (!grp || grp.filter((x) => x !== r).length < MIN_REF) { grp = qI.get(anLabel(r)); basis = "item"; }
             const ref = (grp || []).filter((x) => x !== r).map((x) => x.q);
-            if (ref.length < 4) return;
-            const cnt = new Map();
-            ref.forEach((q) => cnt.set(q, (cnt.get(q) || 0) + 1));
-            const top = [...cnt.entries()].sort((a, b) => b[1] - a[1]);
-            if (top[0][1] / ref.length < 0.6 || (top[1] && top[1][1] === top[0][1])) return; // tidak ada qty standar yang jelas
-            const std_ = top[0][0],
-              dev = ((r.q - std_) / std_) * 100;
-            if (Math.abs(dev) < 20) return;
-            out.qty.push({ v: r.v, mc: r.mc, item: anLabel(r), q: r.q, usual: std_, dev, basis, hi: Math.abs(dev) >= 50 });
+            if (ref.length < MIN_REF) return;
+            const { med, z } = rz(ref, r.q);
+            if (Math.abs(z) < Z_CUT) return;
+            out.qty.push({ v: r.v, mc: r.mc, item: anLabel(r), q: r.q, usual: med, dev: ((r.q - med) / med) * 100, z, n: ref.length, basis, hi: Math.abs(z) >= Z_CUT * 2 });
           });
-          out.qty.sort((a, b) => Math.abs(b.dev) - Math.abs(a.dev));
+          out.qty.sort((a, b) => Math.abs(b.z) - Math.abs(a.z) || Math.abs(b.dev) - Math.abs(a.dev));
+          // (b) total qty per lori dan item
+          out.lori = [];
+          if (std.some((r) => r.lr)) {
+            const lm = new Map();
+            std.forEach((r) => {
+              const lr = String(r.lr || "").trim().toUpperCase();
+              if (!lr || !(r.q > 0)) return;
+              const k = anLabel(r) + "\u0001" + lr;
+              if (!lm.has(k)) lm.set(k, { lr, item: anLabel(r), q: 0, n: 0 });
+              const o = lm.get(k);
+              o.q += r.q; o.n++;
+            });
+            const byItem = new Map();
+            lm.forEach((o) => { if (!byItem.has(o.item)) byItem.set(o.item, []); byItem.get(o.item).push(o); });
+            byItem.forEach((list) => {
+              list.forEach((o) => {
+                const ref = list.filter((x) => x !== o).map((x) => x.q);
+                if (ref.length < MIN_REF) return;
+                const { med, z } = rz(ref, o.q);
+                if (Math.abs(z) < Z_CUT) return;
+                out.lori.push({ lr: o.lr, item: o.item, q: o.q, usual: med, dev: ((o.q - med) / med) * 100, z, nv: o.n, nref: ref.length, hi: Math.abs(z) >= Z_CUT * 2 });
+              });
+            });
+            out.lori.sort((a, b) => Math.abs(b.z) - Math.abs(a.z));
+          }
         }
         return out;
       }
@@ -157,6 +191,7 @@
         const b = o.cmN ? ` Dari ${fmt(o.cmN)} voucher bertanda yang sudah dihitung counting, ${fmt(o.cm)} juga selisih qty.` : "";
         return `<p class="fine an-acc" role="status">Akurasi: ${a}${b}</p>`;
       }
+      const anZ = (z) => (!isFinite(z) ? "pembanding seragam, nilai ini berbeda" : "z " + (z > 0 ? "+" : "−") + Math.abs(z).toFixed(1).replace(".", ","));
       const anPct = (d) => (d > 0 ? "+" : d < 0 ? "−" : "") + Math.abs(d).toFixed(1).replace(".", ",") + "%";
       function clrAnomRender() {
         const el = $("clrAnom");
@@ -169,8 +204,8 @@
           el.innerHTML = '<details class="clr-an"><summary>Peringatan dini voucher · kolom belum terbaca</summary><p class="fine">Laporan ini belum memuat kolom <b>Mesin</b>, <b>Berat bersih</b>, atau <b>Berat kotor</b> (atau diimpor sebelum fitur ini ada). Impor ulang laporan voucher yang memuat kolom itu.</p></details>';
           return;
         }
-        const nHi = R.machine.filter((x) => x.alt).length + R.weight.filter((x) => x.hi).length + R.qty.filter((x) => x.hi).length,
-          total = R.machine.length + R.weight.length + R.qty.length,
+        const nHi = R.machine.filter((x) => x.alt).length + R.weight.filter((x) => x.hi).length + R.qty.filter((x) => x.hi).length + R.lori.filter((x) => x.hi).length,
+          total = R.machine.length + R.weight.length + R.qty.length + R.lori.length,
           open = anOpen == null ? nHi > 0 : anOpen;
         const read = [R.cols.mc ? "Mesin" : "", R.cols.nw ? "Berat bersih" : "", R.cols.gw ? "Berat kotor" : ""].filter(Boolean).join(", ");
         const mach = R.machine.length
@@ -180,12 +215,15 @@
           ? '<div class="lh">Berat tidak normal</div>' + R.weight.map((x) => `<div class="lrow"><div class="lt"><b>${esc(x.v)}${x.mc ? " · " + esc(x.mc) : ""}</b><small>${esc(x.item)} · Qty ${esc(fmt(x.q))}${x.f.map((f) => ` · ${f.label} ${esc(fmt(f.val))} (wajar ±${esc(fmt(f.exp))})`).join("")}${x.bad ? " · " + esc(x.bad) : ""}</small>${anX(x.v)}</div><span class="pill2 ${x.hi ? "red" : "wip"}">${x.f.length ? esc(anPct(x.f.sort((a, b) => Math.abs(b.dev) - Math.abs(a.dev))[0].dev)) : "Data"}</span></div>`).join("")
           : R.cols.nw || R.cols.gw ? '<p class="fine">Tidak ada berat yang menyimpang dari pola mesin dan item.</p>' : "";
         const qt = R.qty.length
-          ? '<div class="lh">Qty tidak biasa</div>' + R.qty.map((x) => `<div class="lrow"><div class="lt"><b>${esc(x.v)}${x.mc ? " · " + esc(x.mc) : ""}</b><small>${esc(x.item)} · Qty ${esc(fmt(x.q))} (biasanya ${esc(fmt(x.usual))}, ${esc(anPct(x.dev))})</small>${anX(x.v)}</div><span class="pill2 ${x.hi ? "red" : "wip"}">${x.hi ? "Tinggi" : "Cek"}</span></div>`).join("")
+          ? '<div class="lh">Qty tidak biasa</div>' + R.qty.map((x) => `<div class="lrow"><div class="lt"><b>${esc(x.v)}${x.mc ? " · " + esc(x.mc) : ""}</b><small>${esc(x.item)} · Qty ${esc(fmt(x.q))} (median ${esc(fmt(x.usual))}, ${esc(anPct(x.dev))}, ${esc(anZ(x.z))} dari ${esc(fmt(x.n))} pembanding)</small>${anX(x.v)}</div><span class="pill2 ${x.hi ? "red" : "wip"}">${x.hi ? "Tinggi" : "Cek"}</span></div>`).join("")
           : "";
-        el.innerHTML = `<details class="clr-an" id="clrAnD"${open ? " open" : ""}><summary>Peringatan dini voucher · ${total ? esc(fmt(R.machine.length)) + " item mesin, " + esc(fmt(R.weight.length)) + " berat" + (R.qty.length ? ", " + esc(fmt(R.qty.length)) + " qty" : "") : "tidak ada indikasi"}</summary>` +
-          `<p class="fine">Dibaca dari laporan: ${esc(read)} · ${esc(fmt(R.n))} voucher${R.afkir ? " (" + esc(fmt(R.afkir)) + " afkir dikecualikan)" : ""}. Ini indikasi statistik, bukan bukti salah item.</p>` +
+        const lo = R.lori.length
+          ? '<div class="lh">Qty per lori tidak biasa</div>' + R.lori.map((x) => `<div class="lrow"><div class="lt"><b>Lori ${esc(x.lr)}</b><small>${esc(x.item)} · total Qty ${esc(fmt(x.q))} dari ${esc(fmt(x.nv))} voucher (median lori lain ${esc(fmt(x.usual))}, ${esc(anPct(x.dev))}, ${esc(anZ(x.z))} dari ${esc(fmt(x.nref))} lori)</small></div><span class="pill2 ${x.hi ? "red" : "wip"}">${x.hi ? "Tinggi" : "Cek"}</span></div>`).join("")
+          : "";
+        el.innerHTML = `<details class="clr-an" id="clrAnD"${open ? " open" : ""}><summary>Peringatan dini voucher · ${total ? esc(fmt(R.machine.length)) + " item mesin, " + esc(fmt(R.weight.length)) + " berat" + (R.qty.length ? ", " + esc(fmt(R.qty.length)) + " qty" : "") + (R.lori.length ? ", " + esc(fmt(R.lori.length)) + " lori" : "") : "tidak ada indikasi"}</summary>` +
+          `<p class="fine">Dibaca dari laporan: ${esc(read)} · ${esc(fmt(R.n))} voucher${R.afkir ? " (" + esc(fmt(R.afkir)) + " afkir dikecualikan)" : ""}. Ini indikasi statistik (skor-z robust, ambang 3,5), bukan bukti salah item.</p>` +
           `<label class="fine" for="clrAnPct">Ambang berat menyimpang</label><select id="clrAnPct">${[3, 5, 8].map((p) => `<option value="${p}"${anCfg.pct === p ? " selected" : ""}>${p}%</option>`).join("")}</select>` +
-          anAcc(R) + mach + wt + qt + "</details>";
+          anAcc(R) + mach + wt + qt + lo + "</details>";
       }
       $("clrAnom") &&
         ($("clrAnom").addEventListener("change", (e) => {
