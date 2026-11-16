@@ -18,18 +18,36 @@
           <div class="kcs mt" id="clrStats"></div>
           <div id="clrAnom"></div>
           <div id="clrRekap"></div>
-          <div class="panel mt">
-            <input id="clrQ" type="search" placeholder="Cari voucher / item, contoh: 4043814" aria-label="Cari voucher atau item" autocomplete="off" />
-            <div class="chips clr-chips" id="clrChips"></div>
-            <div class="chips clr-chips" id="clrShChips"></div>
+          <div class="panel mt clr-main">
+            <div class="clr-bar" id="clrBar">
+              <input id="clrQ" type="search" placeholder="Cari voucher / item, contoh: 4043814" aria-label="Cari voucher atau item" autocomplete="off" />
+              <div class="chips clr-chips" id="clrChips"></div>
+            </div>
+            <div class="clr-sub">
+              <div class="chips clr-chips" id="clrShChips"></div>
+              <div class="clr-tools">
+                <span class="fine" id="clrCount" role="status" aria-live="polite"></span>
+                <label class="clr-sort" for="clrSort"><span>Urutkan</span>
+                  <select id="clrSort" aria-label="Urutkan daftar voucher">
+                    <option value="asli">Urutan laporan</option>
+                    <option value="selisih">Selisih terbesar</option>
+                    <option value="voucher">No voucher (terbaru)</option>
+                    <option value="status">Perlu dicek dulu</option>
+                  </select>
+                </label>
+              </div>
+            </div>
             <div id="clrList" class="bin-list"></div>
           </div>
-          <button class="btn pri mt ximp" id="clrCsv" type="button">Unduh hasil clearing (CSV)</button>
-          <details class="mt"><summary>Salin data untuk input WMS</summary><button class="btn sec mt" id="clrCopy" type="button">Salin No Voucher + Qty</button></details>
-          <div class="panel mt" id="clrSavePanel">
+          <section class="panel mt clr-out" id="clrSavePanel" aria-label="Hasil dan kirim">
+            <h3>Hasil &amp; kirim</h3>
             <p class="fine" id="clrSaveInfo" role="status" style="margin:0 0 10px"></p>
             <button class="btn pri" id="clrSaveHist" type="button">Simpan, salin &amp; kirim ke Telegram</button>
-          </div>
+            <div class="row-act mt">
+              <button class="btn sec ximp" id="clrCsv" type="button">Unduh CSV</button>
+              <button class="btn sec" id="clrCopy" type="button" title="Salin No Voucher + Qty untuk input WMS">Salin No Voucher + Qty</button>
+            </div>
+          </section>
           <button class="ximp" data-tg="clrTg" type="button" tabindex="-1" aria-hidden="true">x</button>
           <button class="btn sec mt" id="clrTg" type="button" hidden>tg</button>
           <h3 class="sec">Riwayat clearing tersimpan</h3>

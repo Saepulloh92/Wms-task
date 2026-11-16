@@ -50,7 +50,7 @@
         const s = spec.toLowerCase();
         return hdr.findIndex((h) => String(h ?? "").toLowerCase().includes(s));
       }
-      let clrShF = "all";
+      let clrShF = "all", clrSortK = "asli";
       function clrShiftOf(t) {
         const m = String(t || "").match(/(\d{1,2}):(\d{2})/) || String(t || "").match(/(?<![\d.])(\d{1,2})\.(\d{2})(?![\d.])/); // 7.30 (titik) diterima; tanggal 06.11.2026 tidak
         if (!m) return "";
@@ -298,8 +298,8 @@
           if (!all.length) clrAutoF = false;
           else if (!clrAutoF) { clrAutoF = true; if (all.some((x) => x.st !== "ok" && !clrIsDone(x))) clrF = "bad"; }
         }
-        const kc = (cls, ico, v, lb) => `<div class="kc ${cls}"><div class="kh"><span class="ki">${ico}</span><b>${fmt(v)}</b></div><div class="kl">${lb}</div><span class="dchip eq">${nTot ? Math.round((v / nTot) * 100) : 0}%</span></div>`;
-        $("clrStats").innerHTML = kc("ok", monIco.ok, nOk, "Cocok") + kc("bad", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg>', nBad, "Selisih / dobel") + kc("wip", monIco.wip, nBel, "Belum dihitung");
+        const kc = (cls, ico, v, lb, go) => `<div class="kc ${cls} kc-go" role="button" tabindex="0" data-go="${go}" aria-label="Tampilkan: ${lb}"><div class="kh"><span class="ki">${ico}</span><b>${fmt(v)}</b></div><div class="kl">${lb}</div><span class="dchip eq">${nTot ? Math.round((v / nTot) * 100) : 0}%</span></div>`;
+        $("clrStats").innerHTML = kc("ok", monIco.ok, nOk, "Cocok", "ok") + kc("bad", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg>', nBad, "Selisih / dobel", "sel") + kc("wip", monIco.wip, nBel, "Belum dihitung", "belum");
         { // pil sinkron: waktu counting terakhir dimuat
           const el = $("clrAt");
           if (!clrCnt) { el.className = "sync"; el.textContent = ""; }
@@ -309,7 +309,7 @@
             el.textContent = (clrCnt.src === "file" ? "Dari file" : stale ? "Data lama" : "Tersinkron") + " · " + new Date(clrCnt.at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
           }
         }
-        $("clrChips").innerHTML = chipsHtml(clrF, [["all", "Semua", all.length], ["bad", "Perlu dicek", all.filter((x) => x.st !== "ok" && !clrIsDone(x)).length], ["done", "Ditandai selesai", all.filter(clrIsDone).length], ["ok", "Cocok", n("ok")], ["belum", "Belum dihitung", n("belum")]]);
+        $("clrChips").innerHTML = chipsHtml(clrF, [["all", "Semua", all.length], ["bad", "Perlu dicek", all.filter((x) => x.st !== "ok" && !clrIsDone(x)).length], ["sel", "Selisih / dobel", nBad], ["belum", "Belum dihitung", nBel], ["done", "Ditandai selesai", all.filter(clrIsDone).length], ["ok", "Cocok", nOk]]);
         { // ringkasan: donat status + progres per shift
           const segs = [["Cocok", nOk, "#1f7a4d"], ["Selisih / dobel", nBad, "#b3261e"], ["Belum dihitung", nBel, "#b26a00"]], C = 2 * Math.PI * 40;
           let off = 0;
@@ -327,7 +327,20 @@
         const shs = [...new Set(all.map((x) => x.shift).filter(Boolean))].sort();
         $("clrShChips").innerHTML = shs.length ? chipsHtml(clrShF, [["all", "Semua shift", all.length], ...shs.map((h) => [h, h, all.filter((x) => x.shift === h).length])]).replace(/data-k=/g, "data-sh=") : "";
         const q = $("clrQ").value.toLowerCase().trim();
-        const vis = all.filter((x) => (clrShF === "all" || x.shift === clrShF) && (clrF === "all" || (clrF === "bad" ? x.st !== "ok" && !clrIsDone(x) : clrF === "done" ? clrIsDone(x) : x.st === clrF)) && (!q || (x.v + " " + x.n + " " + x.r + " " + x.lori + " " + x.shift).toLowerCase().includes(q)));
+        const fOk = (x) => clrF === "all" ? true : clrF === "bad" ? x.st !== "ok" && !clrIsDone(x) : clrF === "done" ? clrIsDone(x) : clrF === "sel" ? x.st === "qty" || x.st === "dup" : clrF === "belum" ? x.st === "belum" || x.st === "nq" : x.st === clrF;
+        const vis = all.filter((x) => (clrShF === "all" || x.shift === clrShF) && fOk(x) && (!q || (x.v + " " + x.n + " " + x.r + " " + x.lori + " " + x.shift).toLowerCase().includes(q)));
+        { // urutan daftar (default = urutan laporan; sort stabil jadi urutan asli terjaga di antara yang sama)
+          const aD = (x) => Math.abs(x.diff || 0), vN = (x) => Number(String(x.v).replace(/\D/g, "")) || 0, rk = (x) => (x.st === "ok" ? 2 : clrIsDone(x) ? 1 : 0);
+          if (clrSortK === "selisih") vis.sort((a, b) => aD(b) - aD(a));
+          else if (clrSortK === "voucher") vis.sort((a, b) => vN(b) - vN(a) || String(b.v).localeCompare(String(a.v)));
+          else if (clrSortK === "status") vis.sort((a, b) => rk(a) - rk(b) || aD(b) - aD(a));
+          $("clrSort").value = clrSortK;
+          $("clrCount").textContent = !all.length ? "" : vis.length === all.length ? fmt(all.length) + " voucher" : "Menampilkan " + fmt(vis.length) + " dari " + fmt(all.length) + " voucher";
+          // bar filter menempel tepat di bawah header aplikasi
+          const hd = document.querySelector("header"), hh = hd ? hd.offsetHeight : 0;
+          $("clrBar").style.top = hh + "px";
+          $("clrBar").parentElement.style.scrollMarginTop = hh + 8 + "px";
+        }
         $("clrList").innerHTML = (vis.length ? vis.slice(0, 300).map((x) => {
           const [lb, cl] = CLR_ST[x.st];
           const d = x.diff == null ? "" : x.diff === 0 ? "0" : (x.diff > 0 ? "+" : "") + fmt(x.diff);
@@ -444,6 +457,21 @@
         clrShF = sb.dataset.sh;
         renderClr();
       };
+      $("clrSort").onchange = () => { clrSortK = $("clrSort").value; renderClr(); };
+      { // kartu ringkasan = pintasan ke filter yang sesuai
+        const go = (e) => {
+          const c = e.target.closest("[data-go]");
+          if (!c) return;
+          if (e.type === "keydown") { if (e.key !== "Enter" && e.key !== " ") return; e.preventDefault(); }
+          clrF = clrF === c.dataset.go ? "all" : c.dataset.go;
+          clrShF = "all";
+          $("clrQ").value = "";
+          renderClr();
+          $("clrBar").parentElement.scrollIntoView({ behavior: "smooth", block: "start" });
+        };
+        $("clrStats").addEventListener("click", go);
+        $("clrStats").addEventListener("keydown", go);
+      }
       $("clrChips").onclick = (e) => {
         const b = e.target.closest("[data-k]");
         if (!b) return;

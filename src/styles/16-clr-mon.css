@@ -53,3 +53,17 @@ body.tv .cm-act { display: none !important; }
 #v-clr .vc .vq-d.neg { color: var(--red); background: rgba(179, 38, 30, 0.1); }
 #v-clr .vc .vq-d.wip { color: #b26a00; background: rgba(178, 106, 0, 0.12); }
 #v-clr .vc .vm { font-size: 13px; color: var(--muted); }
+
+/* Clearing: bar filter menempel, urutan, jumlah hasil, kartu ringkasan bisa diketuk, aksi akhir dikelompokkan */
+#v-clr .clr-bar { position: sticky; top: 0; z-index: 5; background: #fff; margin: -16px -16px 4px; padding: 10px 16px 2px; border-bottom: 1px solid var(--line); border-radius: 14px 14px 0 0; }
+#v-clr .clr-bar .clr-chips { margin-top: 8px; padding-bottom: 6px; }
+#v-clr .clr-sub .clr-chips { margin-top: 4px; padding-bottom: 4px; }
+#v-clr .clr-tools { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 0 2px; flex-wrap: wrap; }
+#v-clr .clr-tools .fine { margin: 0; }
+#v-clr .clr-sort { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; color: var(--muted); }
+#v-clr .clr-sort select { width: auto; min-height: 40px; margin: 0; font-size: 14px; }
+#v-clr .kc-go { cursor: pointer; }
+#v-clr .kc-go:focus-visible { outline: 3px solid var(--blue, #1f6feb); outline-offset: 2px; }
+#v-clr .kc-go:active { transform: scale(0.98); }
+#v-clr .clr-out h3 { margin: 0 0 6px; }
+#v-clr .clr-out .row-act .btn { flex: 1 1 140px; }
