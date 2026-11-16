@@ -17,7 +17,7 @@
       function clrAnomaly(rows, pct = 3) {
         const cols = { mc: rows.some((r) => r.mc), nw: rows.some((r) => r.nw > 0), gw: rows.some((r) => r.gw > 0) };
         const std = rows.filter((r) => !r.afk);
-        const out = { cols, machine: [], weight: [], n: rows.length, afkir: rows.length - std.length };
+        const out = { cols, machine: [], weight: [], qty: [], n: rows.length, afkir: rows.length - std.length };
         if (cols.mc) {
           const by = new Map();
           std.slice().sort(anOrd).forEach((r) => {
@@ -78,6 +78,39 @@
           });
           out.weight = [...hit.values()].map((h) => ({ ...h, dev: Math.max(0, ...h.f.map((x) => Math.abs(x.dev))), hi: !!h.bad || h.f.some((x) => Math.abs(x.dev) >= pct * 2.5) })).sort((a, b) => b.dev - a.dev);
         }
+        /* Lapisan 3: qty tidak biasa. Mesin+item (cadangan: item) yang punya qty standar (>= 60% voucher lain sama, minimal 4 pembanding);
+           voucher yang qty-nya menyimpang >= 20% dari standar ditandai (>= 50% = tinggi). Salah item sering ikut membawa qty ikatan yang lain. */
+        {
+          const g = (kf) => {
+            const m = new Map();
+            std.forEach((r) => {
+              const k = kf(r);
+              if (!k || !(r.q > 0)) return;
+              if (!m.has(k)) m.set(k, []);
+              m.get(k).push(r);
+            });
+            return m;
+          };
+          const qMI = g((r) => (r.mc ? r.mc + "|" + anLabel(r) : "")),
+            qI = g((r) => anLabel(r));
+          std.forEach((r) => {
+            if (!(r.q > 0)) return;
+            let grp = r.mc ? qMI.get(r.mc + "|" + anLabel(r)) : null,
+              basis = "mesin + item";
+            if (!grp || grp.filter((x) => x !== r).length < 4) { grp = qI.get(anLabel(r)); basis = "item"; }
+            const ref = (grp || []).filter((x) => x !== r).map((x) => x.q);
+            if (ref.length < 4) return;
+            const cnt = new Map();
+            ref.forEach((q) => cnt.set(q, (cnt.get(q) || 0) + 1));
+            const top = [...cnt.entries()].sort((a, b) => b[1] - a[1]);
+            if (top[0][1] / ref.length < 0.6 || (top[1] && top[1][1] === top[0][1])) return; // tidak ada qty standar yang jelas
+            const std_ = top[0][0],
+              dev = ((r.q - std_) / std_) * 100;
+            if (Math.abs(dev) < 20) return;
+            out.qty.push({ v: r.v, mc: r.mc, item: anLabel(r), q: r.q, usual: std_, dev, basis, hi: Math.abs(dev) >= 50 });
+          });
+          out.qty.sort((a, b) => Math.abs(b.dev) - Math.abs(a.dev));
+        }
         return out;
       }
       const anPct = (d) => (d > 0 ? "+" : d < 0 ? "−" : "") + Math.abs(d).toFixed(1).replace(".", ",") + "%";
@@ -90,8 +123,8 @@
           el.innerHTML = '<details class="clr-an"><summary>Peringatan dini voucher · kolom belum terbaca</summary><p class="fine">Laporan ini belum memuat kolom <b>Mesin</b>, <b>Berat bersih</b>, atau <b>Berat kotor</b> (atau diimpor sebelum fitur ini ada). Impor ulang laporan voucher yang memuat kolom itu.</p></details>';
           return;
         }
-        const nHi = R.machine.filter((x) => x.alt).length + R.weight.filter((x) => x.hi).length,
-          total = R.machine.length + R.weight.length,
+        const nHi = R.machine.filter((x) => x.alt).length + R.weight.filter((x) => x.hi).length + R.qty.filter((x) => x.hi).length,
+          total = R.machine.length + R.weight.length + R.qty.length,
           open = anOpen == null ? nHi > 0 : anOpen;
         const read = [R.cols.mc ? "Mesin" : "", R.cols.nw ? "Berat bersih" : "", R.cols.gw ? "Berat kotor" : ""].filter(Boolean).join(", ");
         const mach = R.machine.length
@@ -100,10 +133,13 @@
         const wt = R.weight.length
           ? '<div class="lh">Berat tidak normal</div>' + R.weight.map((x) => `<div class="lrow"><div class="lt"><b>${esc(x.v)}${x.mc ? " · " + esc(x.mc) : ""}</b><small>${esc(x.item)} · Qty ${esc(fmt(x.q))}${x.f.map((f) => ` · ${f.label} ${esc(fmt(f.val))} (wajar ±${esc(fmt(f.exp))})`).join("")}${x.bad ? " · " + esc(x.bad) : ""}</small></div><span class="pill2 ${x.hi ? "red" : "wip"}">${x.f.length ? esc(anPct(x.f.sort((a, b) => Math.abs(b.dev) - Math.abs(a.dev))[0].dev)) : "Data"}</span></div>`).join("")
           : R.cols.nw || R.cols.gw ? '<p class="fine">Tidak ada berat yang menyimpang dari pola mesin dan item.</p>' : "";
-        el.innerHTML = `<details class="clr-an" id="clrAnD"${open ? " open" : ""}><summary>Peringatan dini voucher · ${total ? esc(fmt(R.machine.length)) + " item mesin, " + esc(fmt(R.weight.length)) + " berat" : "tidak ada indikasi"}</summary>` +
+        const qt = R.qty.length
+          ? '<div class="lh">Qty tidak biasa</div>' + R.qty.map((x) => `<div class="lrow"><div class="lt"><b>${esc(x.v)}${x.mc ? " · " + esc(x.mc) : ""}</b><small>${esc(x.item)} · Qty ${esc(fmt(x.q))} (biasanya ${esc(fmt(x.usual))}, ${esc(anPct(x.dev))})</small></div><span class="pill2 ${x.hi ? "red" : "wip"}">${x.hi ? "Tinggi" : "Cek"}</span></div>`).join("")
+          : "";
+        el.innerHTML = `<details class="clr-an" id="clrAnD"${open ? " open" : ""}><summary>Peringatan dini voucher · ${total ? esc(fmt(R.machine.length)) + " item mesin, " + esc(fmt(R.weight.length)) + " berat" + (R.qty.length ? ", " + esc(fmt(R.qty.length)) + " qty" : "") : "tidak ada indikasi"}</summary>` +
           `<p class="fine">Dibaca dari laporan: ${esc(read)} · ${esc(fmt(R.n))} voucher${R.afkir ? " (" + esc(fmt(R.afkir)) + " afkir dikecualikan)" : ""}. Ini indikasi statistik, bukan bukti salah item.</p>` +
           `<label class="fine" for="clrAnPct">Ambang berat menyimpang</label><select id="clrAnPct">${[3, 5, 8].map((p) => `<option value="${p}"${anCfg.pct === p ? " selected" : ""}>${p}%</option>`).join("")}</select>` +
-          mach + wt + "</details>";
+          mach + wt + qt + "</details>";
       }
       $("clrAnom") &&
         ($("clrAnom").addEventListener("change", (e) => {

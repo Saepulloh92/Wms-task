@@ -23,7 +23,8 @@
     "test:remind": "node tests/remind.mjs",
     "test:clr-anomali": "node tests/clearing-anomali.mjs",
     "test:csv": "node tests/csv-safe.mjs",
-    "test:clr-edge": "node tests/clearing-edge.mjs"
+    "test:clr-edge": "node tests/clearing-edge.mjs",
+    "test:clr-qty": "node tests/clearing-anomali-qty.mjs"
   },
   "dependencies": {
     "react": "18.3.1",
