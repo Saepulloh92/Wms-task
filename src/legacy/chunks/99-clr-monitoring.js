@@ -14,6 +14,25 @@
         const open = h.bad || 0;
         return { s: { total: h.n, ok: h.ok, open, qty: 0, dup: 0, nq: 0, belum: 0, done: 0, wms: null, cnt: null, sel: 0, pct: h.n ? Math.round((h.ok / h.n) * 100) : 0, byShift: [], top: [], status: open ? "cek" : "ok" }, live: false, at: Date.parse(h.at) || 0, tgl: h.tgl };
       }
+      /* Putusan dari Monitoring: baris meluncur keluar, putusan ditahan 4,5 detik agar bisa "Urungkan"; tindakan berikutnya/pindah layar langsung menyimpan. */
+      let cmPend = null, cmFresh = false;
+      function cmCommit() {
+        if (!cmPend) return;
+        const p = cmPend; cmPend = null; clearTimeout(p.t);
+        anSetVerdict(p.k, p.v);
+        if (typeof clrAnomRender === "function") clrAnomRender();
+      }
+      function cmDecide(k, v, li) {
+        cmCommit();
+        try { if (navigator.vibrate) navigator.vibrate(v === "salah" ? [30, 40, 30] : 18); } catch (e) {}
+        const go_ = () => {
+          cmPend = { k, v, t: setTimeout(() => { cmCommit(); monClrRender(); }, 4500) };
+          monClrRender();
+          toast(v === "salah" ? "Dicatat: salah item" : "Dicatat: normal", { label: "Urungkan", fn: () => { if (cmPend) { clearTimeout(cmPend.t); cmPend = null; } monClrRender(); } });
+        };
+        if (li && !matchMedia("(prefers-reduced-motion: reduce)").matches) { li.classList.add("out"); setTimeout(go_, 240); } else go_();
+      }
+      window.addEventListener("pagehide", cmCommit);
       // akurasi peringatan dini voucher: berapa yang ditandai, sudah diputuskan petugas, dan terbukti salah item
       function cmAn() {
         try {
@@ -22,16 +41,22 @@
           const acc = a.chk
             ? "<b>" + fmt(a.salah) + "</b> terbukti salah item · " + fmt(a.normal) + " normal · akurasi <b>" + a.pct + "%</b> dari " + fmt(a.chk) + " yang diperiksa"
             : "belum ada yang diputuskan petugas";
-          const top = a.plan.slice(0, 5), fb = (k, v, lb, cls) => '<button class="btn ' + cls + ' sm" type="button" data-anfb="' + esc(k) + "|" + v + '">' + lb + "</button>";
-          const rows = top.map((x) => '<li class="cm-pl"><div class="cm-pt"><b>' + esc(x.v) + "</b><span>" + esc([x.mc && "Mesin " + x.mc, x.lr && "Lori " + x.lr, x.item].filter(Boolean).join(" · ")) + "</span></div>" +
+          const ic = { x: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l10 18H2L12 3zM12 10v5M12 18v.01"/></svg>', ok: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>' };
+          const plan = a.plan.filter((x) => !(cmPend && cmPend.k === x.k)), top = plan.slice(0, 5),
+            fb = (k, v, lb, cls, i) => '<button class="btn ' + cls + ' sm" type="button" data-anfb="' + esc(k) + "|" + v + '">' + i + "<span>" + lb + "</span></button>";
+          const lay = { mesin: "Mesin loncat", berat: "Berat", qty: "Qty" };
+          const rows = top.map((x, i) => '<li class="cm-pl ' + (x.layers.size > 1 || x.w >= 3 ? "sev-hi" : "sev-mid") + '" style="--i:' + i + '" data-k="' + esc(x.k) + '"><div class="cm-pt"><b>' + esc(x.v) + "</b><span>" + esc([x.mc && "Mesin " + x.mc, x.lr && "Lori " + x.lr, x.item].filter(Boolean).join(" · ")) + "</span></div>" +
+            '<div class="cm-chips">' + [...x.layers].map((l) => "<i>" + (lay[l] || l) + "</i>").join("") + "</div>" +
             '<p class="cm-why">' + esc(x.why.join(" · ")) + "</p>" +
-            '<div class="cm-pb">' + fb(x.k, "salah", "Salah item", "pri") + fb(x.k, "normal", "Normal", "sec") + "</div></li>").join("");
+            '<div class="cm-pb">' + fb(x.k, "salah", "Salah item", "pri", ic.x) + fb(x.k, "normal", "Normal", "sec", ic.ok) + "</div></li>").join("");
           const lori = a.lori.slice(0, 3).map((x) => '<li class="cm-pl"><div class="cm-pt"><b>Lori ' + esc(x.lr) + "</b><span>" + esc(x.item) + '</span></div><p class="cm-why">Total qty ' + fmt(x.q) + " dari " + fmt(x.nv) + " voucher, lori lain biasanya " + fmt(x.usual) + ". Cek fisik lori ini.</p></li>").join("");
-          const left = a.plan.length;
-          return '<div class="cm-sec">Cek hari ini · peringatan dini voucher</div>' +
+          const left = plan.length, tot = Math.max(a.planAll || 0, left), dn = Math.max(0, tot - left), pctDn = tot ? Math.round((dn / tot) * 100) : 0;
+          const prog = tot ? '<div class="cm-prog" role="progressbar" aria-label="Voucher bertanda yang sudah diputuskan" aria-valuemin="0" aria-valuemax="' + tot + '" aria-valuenow="' + dn + '"><i style="width:' + pctDn + '%"></i></div><p class="cm-pt2">' + fmt(dn) + " dari " + fmt(tot) + " sudah diputuskan</p>" : "";
+          const done = !left && a.flag ? '<div class="cm-done"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7 12.5l3.5 3.5L17 9"/></svg><div><b>Semua sudah diputuskan</b><span>Tidak ada voucher bertanda yang menunggu cek hari ini.</span></div></div>' : "";
+          return '<div class="cm-sec">Cek hari ini · peringatan dini voucher</div>' + prog + done +
             '<p class="cm-det cm-an">' + fmt(a.flag) + " ditandai · " + (left ? "<b>" + fmt(left) + "</b> belum diputuskan" : "semua sudah diputuskan") + " · " + acc + "</p>" +
             (left ? '<p class="fine">Cek fisik voucher di bawah (urut paling perlu dulu), lalu tekan hasilnya.</p>' : "") +
-            (rows ? '<ul class="cm-plan">' + rows + "</ul>" : "") +
+            (rows ? '<ul class="cm-plan' + (cmFresh ? " fresh" : "") + '">' + rows + "</ul>" : "") +
             (lori ? '<div class="cm-sec">Lori perlu dicek</div><ul class="cm-plan">' + lori + "</ul>" : "") +
             '<div class="cm-pb">' + (left > top.length ? '<button class="btn sec sm" type="button" id="cmAnAll">Lihat semua (' + fmt(left) + ")</button>" : "") + '<button class="btn sec sm" type="button" id="cmAnCopy">Bagikan daftar</button></div>';
         } catch (e) { return ""; }
@@ -74,7 +99,7 @@
             (clr.url && clrRep ? '<button class="btn sec sm inl" id="cmRef" type="button"' + (clrBusy ? " disabled" : "") + ">" + (clrBusy ? "Memuat…" : "Muat ulang counting") + "</button>" : "") + "</div></section>";
           el.onclick = (e) => {
             const b = e.target.closest && e.target.closest("[data-anfb]");
-            if (b) { const [k, v] = b.dataset.anfb.split("|"); anSetVerdict(k, v); monClrRender(); if (typeof clrAnomRender === "function") clrAnomRender(); return; }
+            if (b) { const [k, v] = b.dataset.anfb.split("|"); cmDecide(k, v, b.closest(".cm-pl")); return; }
             if (e.target.closest && e.target.closest("#cmAnAll")) go("clr");
             if (e.target.closest && e.target.closest("#cmAnCopy")) {
               const a = anSummary(), t = a ? cmAnText(a) : "";
@@ -89,7 +114,10 @@
         } catch (e) { el.innerHTML = ""; }
       }
       function monClrEnter() {
+        cmCommit();
+        cmFresh = true;
         monClrRender();
+        cmFresh = false;
         clearInterval(cmTimer);
         const stale = () => clr.url && clrRep && clrCnt && clrCnt.src !== "file" && !clrBusy && Date.now() - clrCnt.at > Math.max(2, clr.auto || 5) * 60000;
         if (stale()) clrFetch(false);

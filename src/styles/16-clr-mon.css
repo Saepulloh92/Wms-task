@@ -123,3 +123,27 @@ body.tv .cm-act { display: none !important; }
 #v-clr .clr-ho .btn { width: 100%; margin-top: 10px; }
 #v-clr #clrHoNoteInfo, #v-clr #clrHoLast { min-height: 1.45em; }
 #v-clr .clr-ho label { font-size: 17px; font-weight: 800; color: #1b2630; }
+
+/* Monitoring · Cek hari ini: halus, tidak kaku */
+.cm-prog { height: 8px; border-radius: 99px; background: rgba(20, 86, 160, 0.12); overflow: hidden; margin: 8px 0 4px; }
+.cm-prog > i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #2e9d62, #46c07f); transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+.cm-pt2 { margin: 0 0 6px; font-size: 12px; color: var(--muted, #6b7a89); }
+.cm-pl { position: relative; overflow: hidden; border-radius: 14px; padding-left: 16px; box-shadow: 0 1px 2px rgba(15, 40, 70, 0.06); transition: transform 0.24s ease, opacity 0.24s ease, box-shadow 0.2s ease; }
+.cm-pl::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: #e0a030; }
+.cm-pl.sev-hi::before { background: #d6453d; }
+.cm-pl.out { transform: translateX(48px); opacity: 0; }
+.cm-plan.fresh .cm-pl { animation: cm-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i) * 60ms); }
+@keyframes cm-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.cm-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
+.cm-chips i { font-style: normal; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 99px; background: rgba(20, 86, 160, 0.1); color: #1456a0; }
+.cm-pb .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 12px; transition: transform 0.12s ease, filter 0.12s ease; }
+.cm-pb .btn:active { transform: scale(0.97); filter: brightness(0.95); }
+.cm-pb .btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.cm-done { display: flex; align-items: center; gap: 12px; margin: 10px 0; padding: 14px; border-radius: 14px; background: rgba(46, 157, 98, 0.1); animation: cm-in 0.4s ease both; }
+.cm-done svg { width: 32px; height: 32px; fill: none; stroke: #2e9d62; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.cm-done b { display: block; }
+.cm-done span { font-size: 13px; color: var(--muted, #6b7a89); }
+@media (prefers-reduced-motion: reduce) {
+  .cm-pl, .cm-prog > i, .cm-pb .btn { transition: none; }
+  .cm-plan.fresh .cm-pl, .cm-done { animation: none; }
+}
