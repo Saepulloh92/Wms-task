@@ -14,7 +14,15 @@
       const anLabel = (r) => String(r.n || r.k || "").replace(/\s+/g, " ").trim();
       // urutan produksi: nomor voucher berurutan mengikuti waktu produksi
       const anOrd = (a, b) => (Number(a.v) - Number(b.v) || 0) || String(a.v).localeCompare(String(b.v));
-      function clrAnomaly(rows, pct = 3) {
+      // analisis statistik dihitung ulang hanya bila baris laporan atau ambang berubah (berat pada ribuan voucher)
+      let anMemo = null;
+      function clrAnomaly(rows, pct) {
+        if (anMemo && anMemo.rows === rows && anMemo.n === rows.length && anMemo.pct === pct) return anMemo.out;
+        const out = clrAnomalyRaw(rows, pct);
+        anMemo = { rows, n: rows.length, pct, out };
+        return out;
+      }
+      function clrAnomalyRaw(rows, pct = 3) {
         const cols = { q: rows.some((r) => r.q > 0), mc: rows.some((r) => r.mc), nw: rows.some((r) => r.nw > 0), gw: rows.some((r) => r.gw > 0) };
         const std = rows.filter((r) => !r.afk);
         const out = { cols, machine: [], weight: [], qty: [], lori: [], n: rows.length, afkir: rows.length - std.length };
@@ -177,7 +185,16 @@
         return o;
       }
       // dipakai kartu Clearing di Monitoring (data laporan + putusan yang tersinkron)
+      let anSumMemo = null, anVer = 0; // anVer naik tiap putusan berubah
       function anSummary() {
+        if (typeof clrRep === "undefined" || !clrRep || !clrRep.rows || !clrRep.rows.length) return null;
+        const key = [clrRep.rows, clrRep.rows.length, typeof clrCnt !== "undefined" && clrCnt ? clrCnt.rows : null, typeof clrCnt !== "undefined" && clrCnt ? clrCnt.rows.length : 0, anCfg.pct, anFb, anVer];
+        if (anSumMemo && anSumMemo.key.every((v, i) => v === key[i])) return anSumMemo.val;
+        const val = anSummaryRaw();
+        anSumMemo = { key, val };
+        return val;
+      }
+      function anSummaryRaw() {
         if (typeof clrRep === "undefined" || !clrRep || !clrRep.rows || !clrRep.rows.length) return null;
         const R = clrAnomaly(clrRep.rows, anCfg.pct);
         if (!R.cols.mc && !R.cols.nw && !R.cols.gw && !R.cols.q) return null;
@@ -191,6 +208,7 @@
       }
       function anSetVerdict(k, val) {
         anFb[k] = { v: val, at: new Date().toISOString(), by: typeof curName === "function" ? curName() : "" };
+        anVer++;
         sv(K_ANFB, anFb);
       }
       /* Daftar kerja: satu baris per voucher (gabungan semua sinyal), urut dari yang paling perlu dicek dulu
@@ -216,6 +234,9 @@
         const b = o.cmN ? ` Dari ${fmt(o.cmN)} voucher bertanda yang sudah dihitung counting, ${fmt(o.cm)} juga selisih qty.` : "";
         return `<p class="fine an-acc" role="status">Akurasi: ${a}${b}</p>`;
       }
+      const AN_CAP = 15; // baris per bagian yang digambar (ribuan baris = layar berat di HP); sisanya diberi keterangan jumlah
+      const anCap = (a) => a.slice(0, AN_CAP);
+      const anMore = (a) => (a.length > AN_CAP ? `<p class="fine">+${fmt(a.length - AN_CAP)} lainnya (urut dari yang paling menyimpang). Cek lewat daftar kerja di Monitoring.</p>` : "");
       const anZ = (z) => (!isFinite(z) ? "pembanding seragam, nilai ini berbeda" : "z " + (z > 0 ? "+" : "−") + Math.abs(z).toFixed(1).replace(".", ","));
       const anPct = (d) => (d > 0 ? "+" : d < 0 ? "−" : "") + Math.abs(d).toFixed(1).replace(".", ",") + "%";
       function clrAnomRender() {
@@ -234,16 +255,16 @@
           open = anOpen == null ? nHi > 0 : anOpen;
         const read = [R.cols.mc ? "Mesin" : "", R.cols.nw ? "Berat bersih" : "", R.cols.gw ? "Berat kotor" : ""].filter(Boolean).join(", ");
         const mach = R.machine.length
-          ? '<div class="lh">Mesin: item tidak biasa</div>' + R.machine.map((x) => `<div class="lrow"><div class="lt"><b>${esc(x.v)} · ${esc(x.mc)}</b><small>${esc(x.item)} (biasanya ${esc(x.usual)})${x.alt ? " · kembali ke item biasa di voucher berikutnya" : ""}</small>${anX(x.v)}</div><span class="pill2 ${x.alt ? "red" : "wip"}">${x.alt ? "Selang-seling" : "Berbeda"}</span></div>`).join("")
+          ? '<div class="lh">Mesin: item tidak biasa</div>' + anCap(R.machine).map((x) => `<div class="lrow"><div class="lt"><b>${esc(x.v)} · ${esc(x.mc)}</b><small>${esc(x.item)} (biasanya ${esc(x.usual)})${x.alt ? " · kembali ke item biasa di voucher berikutnya" : ""}</small>${anX(x.v)}</div><span class="pill2 ${x.alt ? "red" : "wip"}">${x.alt ? "Selang-seling" : "Berbeda"}</span></div>`).join("") + anMore(R.machine)
           : R.cols.mc ? '<p class="fine">Tidak ada mesin yang berganti item secara tidak biasa.</p>' : "";
         const wt = R.weight.length
-          ? '<div class="lh">Berat tidak normal</div>' + R.weight.map((x) => `<div class="lrow"><div class="lt"><b>${esc(x.v)}${x.mc ? " · " + esc(x.mc) : ""}</b><small>${esc(x.item)} · Qty ${esc(fmt(x.q))}${x.f.map((f) => ` · ${f.label} ${esc(fmt(f.val))} (wajar ±${esc(fmt(f.exp))})`).join("")}${x.bad ? " · " + esc(x.bad) : ""}</small>${anX(x.v)}</div><span class="pill2 ${x.hi ? "red" : "wip"}">${x.f.length ? esc(anPct(x.f.sort((a, b) => Math.abs(b.dev) - Math.abs(a.dev))[0].dev)) : "Data"}</span></div>`).join("")
+          ? '<div class="lh">Berat tidak normal</div>' + anCap(R.weight).map((x) => `<div class="lrow"><div class="lt"><b>${esc(x.v)}${x.mc ? " · " + esc(x.mc) : ""}</b><small>${esc(x.item)} · Qty ${esc(fmt(x.q))}${x.f.map((f) => ` · ${f.label} ${esc(fmt(f.val))} (wajar ±${esc(fmt(f.exp))})`).join("") + anMore(R.weight)}${x.bad ? " · " + esc(x.bad) : ""}</small>${anX(x.v)}</div><span class="pill2 ${x.hi ? "red" : "wip"}">${x.f.length ? esc(anPct(x.f.sort((a, b) => Math.abs(b.dev) - Math.abs(a.dev))[0].dev)) : "Data"}</span></div>`).join("")
           : R.cols.nw || R.cols.gw ? '<p class="fine">Tidak ada berat yang menyimpang dari pola mesin dan item.</p>' : "";
         const qt = R.qty.length
-          ? '<div class="lh">Qty tidak biasa</div>' + R.qty.map((x) => `<div class="lrow"><div class="lt"><b>${esc(x.v)}${x.mc ? " · " + esc(x.mc) : ""}</b><small>${esc(x.item)} · Qty ${esc(fmt(x.q))} (median ${esc(fmt(x.usual))}, ${esc(anPct(x.dev))}, ${esc(anZ(x.z))} dari ${esc(fmt(x.n))} pembanding)</small>${anX(x.v)}</div><span class="pill2 ${x.hi ? "red" : "wip"}">${x.hi ? "Tinggi" : "Cek"}</span></div>`).join("")
+          ? '<div class="lh">Qty tidak biasa</div>' + anCap(R.qty).map((x) => `<div class="lrow"><div class="lt"><b>${esc(x.v)}${x.mc ? " · " + esc(x.mc) : ""}</b><small>${esc(x.item)} · Qty ${esc(fmt(x.q))} (median ${esc(fmt(x.usual))}, ${esc(anPct(x.dev))}, ${esc(anZ(x.z))} dari ${esc(fmt(x.n))} pembanding)</small>${anX(x.v)}</div><span class="pill2 ${x.hi ? "red" : "wip"}">${x.hi ? "Tinggi" : "Cek"}</span></div>`).join("") + anMore(R.qty)
           : "";
         const lo = R.lori.length
-          ? '<div class="lh">Qty per lori tidak biasa</div>' + R.lori.map((x) => `<div class="lrow"><div class="lt"><b>Lori ${esc(x.lr)}</b><small>${esc(x.item)} · total Qty ${esc(fmt(x.q))} dari ${esc(fmt(x.nv))} voucher (median lori lain ${esc(fmt(x.usual))}, ${esc(anPct(x.dev))}, ${esc(anZ(x.z))} dari ${esc(fmt(x.nref))} lori)</small></div><span class="pill2 ${x.hi ? "red" : "wip"}">${x.hi ? "Tinggi" : "Cek"}</span></div>`).join("")
+          ? '<div class="lh">Qty per lori tidak biasa</div>' + anCap(R.lori).map((x) => `<div class="lrow"><div class="lt"><b>Lori ${esc(x.lr)}</b><small>${esc(x.item)} · total Qty ${esc(fmt(x.q))} dari ${esc(fmt(x.nv))} voucher (median lori lain ${esc(fmt(x.usual))}, ${esc(anPct(x.dev))}, ${esc(anZ(x.z))} dari ${esc(fmt(x.nref))} lori)</small></div><span class="pill2 ${x.hi ? "red" : "wip"}">${x.hi ? "Tinggi" : "Cek"}</span></div>`).join("") + anMore(R.lori)
           : "";
         el.innerHTML = `<details class="clr-an" id="clrAnD"${open ? " open" : ""}><summary>Peringatan dini voucher · ${total ? esc(fmt(R.machine.length)) + " item mesin, " + esc(fmt(R.weight.length)) + " berat" + (R.qty.length ? ", " + esc(fmt(R.qty.length)) + " qty" : "") + (R.lori.length ? ", " + esc(fmt(R.lori.length)) + " lori" : "") : "tidak ada indikasi"}</summary>` +
           `<p class="fine">Dibaca dari laporan: ${esc(read)} · ${esc(fmt(R.n))} voucher${R.afkir ? " (" + esc(fmt(R.afkir)) + " afkir dikecualikan)" : ""}. Ini indikasi statistik (skor-z robust, ambang 3,5), bukan bukti salah item.</p>` +

@@ -137,7 +137,18 @@
       }
       const CLR_IKAT = 25; // isi satu ikatan
       const clrRnd = (x) => Math.round(x * 1000) / 1000; // hindari galat desimal (0,1 + 0,2 ≠ 0,3)
+      /* Hasil pencocokan hanya bergantung pada baris laporan + counting, dan dihitung berat (ribuan voucher, dipanggil berkali-kali saat membuka layar).
+         Disimpan selama kedua daftar baris yang sama; yang dikembalikan salinan dangkal supaya pemanggil boleh mengubah isinya. */
+      let clrBMemo = null;
       function clrBuild() {
+        const rr = clrRep ? clrRep.rows : null, cr = clrCnt ? clrCnt.rows : null;
+        const m = clrBMemo;
+        if (!m || m.rr !== rr || m.cr !== cr || m.nr !== (rr ? rr.length : 0) || m.nc !== (cr ? cr.length : 0)) {
+          clrBMemo = { rr, cr, nr: rr ? rr.length : 0, nc: cr ? cr.length : 0, list: clrBuildRaw() };
+        }
+        return clrBMemo.list.map((x) => ({ ...x }));
+      }
+      function clrBuildRaw() {
         const rep = clrRep ? clrRep.rows : [], cnt = clrCnt ? clrCnt.rows : [];
         const cm = new Map();
         cnt.forEach((c) => {
@@ -267,6 +278,8 @@
         $("clrDiagCopy").onclick = () => (navigator.clipboard ? navigator.clipboard.writeText(txt).then(() => toast("Diagnosa tersalin. Tempel ke chat."), () => toast("Gagal menyalin diagnosa")) : toast("Browser tidak mengizinkan salin"));
       }
       let clrAutoF = false;
+      var clrLim = 40, clrLimSig = "";
+      document.addEventListener("click", (e) => { if (e.target.closest && e.target.closest("#clrMore")) { clrLim += 40; renderClr(); } });
       function renderClr() {
         setTimeout(() => typeof renderClrHist === "function" && $("clrHist") && renderClrHist(), 0);
         clearTimeout(clrAT);
@@ -343,11 +356,13 @@
           $("clrBar").style.top = hh + "px";
           $("clrBar").parentElement.style.scrollMarginTop = hh + 8 + "px";
         }
-        $("clrList").innerHTML = (vis.length ? vis.slice(0, 300).map((x) => {
+        // daftar tampil bertahap (kartu banyak = berat di HP): awalnya 40, tombol "Tampilkan lebih" menambah 40; ganti filter/cari/urut = mulai dari 40 lagi
+        { const sig = clrF + "|" + clrShF + "|" + q + "|" + clrSortK; if (sig !== clrLimSig) { clrLimSig = sig; clrLim = 40; } }
+        $("clrList").innerHTML = (vis.length ? vis.slice(0, clrLim).map((x) => {
           const [lb, cl] = CLR_ST[x.st];
           const d = x.diff == null ? "" : x.diff === 0 ? "0" : (x.diff > 0 ? "+" : "") + fmt(x.diff);
           return `<div class="card vc s-${x.st}"><div class="r"><b class="id">${esc(x.v)}</b><span class="pill ${cl}">${lb}</span>${clrIsDone(x) ? ' <span class="pill green">Selesai</span>' : ""}</div>${x.n ? `<div class="nm">${esc(x.n)}${x.r ? ", rak " + esc(x.r) : ""}</div>` : ""}<div class="vq"><div class="vq-n"><span>WMS <b>${x.qR == null ? "-" : fmt(x.qR)}</b></span><i aria-hidden="true">→</i><span>Hitung <b>${x.qC == null ? "-" : fmt(x.qC)}</b>${x.ik ? ` <small>(${fmt(x.ik)}×${CLR_IKAT})</small>` : ""}</span></div><div class="vq-d ${x.st === "ok" ? "ok" : x.diff ? "neg" : "wip"}">${x.st === "ok" ? "✓ Cocok" : x.diff == null ? "Belum" : x.diff < 0 ? "▼ Kurang " + fmt(-x.diff) : x.diff > 0 ? "▲ Lebih " + fmt(x.diff) : "Cek ulang"}</div></div><div class="vm">${[esc(x.shift || ""), x.tm ? esc((String(x.tm).match(/\d{1,2}:\d{2}/) || [""])[0]) : "", x.lori ? "Lori " + esc(x.lori) : ""].filter(Boolean).join(" · ") || "&nbsp;"}</div>${x.st !== "ok" && x.ik ? `<div class="m">Counting ${fmt(x.ik)} ikat × ${CLR_IKAT} = ${fmt(x.qC)}.</div>` : ""}${x.cv ? `<div class="m">Dicocokkan lewat awalan angka dengan nama foto ${esc(x.cv)}.</div>` : ""}${x.st !== "ok" && x.rc > 1 ? `<div class="m">${x.rc} foto counting untuk voucher ini, dipakai yang terbaru.</div>` : ""}${clrAct(x)}</div>`;
-        }).join("") + (vis.length > 300 ? `<p class="fine">Menampilkan 300 dari ${fmt(vis.length)}. Pakai pencarian atau filter.</p>` : "") : `<div class="empty">${all.length ? "Tidak ada voucher di filter ini." : "Muat Laporan Voucher dan counting dulu."}</div>`);
+        }).join("") + (vis.length > clrLim ? `<p class="fine">Menampilkan ${fmt(clrLim)} dari ${fmt(vis.length)}.</p><button class="btn sec" id="clrMore" type="button">Tampilkan lebih (${fmt(Math.min(40, vis.length - clrLim))})</button>` : "") : `<div class="empty">${all.length ? "Tidak ada voucher di filter ini." : "Muat Laporan Voucher dan counting dulu."}</div>`);
         clrHoRender(all);
       }
       async function clrFetch(manual) {
