@@ -15,7 +15,7 @@
         return { s: { total: h.n, ok: h.ok, open, qty: 0, dup: 0, nq: 0, belum: 0, done: 0, wms: null, cnt: null, sel: 0, pct: h.n ? Math.round((h.ok / h.n) * 100) : 0, byShift: [], top: [], status: open ? "cek" : "ok" }, live: false, at: Date.parse(h.at) || 0, tgl: h.tgl };
       }
       /* Putusan dari Monitoring: baris meluncur keluar, putusan ditahan 4,5 detik agar bisa "Urungkan"; tindakan berikutnya/pindah layar langsung menyimpan. */
-      let cmPend = null, cmFresh = false;
+      var cmPend = null, cmFresh = false; // var (bukan let): monClrRender sudah bisa dipanggil chunk 80 sebelum baris ini berjalan
       function cmCommit() {
         if (!cmPend) return;
         const p = cmPend; cmPend = null; clearTimeout(p.t);
